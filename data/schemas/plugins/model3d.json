@@ -1,0 +1,629 @@
+{
+  "id": "model3d",
+  "originalId": "Model3D",
+  "name_zh": "",
+  "name_en": "",
+  "description_zh": "",
+  "description_en": "",
+  "path": "3d/3dmodel",
+  "categories": [
+    "3d-model",
+    "playback",
+    "misc",
+    "collisions"
+  ],
+  "conditions": [
+    {
+      "id": "on-load-model",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnLoadModel",
+      "isTrigger": true,
+      "category": "3d-model"
+    },
+    {
+      "id": "on-load-model-fail",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnLoadModelFail",
+      "isTrigger": true,
+      "category": "3d-model"
+    },
+    {
+      "id": "for-each-mesh",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ForEachMesh",
+      "category": "3d-model"
+    },
+    {
+      "id": "for-each-animation",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ForEachAnimation",
+      "category": "3d-model"
+    },
+    {
+      "id": "playing",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsPlaying",
+      "category": "3d-model"
+    },
+    {
+      "id": "mesh-render-mode",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "MeshRenderMode",
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "hierarchy",
+          "items": [
+            "hierarchy",
+            "isolate"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "collisions-enabled",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsCollisionEnabled",
+      "category": "collisions"
+    }
+  ],
+  "actions": [
+    {
+      "id": "set-file",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetFile",
+      "isAsync": true,
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "file",
+          "type": "projectfile",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "mesh",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "animation",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "playing",
+          "type": "boolean",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "false"
+        },
+        {
+          "id": "progress",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": 0
+        }
+      ]
+    },
+    {
+      "id": "set-file-by-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetFileByName",
+      "isAsync": true,
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "file",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "mesh",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "animation",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "playing",
+          "type": "boolean",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "false"
+        },
+        {
+          "id": "progress",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": 0
+        }
+      ]
+    },
+    {
+      "id": "set-mesh",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetMesh",
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "mesh",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "set-animation",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetAnimation",
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "animation",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "playing",
+          "type": "boolean",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "false"
+        },
+        {
+          "id": "progress",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": 0
+        }
+      ]
+    },
+    {
+      "id": "set-progress",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetProgress",
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "progress",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": 0
+        }
+      ]
+    },
+    {
+      "id": "set-transform",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetTransform",
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "x-transform",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": 0
+        },
+        {
+          "id": "y-transform",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": 0
+        },
+        {
+          "id": "z-transform",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": 0
+        },
+        {
+          "id": "operation",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "set",
+          "items": [
+            "set",
+            "add",
+            "sub",
+            "mul",
+            "div"
+          ]
+        },
+        {
+          "id": "type",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "position",
+          "items": [
+            "position",
+            "rotation",
+            "scale"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "set-mesh-render-mode",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetMeshRenderMode",
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "hierarchy",
+          "items": [
+            "hierarchy",
+            "isolate"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "play",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "Play",
+      "category": "playback",
+      "params": [
+        {
+          "id": "animation",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "progress",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": 0
+        }
+      ]
+    },
+    {
+      "id": "stop",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "Stop",
+      "category": "playback"
+    },
+    {
+      "id": "pause",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "Pause",
+      "category": "playback"
+    },
+    {
+      "id": "resume",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "Resume",
+      "category": "playback"
+    },
+    {
+      "id": "set-collisions-enabled",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetCollisions",
+      "category": "misc",
+      "params": [
+        {
+          "id": "collisions",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "disabled",
+            "enabled"
+          ]
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "error-filename",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "ErrorFilename",
+      "returnType": "string",
+      "category": "3d-model"
+    },
+    {
+      "id": "mesh",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "Mesh",
+      "returnType": "string",
+      "category": "3d-model"
+    },
+    {
+      "id": "animation",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "Animation",
+      "returnType": "string",
+      "category": "3d-model"
+    },
+    {
+      "id": "animation-duration",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "AnimationDuration",
+      "returnType": "number",
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "animation",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "progress",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "Progress",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "mesh-count",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "MeshCount",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "mesh-at",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "MeshAt",
+      "returnType": "string",
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "animation-count",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "AnimationCount",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "animation-at",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "AnimationAt",
+      "returnType": "string",
+      "category": "3d-model",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "cur-mesh",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "CurMesh",
+      "returnType": "string",
+      "category": "3d-model"
+    },
+    {
+      "id": "cur-animation",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "CurAnimation",
+      "returnType": "string",
+      "category": "3d-model"
+    },
+    {
+      "id": "position-x",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "OffsetX",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "position-y",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "OffsetY",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "position-z",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "OffsetZ",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "rotation-x",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "RotationX",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "rotation-y",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "RotationY",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "rotation-z",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "RotationZ",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "scale-x",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "ScaleX",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "scale-y",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "ScaleY",
+      "returnType": "number",
+      "category": "3d-model"
+    },
+    {
+      "id": "scale-z",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "ScaleZ",
+      "returnType": "number",
+      "category": "3d-model"
+    }
+  ]
+}

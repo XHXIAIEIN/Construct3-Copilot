@@ -1,0 +1,1002 @@
+{
+  "id": "timeline",
+  "originalId": "Timeline",
+  "name_zh": "时间轴",
+  "name_en": "Timeline controller",
+  "description_zh": "通过事件来控制时间轴动画，例如开始或停止播放。",
+  "description_en": "Control timelines from event sheets, such as starting and stopping them.",
+  "path": "general/timelineController",
+  "categories": [
+    "timeline",
+    "triggers",
+    "by-timeline",
+    "all",
+    "misc"
+  ],
+  "conditions": [
+    {
+      "id": "on-timeline-started",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnTimelineStarted",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "trigger-on",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "any",
+            "start-only",
+            "resume-only"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "on-timeline-started-by-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnTimelineStartedByName",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline-name",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "trigger-on",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "any",
+            "start-only",
+            "resume-only"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "on-timeline-started-by-tags",
+      "name_zh": "开始播放",
+      "name_en": "On started",
+      "description_zh": "在指定的时间轴开始播放时触发。",
+      "description_en": "Triggered when a specific timeline starts.",
+      "scriptName": "OnTimelineStartedByTags",
+      "isTrigger": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        },
+        {
+          "id": "trigger-on",
+          "type": "combo",
+          "name_zh": "类型",
+          "name_en": "Type",
+          "items": [
+            "any",
+            "start-only",
+            "resume-only"
+          ],
+          "items_i18n": {
+            "any": {
+              "zh": "任意",
+              "en": "Any"
+            },
+            "start-only": {
+              "zh": "起始",
+              "en": "Starting"
+            },
+            "resume-only": {
+              "zh": "恢复",
+              "en": "Resuming"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-any-timeline-started",
+      "name_zh": "任意动画开始播放",
+      "name_en": "On any started",
+      "description_zh": "在任何时间轴动画启动时触发。",
+      "description_en": "Triggered when any timeline starts.",
+      "scriptName": "OnAnyTimelineStarted",
+      "isTrigger": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "trigger-on",
+          "type": "combo",
+          "name_zh": "类型",
+          "name_en": "Type",
+          "items": [
+            "any",
+            "start-only",
+            "resume-only"
+          ],
+          "items_i18n": {
+            "any": {
+              "zh": "任意",
+              "en": "Any"
+            },
+            "start-only": {
+              "zh": "恢复",
+              "en": "Starting"
+            },
+            "resume-only": {
+              "zh": "恢复状态",
+              "en": "Resuming"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-timeline-finished",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnTimelineFinished",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "on-timeline-finished-by-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnTimelineFinishedByName",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline-name",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "on-timeline-finished-by-tags",
+      "name_zh": "播放完成",
+      "name_en": "On finished",
+      "description_zh": "在指定的时间轴播放完成时触发。",
+      "description_en": "Triggered when a specific timeline finishes.",
+      "scriptName": "OnTimelineFinishedByTags",
+      "isTrigger": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        }
+      ]
+    },
+    {
+      "id": "on-any-timeline-finished",
+      "name_zh": "任意动画播放完成",
+      "name_en": "On any finished",
+      "description_zh": "在任何时间轴动画完成时触发。",
+      "description_en": "Triggered when any timeline finishes.",
+      "scriptName": "OnAnyTimelineFinished",
+      "isTrigger": true,
+      "category": "timeline"
+    },
+    {
+      "id": "is-playing",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsPlaying",
+      "isDeprecated": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "is-playing-by-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsPlayingByName",
+      "isDeprecated": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline-name",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "is-playing-by-tags",
+      "name_zh": "正在播放",
+      "name_en": "Is playing",
+      "description_zh": "测试当前是否正在播放指定的时间轴。",
+      "description_en": "Test if a specific timeline is currently playing.",
+      "scriptName": "IsPlayingByTags",
+      "category": "timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        }
+      ]
+    },
+    {
+      "id": "is-any-playing",
+      "name_zh": "任意动画正在播放",
+      "name_en": "Is any playing",
+      "description_zh": "检测任意时间轴动画是否正在播放。",
+      "description_en": "Test if any timeline is currently playing.",
+      "scriptName": "IsAnyPlaying",
+      "category": "timeline"
+    },
+    {
+      "id": "is-paused-by-tags",
+      "name_zh": "正在暂停",
+      "name_en": "Is paused",
+      "description_zh": "检测时间轴是否正处于暂停状态。",
+      "description_en": "Test if a specific timeline is currently paused.",
+      "scriptName": "IsPausedByTags",
+      "category": "timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        }
+      ]
+    },
+    {
+      "id": "is-any-paused",
+      "name_zh": "任意时间轴正在暂停",
+      "name_en": "Is any paused",
+      "description_zh": "检测是否有任意的时间轴动画正在暂停。",
+      "description_en": "Test if any timeline is currently paused.",
+      "scriptName": "IsAnyPaused",
+      "category": "timeline"
+    },
+    {
+      "id": "on-time-set",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnTimeSet",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "on-time-set-by-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnTimeSetByName",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline-name",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "on-time-set-by-tags",
+      "name_zh": "播放时间被更改",
+      "name_en": "On time set",
+      "description_zh": "当指定的时间轴播放时间被更改时触发。",
+      "description_en": "Triggered when the playback time of a specific timeline has been changed.",
+      "scriptName": "OnTimeSetByTags",
+      "isTrigger": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        }
+      ]
+    },
+    {
+      "id": "on-any-keyframe-reached",
+      "name_zh": "触发任意关键帧",
+      "name_en": "On any keyframe reached",
+      "description_zh": "在时间轴播放期间，经过任意主关键帧时触发。",
+      "description_en": "Triggered when any master keyframe has been reached during timeline playback.",
+      "scriptName": "OnAnyKeyframeReached",
+      "isTrigger": true,
+      "category": "timeline"
+    },
+    {
+      "id": "on-keyframe-reached",
+      "name_zh": "触发关键帧",
+      "name_en": "On keyframe reached",
+      "description_zh": "在时间轴播放期间，经过指定标签的主关键帧时触发。",
+      "description_en": "Triggered when a master keyframe with specific tags has been reached during timeline playback.",
+      "scriptName": "OnKeyframeReached",
+      "isTrigger": true,
+      "category": "timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        },
+        {
+          "id": "match",
+          "type": "combo",
+          "name_zh": "匹配规则",
+          "name_en": "Match",
+          "items": [
+            "any-tags",
+            "all-tags"
+          ],
+          "items_i18n": {
+            "any-tags": {
+              "zh": "任意标签",
+              "en": "Any tags"
+            },
+            "all-tags": {
+              "zh": "所有标签",
+              "en": "All tags"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "play-timeline",
+      "name_zh": "播放",
+      "name_en": "Play",
+      "description_zh": "播放时间轴",
+      "description_en": "Play a timeline.",
+      "scriptName": "PlayTimeline",
+      "isAsync": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "时间轴",
+          "name_en": "Timeline"
+        },
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签(可选)",
+          "name_en": "Tags"
+        }
+      ]
+    },
+    {
+      "id": "pause-timeline",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "PauseTimeline",
+      "isDeprecated": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "resume-timeline",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ResumeTimeline",
+      "isDeprecated": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "stop-timeline",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "StopTimeline",
+      "isDeprecated": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "set-timeline-time",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetTimelineTime",
+      "isDeprecated": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "time",
+          "type": "any",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "set-timeline-playback-rate",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetTimelinePlaybackRate",
+      "isDeprecated": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "rate",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "play-timeline-by-name",
+      "name_zh": "播放(根据名称)",
+      "name_en": "Play (by name)",
+      "description_zh": "播放指定时间轴，使用字符串来选择。",
+      "description_en": "Play a timeline, using a string to select it.",
+      "scriptName": "PlayTimelineByName",
+      "isAsync": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline-name",
+          "type": "string",
+          "name_zh": "名称",
+          "name_en": "Name"
+        },
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        }
+      ]
+    },
+    {
+      "id": "pause-timeline-by-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "PauseTimelineByName",
+      "isDeprecated": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline-name",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "resume-timeline-by-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ResumeTimelineByName",
+      "isDeprecated": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline-name",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "stop-timeline-by-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "StopTimelineByName",
+      "isDeprecated": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline-name",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "set-timeline-time-by-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetTimelineTimeByName",
+      "isDeprecated": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline-name",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "time",
+          "type": "any",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "set-timeline-playback-rate-by-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetTimelinePlaybackRateByName",
+      "isDeprecated": true,
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline-name",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "rate",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "pause-timeline-by-tags",
+      "name_zh": "停顿",
+      "name_en": "Pause",
+      "description_zh": "暂停播放所有指定的时间轴。",
+      "description_en": "Pause all timelines with the specified tags.",
+      "scriptName": "PauseTimelineByTags",
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        }
+      ]
+    },
+    {
+      "id": "resume-timeline-by-tags",
+      "name_zh": "恢复播放",
+      "name_en": "Resume",
+      "description_zh": "恢复播放所有指定的时间轴。",
+      "description_en": "Resume all timelines with the specified tags.",
+      "scriptName": "ResumeTimelineByTags",
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        }
+      ]
+    },
+    {
+      "id": "stop-timeline-by-tags",
+      "name_zh": "停止",
+      "name_en": "Stop",
+      "description_zh": "停止播放所有指定的时间轴。",
+      "description_en": "Stop all timelines with the specified tags.",
+      "scriptName": "StopTimelineByTags",
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        }
+      ]
+    },
+    {
+      "id": "set-timeline-time-by-tags",
+      "name_zh": "设置时间",
+      "name_en": "Set time",
+      "description_zh": "设置时间轴的播放时间。",
+      "description_en": "Set the time of all timelines with the specified tags.",
+      "scriptName": "SetTimelineTimeByTags",
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        },
+        {
+          "id": "time",
+          "type": "any",
+          "name_zh": "时间",
+          "name_en": "Time",
+          "initialValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "set-timeline-playback-rate-by-tags",
+      "name_zh": "设置播放速度",
+      "name_en": "Set playback rate",
+      "description_zh": "设置时间轴的播放速度。",
+      "description_en": "Set the playback rate of all timelines with the specified tags.",
+      "scriptName": "SetTimelinePlaybackRateByTags",
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tags"
+        },
+        {
+          "id": "rate",
+          "type": "number",
+          "name_zh": "倍速",
+          "name_en": "Rate",
+          "initialValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "play-all-timelines",
+      "name_zh": "播放全部",
+      "name_en": "Play all",
+      "description_zh": "播放所有尚未播放的时间轴动画。",
+      "description_en": "Play all timelines which are not already playing.",
+      "scriptName": "PlayAllTimelines",
+      "isAsync": true,
+      "category": "all"
+    },
+    {
+      "id": "pause-all-timelines",
+      "name_zh": "暂停全部",
+      "name_en": "Pause all",
+      "description_zh": "暂停所有正在运行的时间轴播放。",
+      "description_en": "Pause all active timelines.",
+      "scriptName": "PauseAllTimelines",
+      "category": "all"
+    },
+    {
+      "id": "resume-all-timelines",
+      "name_zh": "恢复所有",
+      "name_en": "Resume all",
+      "description_zh": "恢复所有正在运行的时间轴播放。",
+      "description_en": "Resume all active timelines.",
+      "scriptName": "ResumeAllTimelines",
+      "category": "all"
+    },
+    {
+      "id": "stop-all-timelines",
+      "name_zh": "停止所有",
+      "name_en": "Stop all",
+      "description_zh": "停止所有正在运行的时间轴播放。",
+      "description_en": "Stop all active timelines.",
+      "scriptName": "StopAllTimelines",
+      "category": "all"
+    },
+    {
+      "id": "set-instance",
+      "name_zh": "设置实例对象",
+      "name_en": "Set instance",
+      "description_zh": "设置下一个时间轴要执行的实例",
+      "description_en": "Set an instance to use in the next timeline playback.",
+      "scriptName": "SetInstance",
+      "category": "misc",
+      "params": [
+        {
+          "id": "object-class",
+          "type": "object",
+          "name_zh": "设置的对象",
+          "name_en": "Object to set"
+        },
+        {
+          "id": "track-id",
+          "type": "string",
+          "name_zh": "轨道ID",
+          "name_en": "Track ID"
+        }
+      ]
+    },
+    {
+      "id": "unset-instances",
+      "name_zh": "取消设置实例",
+      "name_en": "Unset instances",
+      "description_zh": "取消设置下一个时间轴在之前设置的所有实例。",
+      "description_en": "Unset all previously set instances for the next timeline.",
+      "scriptName": "UnsetInstances",
+      "category": "misc"
+    }
+  ],
+  "expressions": [
+    {
+      "id": "time",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "时间轴当前的播放时间，以秒为单位。",
+      "description_en": "The current playback time of a timeline in seconds.",
+      "expressionName": "Time",
+      "returnType": "number",
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "string",
+          "name_zh": "时间轴名称或标签",
+          "name_en": "TimelineNameOrTags"
+        }
+      ]
+    },
+    {
+      "id": "total-time",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "时间线已播放总长度",
+      "description_en": "The total playing time of a timeline in seconds.",
+      "expressionName": "TotalTime",
+      "returnType": "number",
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "string",
+          "name_zh": "时间轴名称或标签",
+          "name_en": "TimelineNameOrTags"
+        }
+      ]
+    },
+    {
+      "id": "progress",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "时间轴当前的播放进度，在 0-1 范围内。",
+      "description_en": "The current playback progress of a timeline in the range 0-1.",
+      "expressionName": "Progress",
+      "returnType": "number",
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "string",
+          "name_zh": "时间轴名称或标签",
+          "name_en": "TimelineNameOrTags"
+        }
+      ]
+    },
+    {
+      "id": "ease",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取曲线的值。",
+      "description_en": "Get the value of an easing function.",
+      "expressionName": "Ease",
+      "returnType": "number",
+      "category": "timeline",
+      "params": [
+        {
+          "id": "ease",
+          "type": "string",
+          "name_zh": "名称",
+          "name_en": "Name"
+        },
+        {
+          "id": "progress",
+          "type": "number",
+          "name_zh": "数值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "keyframe-time",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定时间轴上关键帧的时间。",
+      "description_en": "Get the time of a keyframe in the specified timeline.",
+      "expressionName": "KeyframeTime",
+      "returnType": "number",
+      "category": "timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "string",
+          "name_zh": "时间轴名称或标签",
+          "name_en": "TimelineNameOrTags"
+        },
+        {
+          "id": "keyframe",
+          "type": "string",
+          "name_zh": "关键帧标签",
+          "name_en": "KeyframeTags"
+        }
+      ]
+    },
+    {
+      "id": "keyframe-tags",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在触发器中，相关的关键帧标签。",
+      "description_en": "In a trigger, the tags of the relevant keyframe.",
+      "expressionName": "KeyframeTags",
+      "returnType": "string",
+      "category": "triggers"
+    },
+    {
+      "id": "timeline-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在触发器中，相关的时间轴名称。",
+      "description_en": "In a trigger, the name of the relevant timeline.",
+      "expressionName": "TimelineName",
+      "returnType": "string",
+      "category": "triggers"
+    },
+    {
+      "id": "timeline-tags",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在触发器中，与相关时间轴的标签",
+      "description_en": "In a trigger, the tags of the relevant timeline.",
+      "expressionName": "TimelineTags",
+      "returnType": "string",
+      "category": "triggers"
+    },
+    {
+      "id": "value",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "作用于指定时间轴内的变量的数值。",
+      "description_en": "The value of a value track in the specified timeline",
+      "expressionName": "Value",
+      "returnType": "number",
+      "category": "by-timeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "string",
+          "name_zh": "时间轴名称或标签",
+          "name_en": "TimelineNameOrTags",
+          "initialValue": ""
+        },
+        {
+          "id": "track",
+          "type": "string",
+          "name_zh": "属性轨道名称或ID",
+          "name_en": "ValueTrackNameOrId",
+          "initialValue": ""
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,907 @@
+{
+  "id": "spritefont2",
+  "originalId": "Spritefont2",
+  "name_zh": "位图字体",
+  "name_en": "Sprite font",
+  "description_zh": "使用位图的方式，在画面显示由精灵组成的文字。",
+  "description_en": "Displays some text on the screen using a sprite sheet.",
+  "path": "general/spritefont",
+  "categories": [
+    "appearance",
+    "text"
+  ],
+  "conditions": [
+    {
+      "id": "compare-text",
+      "name_zh": "比较文本",
+      "name_en": "Compare text",
+      "description_zh": "比较此对象的文本内容。",
+      "description_en": "Compare the text in this object.",
+      "scriptName": "CompareText",
+      "category": "text",
+      "params": [
+        {
+          "id": "text-to-compare",
+          "type": "string",
+          "name_zh": "要比较的文字",
+          "name_en": "Text to compare"
+        },
+        {
+          "id": "case-sensitivity",
+          "type": "combo",
+          "name_zh": "区分大小写",
+          "name_en": "Case sensitivity",
+          "items": [
+            "ignore-case",
+            "case-sensitive"
+          ],
+          "items_i18n": {
+            "ignore-case": {
+              "zh": "忽略大小写",
+              "en": "Ignore case"
+            },
+            "case-sensitive": {
+              "zh": "区分大小写",
+              "en": "Case sensitive"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "is-running-typewriter-text",
+      "name_zh": "打字机正在运行",
+      "name_en": "Is running typewriter text",
+      "description_zh": "检测打字机当前是否正在运行。",
+      "description_en": "True if currently writing out typewriter text.",
+      "scriptName": "IsRunningTypewriterText",
+      "category": "text"
+    },
+    {
+      "id": "on-typewriter-text-finished",
+      "name_zh": "打字机效果完成",
+      "name_en": "On typewriter text finished",
+      "description_zh": "当文本将所有文字全部显示完成时触发。",
+      "description_en": "Triggered when typewriter text finishes writing out all the text.",
+      "scriptName": "OnTypewriterTextFinished",
+      "isTrigger": true,
+      "category": "text"
+    },
+    {
+      "id": "has-tag-at-position",
+      "name_zh": "位置存在标签",
+      "name_en": "Has tag at position",
+      "description_zh": "检测指定位置是否包含指定的标签。",
+      "description_en": "Check if a BBcode tag style is set at a given position.",
+      "scriptName": "HasTagAtPosition",
+      "category": "text",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        },
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "set-blend-mode",
+      "name_zh": "设置混合模式",
+      "name_en": "Set blend mode",
+      "description_zh": "将对象与背景混合。如果添加了滤镜，会应用到最后一个效果。",
+      "description_en": "Set the background blend mode for this object.",
+      "scriptName": "SetEffect",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "blend-mode",
+          "type": "combo",
+          "name_zh": "混合模式",
+          "name_en": "Blend mode",
+          "items": [
+            "normal",
+            "additive",
+            "xor",
+            "copy",
+            "destination-over",
+            "source-in",
+            "destination-in",
+            "source-out",
+            "destination-out",
+            "source-atop",
+            "destination-atop",
+            "lighten",
+            "darken",
+            "multiply",
+            "screen"
+          ],
+          "items_i18n": {
+            "normal": {
+              "zh": "正常",
+              "en": "Normal"
+            },
+            "additive": {
+              "zh": "叠加",
+              "en": "Additive"
+            },
+            "xor": {
+              "zh": "重叠消除",
+              "en": "XOR"
+            },
+            "copy": {
+              "zh": "覆盖",
+              "en": "Copy"
+            },
+            "destination-over": {
+              "zh": "背景穿透",
+              "en": "Destination over"
+            },
+            "source-in": {
+              "zh": "前景剪贴",
+              "en": "Source in"
+            },
+            "destination-in": {
+              "zh": "背景剪贴",
+              "en": "Destination in"
+            },
+            "source-out": {
+              "zh": "前景剔除",
+              "en": "Source out"
+            },
+            "destination-out": {
+              "zh": "背景剔除",
+              "en": "Destination out"
+            },
+            "source-atop": {
+              "zh": "前景混合",
+              "en": "Source atop"
+            },
+            "destination-atop": {
+              "zh": "背景混合",
+              "en": "Destination atop"
+            },
+            "lighten": {
+              "zh": "变亮",
+              "en": "Lighten"
+            },
+            "darken": {
+              "zh": "变暗",
+              "en": "Darken"
+            },
+            "multiply": {
+              "zh": "正片叠底",
+              "en": "Multiply"
+            },
+            "screen": {
+              "zh": "滤色",
+              "en": "Screen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-scale",
+      "name_zh": "设置缩放倍数",
+      "name_en": "Set scale",
+      "description_zh": "设置位图字体的缩放比例，使其看起来更大或更小。",
+      "description_en": "Set the scale of the spritefont image.",
+      "scriptName": "SetScale",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "scale",
+          "type": "number",
+          "name_zh": "大小",
+          "name_en": "Scale",
+          "initialValue": "1.0"
+        }
+      ]
+    },
+    {
+      "id": "set-character-spacing",
+      "name_zh": "设置字符间距",
+      "name_en": "Set character spacing",
+      "description_zh": "设置每个字符之间的间距。",
+      "description_en": "Set the spacing between each character.",
+      "scriptName": "SetCharacterSpacing",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "character-spacing",
+          "type": "number",
+          "name_zh": "字符间距",
+          "name_en": "Character spacing"
+        }
+      ]
+    },
+    {
+      "id": "set-line-height",
+      "name_zh": "设置行距",
+      "name_en": "Set line height",
+      "description_zh": "基于默认行高的额外间距偏移量，以像素为单位。 默认行间距是0。",
+      "description_en": "Set the spacing between each line.",
+      "scriptName": "SetLineHeight",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "line-height",
+          "type": "number",
+          "name_zh": "行距",
+          "name_en": "Line height"
+        }
+      ]
+    },
+    {
+      "id": "set-character-width",
+      "name_zh": "设置字符宽度",
+      "name_en": "Set character width",
+      "description_zh": "更改部分字符的宽度。",
+      "description_en": "Change the width of some characters.",
+      "scriptName": "SetCharacterWidth",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "character",
+          "type": "string",
+          "name_zh": "字符",
+          "name_en": "Character"
+        },
+        {
+          "id": "width",
+          "type": "number",
+          "name_zh": "宽度",
+          "name_en": "Width",
+          "initialValue": "8"
+        }
+      ]
+    },
+    {
+      "id": "set-horizontal-alignment",
+      "name_zh": "设置水平对齐",
+      "name_en": "Set horizontal alignment",
+      "description_zh": "设置文本的水平对齐方式。",
+      "description_en": "Set the horizontal alignment of the text.",
+      "scriptName": "SetHAlign",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "horizontal-alignment",
+          "type": "combo",
+          "name_zh": "水平对齐",
+          "name_en": "Horizontal alignment",
+          "items": [
+            "left",
+            "center",
+            "right"
+          ],
+          "items_i18n": {
+            "left": {
+              "zh": "左对齐",
+              "en": "left"
+            },
+            "center": {
+              "zh": "居中",
+              "en": "center"
+            },
+            "right": {
+              "zh": "右对齐",
+              "en": "right"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-vertical-alignment",
+      "name_zh": "设置垂直对齐",
+      "name_en": "Set vertical alignment",
+      "description_zh": "设置文本的垂直对齐方式。",
+      "description_en": "Set the vertical alignment of the text.",
+      "scriptName": "SetVAlign",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "vertical-alignment",
+          "type": "combo",
+          "name_zh": "垂直对齐",
+          "name_en": "Vertical alignment",
+          "items": [
+            "top",
+            "center",
+            "bottom"
+          ],
+          "items_i18n": {
+            "top": {
+              "zh": "顶部",
+              "en": "top"
+            },
+            "center": {
+              "zh": "居中",
+              "en": "center"
+            },
+            "bottom": {
+              "zh": "底部",
+              "en": "bottom"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-wrapping",
+      "name_zh": "设置自动换行",
+      "name_en": "Set wrapping",
+      "description_zh": "换行规则，是以空格所分隔的词组，还是按每个字符。",
+      "description_en": "Set whether to wrap text by space-separated words or by character.",
+      "scriptName": "SetWrapping",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "wrapping",
+          "type": "combo",
+          "name_zh": "自动换行",
+          "name_en": "Wrapping",
+          "items": [
+            "word",
+            "cjk",
+            "character"
+          ],
+          "items_i18n": {
+            "word": {
+              "zh": "词组",
+              "en": "Word"
+            },
+            "character": {
+              "zh": "字符",
+              "en": "Character"
+            },
+            "cjk": {
+              "zh": "亚洲语言",
+              "en": "CJK"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-text",
+      "name_zh": "设置文本",
+      "name_en": "Set text",
+      "description_zh": "设置文本显示的内容。",
+      "description_en": "Set the text of this object.",
+      "scriptName": "SetText",
+      "category": "text",
+      "params": [
+        {
+          "id": "text",
+          "type": "any",
+          "name_zh": "文本",
+          "name_en": "Text",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "append-text",
+      "name_zh": "追加文本",
+      "name_en": "Append text",
+      "description_zh": "将文本添加到现有文本的末尾。",
+      "description_en": "Add text to the end of the existing text.",
+      "scriptName": "AppendText",
+      "category": "text",
+      "params": [
+        {
+          "id": "text",
+          "type": "any",
+          "name_zh": "文本",
+          "name_en": "Text",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "typewriter-text",
+      "name_zh": "逐字显示",
+      "name_en": "Typewriter text",
+      "description_zh": "在一段时间内，逐字显示一串文本，直到完全显示。实现打字机效果。",
+      "description_en": "Set the text over time by starting with an empty string and gradually adding characters.",
+      "scriptName": "TypewriterText",
+      "category": "text",
+      "params": [
+        {
+          "id": "text",
+          "type": "any",
+          "name_zh": "文本",
+          "name_en": "Text",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "duration",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Duration"
+        }
+      ]
+    },
+    {
+      "id": "typewriter-finish",
+      "name_zh": "立即显示完成",
+      "name_en": "Finish typewriter",
+      "description_zh": "强制将打字机效果立即显示所有文本。",
+      "description_en": "Force a typewriter text effect to finish immediately.",
+      "scriptName": "TypewriterFinish",
+      "category": "text"
+    },
+    {
+      "id": "set-read-aloud",
+      "name_zh": "设置文本朗读",
+      "name_en": "Set read aloud",
+      "description_zh": "使用屏幕阅读器时，当文本首次出现或内容发生变化时，允许设备的辅助功能朗读这段文本。",
+      "description_en": "Set whether the text is read aloud while using a screen reader.",
+      "scriptName": "SetReadAloud",
+      "category": "text",
+      "params": [
+        {
+          "id": "enable",
+          "type": "boolean",
+          "name_zh": "启用",
+          "name_en": "Enable"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "characterwidth",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取字符的宽度。",
+      "description_en": "Get the width of a character.",
+      "expressionName": "CharacterWidth",
+      "returnType": "number",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "character",
+          "type": "string",
+          "name_zh": "字符",
+          "name_en": "Character"
+        }
+      ]
+    },
+    {
+      "id": "characterheight",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取字符的高度。",
+      "description_en": "Get the height of a character.",
+      "expressionName": "CharacterHeight",
+      "returnType": "number",
+      "category": "appearance"
+    },
+    {
+      "id": "characterscale",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取字符的缩放比例。",
+      "description_en": "Get the scale of the characters.",
+      "expressionName": "CharacterScale",
+      "returnType": "number",
+      "category": "appearance"
+    },
+    {
+      "id": "characterspacing",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取字符之间的间距。",
+      "description_en": "Get the spacing between characters.",
+      "expressionName": "CharacterSpacing",
+      "returnType": "number",
+      "category": "appearance"
+    },
+    {
+      "id": "lineheight",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取行高",
+      "description_en": "Get the line height.",
+      "expressionName": "LineHeight",
+      "returnType": "number",
+      "category": "appearance"
+    },
+    {
+      "id": "textwidth",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取文本的实际内容宽度，以像素为单位。",
+      "description_en": "Get the width extent of the text in the object in pixels.",
+      "expressionName": "TextWidth",
+      "returnType": "number",
+      "category": "appearance"
+    },
+    {
+      "id": "textheight",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取文本的实际内容高度，以像素为单位。",
+      "description_en": "Get the height extent of the text in the object in pixels.",
+      "expressionName": "TextHeight",
+      "returnType": "number",
+      "category": "appearance"
+    },
+    {
+      "id": "text",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取对象的文本。",
+      "description_en": "Get the object's text.",
+      "expressionName": "Text",
+      "returnType": "string",
+      "category": "text"
+    },
+    {
+      "id": "plaintext",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取带有任何BBcode标记的对象的文本",
+      "description_en": "Get the object's text with any BBcode tags stripped out.",
+      "expressionName": "PlainText",
+      "returnType": "string",
+      "category": "text"
+    },
+    {
+      "id": "tag-at-position",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定位置的BBcode的标签，如果没有则返回空字符串。",
+      "description_en": "Get the BBcode tag style at a given position, or an empty string if none.",
+      "expressionName": "TagAtPosition",
+      "returnType": "string",
+      "category": "text",
+      "params": [
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        },
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        }
+      ]
+    },
+    {
+      "id": "tag-count",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定的标签的数量。",
+      "description_en": "Get the number of BBcode style tags for a specific tag.",
+      "expressionName": "TagCount",
+      "returnType": "number",
+      "category": "text",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "tag-x",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定标签的X坐标。",
+      "description_en": "Get X co-ordinate of a BBcode style tag.",
+      "expressionName": "TagX",
+      "returnType": "number",
+      "category": "text",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "tag-y",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定标签的Y坐标。",
+      "description_en": "Get Y co-ordinate of a BBcode style tag.",
+      "expressionName": "TagY",
+      "returnType": "number",
+      "category": "text",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "tag-width",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定的标签的宽度。",
+      "description_en": "Get width of a BBcode style tag.",
+      "expressionName": "TagWidth",
+      "returnType": "number",
+      "category": "text",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "tag-height",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定的标签的高度。",
+      "description_en": "Get height of a BBcode style tag.",
+      "expressionName": "TagHeight",
+      "returnType": "number",
+      "category": "text",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    }
+  ],
+  "properties": [
+    {
+      "id": "text",
+      "name_zh": "文本",
+      "name_en": "Text",
+      "description_zh": "要显示的初始文本。",
+      "description_en": "The initial text to display."
+    },
+    {
+      "id": "edit-image",
+      "name_zh": "位图字体",
+      "name_en": "Sprite font",
+      "description_zh": "单击以编辑对象的位图字体。",
+      "description_en": "Click to edit the object's spritefont."
+    },
+    {
+      "id": "character-width",
+      "name_zh": "字符宽度",
+      "name_en": "Character width",
+      "description_zh": "图像中每个单元格的宽度。",
+      "description_en": "Width of each cell in the image."
+    },
+    {
+      "id": "character-height",
+      "name_zh": "字符高度",
+      "name_en": "Character height",
+      "description_zh": "图像中每个单元格的高度。",
+      "description_en": "Height of each cell in the image."
+    },
+    {
+      "id": "character-set",
+      "name_zh": "字符集",
+      "name_en": "Character set",
+      "description_zh": "图像每个位置对应的字符，从左上角开始。",
+      "description_en": "List of characters in the spritefont image, starting in the top-left."
+    },
+    {
+      "id": "spacing-data",
+      "name_zh": "间距数据",
+      "name_en": "Spacing data",
+      "description_zh": "用于微调单个字符宽度，这是一组JSON数据。",
+      "description_en": "Data describing individual character widths in JSON format."
+    },
+    {
+      "id": "scale",
+      "name_zh": "缩放比例",
+      "name_en": "Scale",
+      "description_zh": "绘制文字时，对其进行缩放。",
+      "description_en": "Amount to scale the drawn text by."
+    },
+    {
+      "id": "character-spacing",
+      "name_zh": "字符间距",
+      "name_en": "Character spacing",
+      "description_zh": "在字符之间添加的额外像素宽度。",
+      "description_en": "Extra pixel width to add between displayed characters."
+    },
+    {
+      "id": "line-height",
+      "name_zh": "行距",
+      "name_en": "Line height",
+      "description_zh": "基于默认行高的额外间距偏移量，以像素为单位。 默认行间距是0。",
+      "description_en": "Offset to the default line height, in pixels. 0 is default line height."
+    },
+    {
+      "id": "horizontal-alignment",
+      "name_zh": "水平对齐",
+      "name_en": "Horizontal alignment",
+      "description_zh": "文本在边框内的水平对齐方式。",
+      "description_en": "Horizontal alignment of the text inside its bounding box.",
+      "items": {
+        "left": {
+          "zh": "左对齐",
+          "en": "Left"
+        },
+        "center": {
+          "zh": "居中",
+          "en": "Center"
+        },
+        "right": {
+          "zh": "右对齐",
+          "en": "Right"
+        }
+      }
+    },
+    {
+      "id": "vertical-alignment",
+      "name_zh": "垂直对齐",
+      "name_en": "Vertical alignment",
+      "description_zh": "文本在边框内的垂直对齐方式。",
+      "description_en": "Vertical alignment of the text inside its bounding box.",
+      "items": {
+        "top": {
+          "zh": "顶部",
+          "en": "Top"
+        },
+        "center": {
+          "zh": "居中",
+          "en": "Center"
+        },
+        "bottom": {
+          "zh": "底部",
+          "en": "Bottom"
+        }
+      }
+    },
+    {
+      "id": "wrapping",
+      "name_zh": "自动换行",
+      "name_en": "Wrapping",
+      "description_zh": "当内容超出对象宽度时，自动换行的截断规则。以空格分隔的单词，或按字符截断。选择亚洲语言时，会尽可能避免标点符号换行。",
+      "description_en": "Wrap text by space-separated words or by character.",
+      "items": {
+        "word": {
+          "zh": "词组",
+          "en": "Word"
+        },
+        "character": {
+          "zh": "字符",
+          "en": "Character"
+        },
+        "cjk": {
+          "zh": "亚洲语言",
+          "en": "CJK"
+        }
+      }
+    },
+    {
+      "id": "initially-visible",
+      "name_zh": "初始可见",
+      "name_en": "Initially visible",
+      "description_zh": "在场景开始时，对象是否可见。",
+      "description_en": "Choose whether the object is visible when the layout starts."
+    },
+    {
+      "id": "origin",
+      "name_zh": "图像原点",
+      "name_en": "Origin",
+      "description_zh": "选择图像原点的位置。",
+      "description_en": "Choose the location of the origin in the object.",
+      "items": {
+        "top-left": {
+          "zh": "左上",
+          "en": "Top-left"
+        },
+        "top": {
+          "zh": "顶部",
+          "en": "Top"
+        },
+        "top-right": {
+          "zh": "右上",
+          "en": "Top-right"
+        },
+        "left": {
+          "zh": "左",
+          "en": "Left"
+        },
+        "center": {
+          "zh": "中心",
+          "en": "Center"
+        },
+        "right": {
+          "zh": "右",
+          "en": "Right"
+        },
+        "bottom-left": {
+          "zh": "左下",
+          "en": "Bottom-left"
+        },
+        "bottom": {
+          "zh": "底部",
+          "en": "Bottom"
+        },
+        "bottom-right": {
+          "zh": "右下",
+          "en": "Bottom-right"
+        }
+      }
+    },
+    {
+      "id": "enable-bbcode",
+      "name_zh": "启用富文本",
+      "name_en": "Enable BBCode",
+      "description_zh": "在文本中使用 BBCode 标签，例如[scale=2]更大的文字[/scale]。",
+      "description_en": "Allow use of BBCode tags in the text, e.g. [scale=2]big text[/scale]."
+    },
+    {
+      "id": "accessibility",
+      "name_zh": "辅助功能",
+      "name_en": "Accessibility",
+      "description_zh": "辅助功能的设置。",
+      "description_en": "Settings for accessibility features."
+    },
+    {
+      "id": "read-aloud",
+      "name_zh": "朗读内容",
+      "name_en": "Read aloud",
+      "description_zh": "使用屏幕阅读器时，当文本首次出现或内容发生变化时，允许设备的辅助功能朗读这段文本。",
+      "description_en": "Check for text to be read aloud when it appears or changes while using a screen reader."
+    }
+  ]
+}

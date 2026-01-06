@@ -1,0 +1,933 @@
+{
+  "id": "gamepad",
+  "originalId": "gamepad",
+  "name_zh": "手柄",
+  "name_en": "Gamepad",
+  "description_zh": "通过外设游戏手柄接收游戏输入。",
+  "description_en": "Receive input from a gamepad device, e.g. console controllers.",
+  "path": "input/gamepad",
+  "categories": [
+    "gamepad",
+    "gamepads",
+    "input",
+    "raw-input"
+  ],
+  "conditions": [
+    {
+      "id": "on-gamepad-connected",
+      "name_zh": "连接成功",
+      "name_en": "On gamepad connected",
+      "description_zh": "游戏手柄连接到设备时触发。",
+      "description_en": "Triggered when a gamepad device is connected to the computer.",
+      "scriptName": "OnGamepadConnected",
+      "isTrigger": true,
+      "category": "gamepads"
+    },
+    {
+      "id": "on-gamepad-disconnected",
+      "name_zh": "断开连接",
+      "name_en": "On gamepad disconnected",
+      "description_zh": "游戏手柄与设备断开连接时触发。",
+      "description_en": "Triggered when a gamepad device is disconnected from the computer.",
+      "scriptName": "OnGamepadDisconnected",
+      "isTrigger": true,
+      "category": "gamepads"
+    },
+    {
+      "id": "has-gamepads",
+      "name_zh": "已连接",
+      "name_en": "Has gamepads",
+      "description_zh": "检测游戏手柄是否已连接并处于活动状态。已连接的手柄被视为激活状态前，可能需要按下任意按钮。",
+      "description_en": "Test if any gamepad is connected and active. A button may need to be pressed before a gamepad counts as active.",
+      "scriptName": "HasGamepads",
+      "category": "gamepads"
+    },
+    {
+      "id": "gamepads-are-supported",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SupportsGamepad",
+      "isDeprecated": true,
+      "category": "gamepads"
+    },
+    {
+      "id": "gamepad-supports-vibration-type",
+      "name_zh": "手柄是否支持振动",
+      "name_en": "Gamepad supports vibration type",
+      "description_zh": "检查当前连接的手柄是否支持特定的振动类型。",
+      "description_en": "Check if a currently connected gamepad supports a specific vibration type.",
+      "scriptName": "GamepadSupportsVibrationType",
+      "category": "gamepads",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "vibration-type",
+          "type": "combo",
+          "name_zh": "振动类型",
+          "name_en": "Vibration type",
+          "items": [
+            "dual-rumble",
+            "trigger-rumble"
+          ],
+          "items_i18n": {
+            "dual-rumble": {
+              "zh": "双马达",
+              "en": "Dual rumble"
+            },
+            "trigger-rumble": {
+              "zh": "单马达",
+              "en": "Trigger rumble"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "is-button-down",
+      "name_zh": "按住按钮",
+      "name_en": "Is button down",
+      "description_zh": "检测对应的手柄是否按住某个按钮。",
+      "description_en": "Test if a gamepad button is currently held down.",
+      "scriptName": "IsButtonDown",
+      "category": "input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "button",
+          "type": "combo",
+          "name_zh": "按钮",
+          "name_en": "Button",
+          "items": [
+            "button-a",
+            "button-b",
+            "button-x",
+            "button-y",
+            "left-shoulder-button",
+            "right-shoulder-button",
+            "left-shoulder-trigger",
+            "right-shoulder-trigger",
+            "back-view",
+            "start-menu",
+            "left-analog-button",
+            "right-analog-button",
+            "d-pad-up",
+            "d-pad-down",
+            "d-pad-left",
+            "d-pad-right"
+          ],
+          "items_i18n": {
+            "button-a": {
+              "zh": "按钮 A",
+              "en": "Button A"
+            },
+            "button-b": {
+              "zh": "按钮 B",
+              "en": "Button B"
+            },
+            "button-x": {
+              "zh": "按钮 X",
+              "en": "Button X"
+            },
+            "button-y": {
+              "zh": "按钮 Y",
+              "en": "Button Y"
+            },
+            "left-shoulder-button": {
+              "zh": "左肩 L1 / LB",
+              "en": "Left shoulder button"
+            },
+            "right-shoulder-button": {
+              "zh": "右肩 R1 / RB",
+              "en": "Right shoulder button"
+            },
+            "left-shoulder-trigger": {
+              "zh": "左肩 L2 / LT",
+              "en": "Left shoulder trigger"
+            },
+            "right-shoulder-trigger": {
+              "zh": "右肩 R2 / RT",
+              "en": "Right shoulder trigger"
+            },
+            "back-view": {
+              "zh": "返回 / 查看",
+              "en": "Back / View"
+            },
+            "start-menu": {
+              "zh": "开始 / 菜单",
+              "en": "Start / Menu"
+            },
+            "left-analog-button": {
+              "zh": "左摇杆按钮",
+              "en": "Left analog button"
+            },
+            "right-analog-button": {
+              "zh": "右摇杆按钮",
+              "en": "Right analog button"
+            },
+            "d-pad-up": {
+              "zh": "十字键上",
+              "en": "D-pad up"
+            },
+            "d-pad-down": {
+              "zh": "十字键下",
+              "en": "D-pad down"
+            },
+            "d-pad-left": {
+              "zh": "十字键左",
+              "en": "D-pad left"
+            },
+            "d-pad-right": {
+              "zh": "十字键右",
+              "en": "D-pad right"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "compare-axis",
+      "name_zh": "比较轴",
+      "name_en": "Compare axis",
+      "description_zh": "测试其中一个游戏手柄轴的值。",
+      "description_en": "Test the value of one of the gamepad's axes.",
+      "scriptName": "CompareAxis",
+      "category": "input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "axis",
+          "type": "combo",
+          "name_zh": "轴",
+          "name_en": "Axis",
+          "items": [
+            "left-analog-x-axis",
+            "left-analog-y-axis",
+            "right-analog-x-axis",
+            "right-analog-y-axis"
+          ],
+          "items_i18n": {
+            "left-analog-x-axis": {
+              "zh": "左摇杆X轴",
+              "en": "Left analog X axis"
+            },
+            "left-analog-y-axis": {
+              "zh": "左摇杆Y轴",
+              "en": "Left analog Y axis"
+            },
+            "right-analog-x-axis": {
+              "zh": "右摇杆X轴",
+              "en": "Right analog X axis"
+            },
+            "right-analog-y-axis": {
+              "zh": "右摇杆Y轴",
+              "en": "Right analog Y axis"
+            }
+          }
+        },
+        {
+          "id": "comparison",
+          "type": "cmp",
+          "name_zh": "比较",
+          "name_en": "Comparison"
+        },
+        {
+          "id": "value",
+          "type": "number",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "on-button-pressed",
+      "name_zh": "按下按钮",
+      "name_en": "On button pressed",
+      "description_zh": "手柄按下指定按钮时触发。",
+      "description_en": "Triggered when a gamepad button is pressed.",
+      "scriptName": "OnButtonDown",
+      "category": "input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "button",
+          "type": "combo",
+          "name_zh": "按钮",
+          "name_en": "Button",
+          "items": [
+            "button-a",
+            "button-b",
+            "button-x",
+            "button-y",
+            "left-shoulder-button",
+            "right-shoulder-button",
+            "left-shoulder-trigger",
+            "right-shoulder-trigger",
+            "back-view",
+            "start-menu",
+            "left-analog-button",
+            "right-analog-button",
+            "d-pad-up",
+            "d-pad-down",
+            "d-pad-left",
+            "d-pad-right"
+          ],
+          "items_i18n": {
+            "button-a": {
+              "zh": "按钮 A",
+              "en": "Button A"
+            },
+            "button-b": {
+              "zh": "按钮 B",
+              "en": "Button B"
+            },
+            "button-x": {
+              "zh": "按钮 X",
+              "en": "Button X"
+            },
+            "button-y": {
+              "zh": "按钮 Y",
+              "en": "Button Y"
+            },
+            "left-shoulder-button": {
+              "zh": "左肩 L1 / LB",
+              "en": "Left shoulder button"
+            },
+            "right-shoulder-button": {
+              "zh": "右肩 R1 / RB",
+              "en": "Right shoulder button"
+            },
+            "left-shoulder-trigger": {
+              "zh": "左肩 L2 / LT",
+              "en": "Left shoulder trigger"
+            },
+            "right-shoulder-trigger": {
+              "zh": "右肩 R2 / RT",
+              "en": "Right shoulder trigger"
+            },
+            "back-view": {
+              "zh": "返回 / 查看",
+              "en": "Back / View"
+            },
+            "start-menu": {
+              "zh": "开始 / 菜单",
+              "en": "Start / Menu"
+            },
+            "left-analog-button": {
+              "zh": "左摇杆按钮",
+              "en": "Left analog button"
+            },
+            "right-analog-button": {
+              "zh": "右摇杆按钮",
+              "en": "Right analog button"
+            },
+            "d-pad-up": {
+              "zh": "十字键上",
+              "en": "D-pad up"
+            },
+            "d-pad-down": {
+              "zh": "十字键下",
+              "en": "D-pad down"
+            },
+            "d-pad-left": {
+              "zh": "十字键左",
+              "en": "D-pad left"
+            },
+            "d-pad-right": {
+              "zh": "十字键右",
+              "en": "D-pad right"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-button-released",
+      "name_zh": "松开按钮",
+      "name_en": "On button released",
+      "description_zh": "释放游戏手柄按钮时触发。",
+      "description_en": "Triggered when a gamepad button is released.",
+      "scriptName": "OnButtonUp",
+      "category": "input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "button",
+          "type": "combo",
+          "name_zh": "按钮",
+          "name_en": "Button",
+          "items": [
+            "button-a",
+            "button-b",
+            "button-x",
+            "button-y",
+            "left-shoulder-button",
+            "right-shoulder-button",
+            "left-shoulder-trigger",
+            "right-shoulder-trigger",
+            "back-view",
+            "start-menu",
+            "left-analog-button",
+            "right-analog-button",
+            "d-pad-up",
+            "d-pad-down",
+            "d-pad-left",
+            "d-pad-right"
+          ],
+          "items_i18n": {
+            "button-a": {
+              "zh": "按钮 A",
+              "en": "Button A"
+            },
+            "button-b": {
+              "zh": "按钮 B",
+              "en": "Button B"
+            },
+            "button-x": {
+              "zh": "按钮 X",
+              "en": "Button X"
+            },
+            "button-y": {
+              "zh": "按钮 Y",
+              "en": "Button Y"
+            },
+            "left-shoulder-button": {
+              "zh": "左肩 L1 / LB",
+              "en": "Left shoulder button"
+            },
+            "right-shoulder-button": {
+              "zh": "右肩 R1 / RB",
+              "en": "Right shoulder button"
+            },
+            "left-shoulder-trigger": {
+              "zh": "左肩 L2 / LT",
+              "en": "Left shoulder trigger"
+            },
+            "right-shoulder-trigger": {
+              "zh": "右肩 R2 / RT",
+              "en": "Right shoulder trigger"
+            },
+            "back-view": {
+              "zh": "返回 / 查看",
+              "en": "Back / View"
+            },
+            "start-menu": {
+              "zh": "开始 / 菜单",
+              "en": "Start / Menu"
+            },
+            "left-analog-button": {
+              "zh": "左摇杆按钮",
+              "en": "Left analog button"
+            },
+            "right-analog-button": {
+              "zh": "右摇杆按钮",
+              "en": "Right analog button"
+            },
+            "d-pad-up": {
+              "zh": "十字键上",
+              "en": "D-pad up"
+            },
+            "d-pad-down": {
+              "zh": "十字键下",
+              "en": "D-pad down"
+            },
+            "d-pad-left": {
+              "zh": "十字键左",
+              "en": "D-pad left"
+            },
+            "d-pad-right": {
+              "zh": "十字键右",
+              "en": "D-pad right"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-any-button-pressed",
+      "name_zh": "按下任意按钮",
+      "name_en": "On any button pressed",
+      "description_zh": "手柄按下任意按钮时触发。",
+      "description_en": "Triggered when any button on a gamepad is pressed.",
+      "scriptName": "OnAnyButtonDown",
+      "category": "input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        }
+      ]
+    },
+    {
+      "id": "on-any-button-released",
+      "name_zh": "松开任意按钮",
+      "name_en": "On any button released",
+      "description_zh": "指定的游戏手柄松开任意按钮时触发。",
+      "description_en": "Triggered when any button on a gamepad is released.",
+      "scriptName": "OnAnyButtonUp",
+      "category": "input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        }
+      ]
+    },
+    {
+      "id": "is-button-index-down",
+      "name_zh": "按下索引按钮",
+      "name_en": "Is button index down",
+      "description_zh": "检测手柄是否按住索引对应的按钮。",
+      "description_en": "Test if a gamepad button is currently held down, by its numerical index.",
+      "scriptName": "IsButtonIndexDown",
+      "category": "input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "button-index",
+          "type": "number",
+          "name_zh": "按钮索引值",
+          "name_en": "Button index"
+        }
+      ]
+    },
+    {
+      "id": "on-button-index-pressed",
+      "name_zh": "按下索引按钮",
+      "name_en": "On button index pressed",
+      "description_zh": "手柄按下索引对应的按钮时触发。",
+      "description_en": "Triggered when a gamepad button is pressed, by its numerical index.",
+      "scriptName": "OnButtonIndexDown",
+      "category": "input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "button-index",
+          "type": "number",
+          "name_zh": "按钮索引",
+          "name_en": "Button index"
+        }
+      ]
+    },
+    {
+      "id": "on-button-index-released",
+      "name_zh": "松开索引按钮",
+      "name_en": "On button index released",
+      "description_zh": "指定的游戏手柄松开索引编号所对应的某个按钮时触发。",
+      "description_en": "Triggered when a gamepad button is released, by its numerical index.",
+      "scriptName": "OnButtonIndexUp",
+      "category": "input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "button-index",
+          "type": "number",
+          "name_zh": "按钮索引",
+          "name_en": "Button index"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "gamepad-vibrate",
+      "name_zh": "振动 (双马达)",
+      "name_en": "Vibrate (dual rumble)",
+      "description_zh": "激活游戏手柄内的双振动马达，向用户提供物理触觉反馈。",
+      "description_en": "Rumble a gamepad using its dual rumble vibration motors, where supported.",
+      "scriptName": "VibrateDualRumble",
+      "category": "gamepad",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "duration",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Duration",
+          "initialValue": "500"
+        },
+        {
+          "id": "weak-magnitude",
+          "type": "number",
+          "name_zh": "弱振幅",
+          "name_en": "Weak magnitude",
+          "initialValue": "100"
+        },
+        {
+          "id": "strong-magnitude",
+          "type": "number",
+          "name_zh": "强振幅",
+          "name_en": "Strong magnitude",
+          "initialValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "gamepad-vibrate-trigger-rumble",
+      "name_zh": "振动 (扳机)",
+      "name_en": "Vibrate (trigger rumble)",
+      "description_zh": "激活游戏手柄内的振动马达，向用户提供物理触觉反馈。",
+      "description_en": "Rumble a gamepad using its trigger rumble vibration motors, where supported.",
+      "scriptName": "VibrateTriggerRumble",
+      "category": "gamepad",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "duration",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Duration",
+          "initialValue": "500"
+        },
+        {
+          "id": "weak-magnitude",
+          "type": "number",
+          "name_zh": "弱振幅",
+          "name_en": "Weak magnitude",
+          "initialValue": "100"
+        },
+        {
+          "id": "strong-magnitude",
+          "type": "number",
+          "name_zh": "强振幅",
+          "name_en": "Strong magnitude",
+          "initialValue": "100"
+        },
+        {
+          "id": "left-trigger",
+          "type": "number",
+          "name_zh": "左扳机键",
+          "name_en": "Left trigger",
+          "initialValue": "100"
+        },
+        {
+          "id": "right-trigger",
+          "type": "number",
+          "name_zh": "右扳机键",
+          "name_en": "Right trigger",
+          "initialValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "reset-vibrate",
+      "name_zh": "重置振动",
+      "name_en": "Reset vibration",
+      "description_zh": "取消游戏手柄当前任何的振动效果。",
+      "description_en": "Cancel any current rumble effect on a gamepad.",
+      "scriptName": "ResetVibrate",
+      "category": "gamepad",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄序列",
+          "name_en": "Gamepad"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "gamepadcount",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前已连接并处于活动状态的游戏手柄数量。",
+      "description_en": "The number of currently connected and active gamepads.",
+      "expressionName": "GamepadCount",
+      "returnType": "number",
+      "category": "gamepad"
+    },
+    {
+      "id": "gamepadid",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "用于标识游戏手柄的字符串，例如生产商和型号。",
+      "description_en": "A string identifying the gamepad, e.g. manufacturer and model.",
+      "expressionName": "GamepadID",
+      "returnType": "string",
+      "category": "gamepad",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄",
+          "name_en": "Gamepad"
+        }
+      ]
+    },
+    {
+      "id": "gamepad-index",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在手柄相关的条件中，表示对应的手柄索引。在 '手柄连接或断开连接' 的条件，或者使用 '任意按钮按下/松开' 且游戏手柄索引为 -1 时使用。",
+      "description_en": "In an On gamepad connected/disconnected trigger, or when using On any button pressed/released with a gamepad of -1, this expression indicates the index of the corresponding gamepad.",
+      "expressionName": "GamepadIndex",
+      "returnType": "number",
+      "category": "gamepad"
+    },
+    {
+      "id": "gamepadaxes",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "GamepadAxes",
+      "returnType": "string",
+      "isDeprecated": true,
+      "category": "gamepad",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "gamepadbuttons",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "GamepadButtons",
+      "returnType": "string",
+      "isDeprecated": true,
+      "category": "gamepad",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "button",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回指定按钮的压力状态，返回值在 0 到 100 之间。对于压力不敏感的按钮，0 表示未按下，100 表示已按下。",
+      "description_en": "Return button input from 0 to 100 for a button index.",
+      "expressionName": "Button",
+      "returnType": "number",
+      "category": "gamepad",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "按钮索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "axis",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "对于轴索引，返回轴输入从-100到100。",
+      "description_en": "Return axis input from -100 to 100 for an axis index.",
+      "expressionName": "Axis",
+      "returnType": "number",
+      "category": "gamepad",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "轴",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "lastbutton",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "最后一次被按下或松开的游戏手柄按钮的索引。",
+      "description_en": "Return index of last gamepad button pressed or released.",
+      "expressionName": "LastButton",
+      "returnType": "number",
+      "isDeprecated": true,
+      "category": "gamepad",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄",
+          "name_en": "Gamepad"
+        }
+      ]
+    },
+    {
+      "id": "buttonindex",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回最后一次被按下或松开的手柄按钮的索引值。",
+      "description_en": "Return index of last gamepad button pressed or released.",
+      "expressionName": "ButtonIndex",
+      "returnType": "number",
+      "category": "gamepad"
+    },
+    {
+      "id": "rawbutton",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "对于按钮索引，返回0到100的原始按钮输入。",
+      "description_en": "Return raw button input from 0 to 100 for a button index.",
+      "expressionName": "RawButton",
+      "returnType": "number",
+      "category": "raw-input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "按钮",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "rawaxis",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "对于轴索引，将原始轴输入从-100返回到100。",
+      "description_en": "Return raw axis input from -100 to 100 for an axis index.",
+      "expressionName": "RawAxis",
+      "returnType": "number",
+      "category": "raw-input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄",
+          "name_en": "Gamepad"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "轴",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "rawbuttoncount",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回原始输入中的按钮数。",
+      "description_en": "Return number of buttons in raw input.",
+      "expressionName": "RawButtonCount",
+      "returnType": "number",
+      "category": "raw-input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄",
+          "name_en": "Gamepad"
+        }
+      ]
+    },
+    {
+      "id": "rawaxiscount",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回原始输入中的轴数。",
+      "description_en": "Return number of axes in raw input.",
+      "expressionName": "RawAxisCount",
+      "returnType": "number",
+      "category": "raw-input",
+      "params": [
+        {
+          "id": "gamepad",
+          "type": "number",
+          "name_zh": "手柄",
+          "name_en": "Gamepad"
+        }
+      ]
+    }
+  ],
+  "properties": [
+    {
+      "id": "analog-deadzone",
+      "name_zh": "模拟死区",
+      "name_en": "Analog deadzone",
+      "description_zh": "如果虚拟摇杆的方向值(0-100)低于此范围则作为0返回，以进行平滑输入。",
+      "description_en": "Analog stick values (0-100) below this range are returned as zero to smooth the input."
+    }
+  ]
+}

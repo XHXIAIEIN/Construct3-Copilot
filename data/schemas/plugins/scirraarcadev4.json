@@ -1,0 +1,40 @@
+{
+  "id": "scirraarcadev4",
+  "originalId": "ScirraArcadeV4",
+  "name_zh": "",
+  "name_en": "",
+  "description_zh": "",
+  "description_en": "",
+  "path": "deprecated/arcadev4",
+  "categories": [
+    "arcade"
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "id": "submit-score",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SubmitScore",
+      "category": "arcade",
+      "params": [
+        {
+          "id": "leaderboard-id",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "score",
+          "type": "number",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    }
+  ],
+  "expressions": [],
+  "productTypes": "games"
+}

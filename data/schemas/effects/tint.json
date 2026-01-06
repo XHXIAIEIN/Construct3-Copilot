@@ -1,0 +1,30 @@
+{
+  "id": "tint",
+  "name_zh": "颜色叠加",
+  "name_en": "Tint",
+  "description_zh": "调整图像的RGB级别。",
+  "description_en": "Adjust the RGB levels of the image.",
+  "category": "color",
+  "author": "Scirra",
+  "supportedRenderers": [
+    "webgl",
+    "webgpu"
+  ],
+  "blendsBackground": false,
+  "preservesOpaqueness": true,
+  "animated": false,
+  "parameters": [
+    {
+      "id": "color",
+      "type": "color",
+      "name_zh": "color",
+      "name_en": "color",
+      "initialValue": [
+        1,
+        0,
+        0
+      ],
+      "interpolatable": true
+    }
+  ]
+}

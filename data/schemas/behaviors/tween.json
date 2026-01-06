@@ -1,0 +1,1323 @@
+{
+  "id": "tween",
+  "originalId": "Tween",
+  "name_zh": "补间动画",
+  "name_en": "Tween",
+  "description_zh": "让对象的属性在一段时间内逐渐变化。",
+  "description_en": "Animate the properties of an object over time",
+  "path": "general/tween",
+  "categories": [
+    "playback",
+    "setters",
+    "one-property",
+    "two-properties",
+    "value"
+  ],
+  "conditions": [
+    {
+      "id": "on-tweens-finished",
+      "name_zh": "播放完成",
+      "name_en": "On finished",
+      "description_zh": "指定标签的补间动画播放完成时触发。",
+      "description_en": "Triggered when a tween with a matching tag finishes.",
+      "scriptName": "OnTweensFinished",
+      "isTrigger": true,
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "on-any-tweens-finished",
+      "name_zh": "任意播放完成",
+      "name_en": "On any finished",
+      "description_zh": "任意补间动画播放完成时触发。",
+      "description_en": "Triggered when any tween finishes.",
+      "scriptName": "OnAnyTweensFinished",
+      "isTrigger": true
+    },
+    {
+      "id": "on-tweens-released",
+      "name_zh": "播放中止",
+      "name_en": "On released",
+      "description_zh": "当具有匹配标签的补间动画被释放时触发。如对象在播放动画期间删除或取消。",
+      "description_en": "Triggered when a tween with a matching tag is released.",
+      "scriptName": "OnTweensReleased",
+      "isTrigger": true,
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "on-any-tweens-released",
+      "name_zh": "任意播放中止",
+      "name_en": "On any released",
+      "description_zh": "任意的补间动画被释放时触发。如在播放动画期间被停止。",
+      "description_en": "Triggered when any tween is released.",
+      "scriptName": "OnAnyTweensReleased",
+      "isTrigger": true
+    },
+    {
+      "id": "is-playing",
+      "name_zh": "正在播放",
+      "name_en": "Is playing",
+      "description_zh": "检查指定标签的补间动画当前是否正在播放。",
+      "description_en": "Test if a tween with a matching tag is playing.",
+      "scriptName": "IsPlaying",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "is-any-playing",
+      "name_zh": "任意正在播放",
+      "name_en": "Is any playing",
+      "description_zh": "检测当前是否正在播放任意补间动画。",
+      "description_en": "Test if any tween is currently playing.",
+      "scriptName": "IsAnyPlaying"
+    },
+    {
+      "id": "is-paused",
+      "name_zh": "正在暂停",
+      "name_en": "Is paused",
+      "description_zh": "检测含有匹配标签的补间动画当前是否暂停。",
+      "description_en": "Test if a tween with a matching tag is paused.",
+      "scriptName": "IsPaused",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "is-any-paused",
+      "name_zh": "任意正在暂停",
+      "name_en": "Is any paused",
+      "description_zh": "检测任意补间动画当前是否暂停。",
+      "description_en": "Test if any tween is currently paused.",
+      "scriptName": "IsAnyPaused"
+    },
+    {
+      "id": "is-ping-pong",
+      "name_zh": "正在反转播放",
+      "name_en": "Is ping-pong",
+      "description_zh": "检测指定标签的补间动画是否正在返程播放，需要开启 '反转播放' 属性。",
+      "description_en": "Test for the ping-pong state of the tweens with the matching tag. If a tween is not set to ping-pong, the condition is always false.",
+      "scriptName": "IsPingPong",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "start",
+            "end"
+          ],
+          "items_i18n": {
+            "start": {
+              "zh": "开始",
+              "en": "start"
+            },
+            "end": {
+              "zh": "结束",
+              "en": "end"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "is-any-ping-pong",
+      "name_zh": "任意正在反转",
+      "name_en": "Is any ping-pong",
+      "description_zh": "检测任意补间动画的返程状态，需要开启 '反转播放' 属性。",
+      "description_en": "Test for the ping-pong state of any tween. If a tween is not set to ping-pong, the condition is always false.",
+      "scriptName": "IsAnyPingPong",
+      "params": [
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "start",
+            "end"
+          ],
+          "items_i18n": {
+            "start": {
+              "zh": "开始",
+              "en": "start"
+            },
+            "end": {
+              "zh": "结束",
+              "en": "end"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-any-tween-looped",
+      "name_zh": "任意到达循环",
+      "name_en": "On any looped",
+      "description_zh": "任意补间动画到达循环时触发。",
+      "description_en": "Triggered when any tween loops for any reason.",
+      "scriptName": "OnAnyTweenLoop",
+      "isTrigger": true
+    },
+    {
+      "id": "on-tweens-looped",
+      "name_zh": "到达循环",
+      "name_en": "On looped",
+      "description_zh": "指定标签的补间动画进入循环播放时触发。",
+      "description_en": "Triggered when a tween with a matching tag loops for any reason.",
+      "scriptName": "OnTweensLoop",
+      "isTrigger": true,
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "on-any-tween-ping-pong",
+      "name_zh": "任意开始反转",
+      "name_en": "On any ping-pong",
+      "description_zh": "任意补间动画进入反转播放状态时触发。",
+      "description_en": "Triggered when any tween ping-pongs.",
+      "scriptName": "OnAnyTweenPingPong",
+      "isTrigger": true,
+      "params": [
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "start",
+            "end",
+            "either"
+          ],
+          "items_i18n": {
+            "start": {
+              "zh": "开始",
+              "en": "start"
+            },
+            "end": {
+              "zh": "结束",
+              "en": "end"
+            },
+            "either": {
+              "zh": "任意",
+              "en": "either"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-tweens-ping-pong",
+      "name_zh": "开始反转",
+      "name_en": "On ping-pong",
+      "description_zh": "指定标签的补间动画进行返程播放时触发。",
+      "description_en": "Triggered when a tween with a matching tag ping-pongs.",
+      "scriptName": "OnTweensPingPong",
+      "isTrigger": true,
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "start",
+            "end",
+            "either"
+          ],
+          "items_i18n": {
+            "start": {
+              "zh": "开始",
+              "en": "start"
+            },
+            "end": {
+              "zh": "结束",
+              "en": "end"
+            },
+            "either": {
+              "zh": "任意",
+              "en": "either"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "pause-tweens",
+      "name_zh": "暂停",
+      "name_en": "Pause",
+      "description_zh": "暂停播放指定的补间动画。",
+      "description_en": "Pause tweens with the given tags.",
+      "scriptName": "PauseTweens",
+      "category": "playback",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "pause-all-tweens",
+      "name_zh": "暂停全部",
+      "name_en": "Pause all",
+      "description_zh": "暂停播放所有补间动画。",
+      "description_en": "Pause all tweens.",
+      "scriptName": "PauseAllTweens",
+      "category": "playback"
+    },
+    {
+      "id": "resume-tweens",
+      "name_zh": "恢复",
+      "name_en": "Resume",
+      "description_zh": "恢复播放指定的补间动画。",
+      "description_en": "Resume any paused tweens with the given tags.",
+      "scriptName": "ResumeTweens",
+      "category": "playback",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "resume-all-tweens",
+      "name_zh": "恢复全部",
+      "name_en": "Resume all",
+      "description_zh": "恢复播放所有的补间动画。",
+      "description_en": "Resume all paused tweens.",
+      "scriptName": "ResumeAllTweens",
+      "category": "playback"
+    },
+    {
+      "id": "stop-tweens",
+      "name_zh": "停止",
+      "name_en": "Stop",
+      "description_zh": "停止播放指定的补间动画。注意，停止后将不能再次恢复。",
+      "description_en": "Stop the tweens with the given tags. Tweens can no longer be referenced after stopping them.",
+      "scriptName": "StopTweens",
+      "category": "playback",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "stop-all-tweens",
+      "name_zh": "停止全部",
+      "name_en": "Stop all",
+      "description_zh": "停止播放所有补间动画。注意，停止后将不能再次恢复。",
+      "description_en": "Stop all tweens. Tweens can no longer be referenced by tag after stopping them.",
+      "scriptName": "StopAllTweens",
+      "category": "playback"
+    },
+    {
+      "id": "set-enabled",
+      "name_zh": "设置启用",
+      "name_en": "Set enabled",
+      "description_zh": "启用或禁用此行为。禁用时，将不会影响任何参数属性。",
+      "description_en": "Set whether the behavior is enabled or disabled. When disabled the behavior will not affect any properties.",
+      "scriptName": "SetEnabled",
+      "category": "setters",
+      "params": [
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "模式",
+          "name_en": "Mode",
+          "items": [
+            "disabled",
+            "enabled"
+          ],
+          "items_i18n": {
+            "disabled": {
+              "zh": "禁用",
+              "en": "Disabled"
+            },
+            "enabled": {
+              "zh": "启用",
+              "en": "Enabled"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-tweens-ease",
+      "name_zh": "设置曲线",
+      "name_en": "Set ease",
+      "description_zh": "要设置的运动曲线。可在项目栏 '曲线' 文件夹新增自定义曲线。",
+      "description_en": "Set the easing function of the tweens with the given tags.",
+      "scriptName": "SetTweensEase",
+      "category": "setters",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "ease",
+          "type": "ease",
+          "name_zh": "曲线",
+          "name_en": "Ease"
+        }
+      ]
+    },
+    {
+      "id": "set-all-tweens-ease",
+      "name_zh": "设置曲线 (全部)",
+      "name_en": "Set all eases",
+      "description_zh": "要设置的运动曲线。可在项目栏 '曲线' 文件夹新增自定义曲线。",
+      "description_en": "Set the ease function of all tweens.",
+      "scriptName": "SetAllTweensEase",
+      "category": "setters",
+      "params": [
+        {
+          "id": "ease",
+          "type": "ease",
+          "name_zh": "曲线",
+          "name_en": "Ease"
+        }
+      ]
+    },
+    {
+      "id": "set-tweens-time",
+      "name_zh": "设置持续时间",
+      "name_en": "Set time",
+      "description_zh": "要设置的持续时间。",
+      "description_en": "Set the time of the tweens with the given tags.",
+      "scriptName": "SetTweensTime",
+      "category": "setters",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "time",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Time"
+        }
+      ]
+    },
+    {
+      "id": "set-all-tweens-time",
+      "name_zh": "设置持续时间 (全部)",
+      "name_en": "Set all times",
+      "description_zh": "设置所有动画的持续时间。",
+      "description_en": "Set the time of all tweens.",
+      "scriptName": "SetAllTweensTime",
+      "category": "setters",
+      "params": [
+        {
+          "id": "time",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Time"
+        }
+      ]
+    },
+    {
+      "id": "set-tweens-destroy-on-complete",
+      "name_zh": "设置播放完成时销毁",
+      "name_en": "Set destroy on complete",
+      "description_zh": "设置是否要在补间动画完成后，销毁这个对象。",
+      "description_en": "Set the 'destroy on complete' property of the tweens with the given tags.",
+      "scriptName": "SetTweensDestroyOnComplete",
+      "category": "setters",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "destroy-on-complete",
+          "type": "combo",
+          "name_zh": "播放完成后销毁",
+          "name_en": "Destroy on complete",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "no": {
+              "zh": "否",
+              "en": "No"
+            },
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-all-tweens-destroy-on-complete",
+      "name_zh": "设置播放完成后销毁 (全部)",
+      "name_en": "Set all destroy on complete",
+      "description_zh": "设置所有补间的 '播放完成时销毁' 属性。",
+      "description_en": "Set the 'destroy on complete' property of all tweens.",
+      "scriptName": "SetAllTweensDestroyOnComplete",
+      "category": "setters",
+      "params": [
+        {
+          "id": "destroy-on-complete",
+          "type": "combo",
+          "name_zh": "播放完成后销毁",
+          "name_en": "Destroy on complete",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "no": {
+              "zh": "否",
+              "en": "No"
+            },
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-tweens-playback-rate",
+      "name_zh": "设置播放速度",
+      "name_en": "Set playback rate",
+      "description_zh": "要设置的播放倍速。",
+      "description_en": "Set the playback rate of the tweens with the given tags.",
+      "scriptName": "SetTweensPlaybackRate",
+      "category": "setters",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "rate",
+          "type": "number",
+          "name_zh": "倍数",
+          "name_en": "Rate",
+          "initialValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "set-all-tweens-playback-rate",
+      "name_zh": "设置播放速度 (全部)",
+      "name_en": "Set all playback rates",
+      "description_zh": "设置全部动画的播放速度。1.0是正常速度，0.5半速，2.0倍速等。",
+      "description_en": "Set the playback rate of all tweens.",
+      "scriptName": "SetAllTweensPlaybackRate",
+      "category": "setters",
+      "params": [
+        {
+          "id": "rate",
+          "type": "number",
+          "name_zh": "倍速",
+          "name_en": "Rate",
+          "initialValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "tween-one-property",
+      "name_zh": "播放补间 (一个参数)",
+      "name_en": "Tween (one property)",
+      "description_zh": "补间一个属性，如 X 坐标。",
+      "description_en": "Tween one property such as the X co-ordinate.",
+      "scriptName": "TweenOneProperty",
+      "isAsync": true,
+      "category": "one-property",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签(可选)",
+          "name_en": "Tags",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "property",
+          "type": "combo",
+          "name_zh": "属性",
+          "name_en": "Property",
+          "initialValue": "offsetX",
+          "items": [
+            "offsetX",
+            "offsetY",
+            "offsetWidth",
+            "offsetHeight",
+            "offsetAngle",
+            "offsetOpacity",
+            "offsetColor",
+            "offsetZElevation",
+            "offsetScaleX",
+            "offsetScaleY"
+          ],
+          "items_i18n": {
+            "offsetX": {
+              "zh": "X坐标",
+              "en": "X"
+            },
+            "offsetY": {
+              "zh": "Y坐标",
+              "en": "Y"
+            },
+            "size": {
+              "zh": "大小",
+              "en": "Size"
+            },
+            "offsetWidth": {
+              "zh": "宽度",
+              "en": "Width"
+            },
+            "offsetHeight": {
+              "zh": "高度",
+              "en": "Height"
+            },
+            "offsetAngle": {
+              "zh": "角度",
+              "en": "Angle"
+            },
+            "offsetOpacity": {
+              "zh": "不透明度",
+              "en": "Opacity"
+            },
+            "offsetColor": {
+              "zh": "颜色",
+              "en": "Color"
+            },
+            "offsetZElevation": {
+              "zh": "视距高度",
+              "en": "Z Elevation"
+            },
+            "offsetScaleX": {
+              "zh": "缩放比例 X",
+              "en": "X Scale"
+            },
+            "offsetScaleY": {
+              "zh": "缩放比例 Y",
+              "en": "Y Scale"
+            }
+          }
+        },
+        {
+          "id": "end-value",
+          "type": "number",
+          "name_zh": "目标值",
+          "name_en": "End value",
+          "initialValue": "0"
+        },
+        {
+          "id": "time",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Time",
+          "initialValue": "5"
+        },
+        {
+          "id": "ease",
+          "type": "ease",
+          "name_zh": "曲线",
+          "name_en": "Ease"
+        },
+        {
+          "id": "destroy-on-complete",
+          "type": "combo",
+          "name_zh": "播放完成后销毁",
+          "name_en": "Destroy on complete",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            },
+            "no": {
+              "zh": "否",
+              "en": "No"
+            }
+          }
+        },
+        {
+          "id": "loop",
+          "type": "combo",
+          "name_zh": "循环播放",
+          "name_en": "Loop",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            },
+            "no": {
+              "zh": "否",
+              "en": "No"
+            }
+          }
+        },
+        {
+          "id": "ping-pong",
+          "type": "combo",
+          "name_zh": "反转播放",
+          "name_en": "Ping pong",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            },
+            "no": {
+              "zh": "否",
+              "en": "No"
+            }
+          }
+        },
+        {
+          "id": "repeat-count",
+          "type": "number",
+          "name_zh": "重复次数",
+          "name_en": "Repeat count",
+          "initialValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "set-one-property-tweens-end-value",
+      "name_zh": "设置目标值",
+      "name_en": "Set end value",
+      "description_zh": "要设置的目标值。",
+      "description_en": "Set the end value of tweens with the given tags.",
+      "scriptName": "SetOnePropertyTweensEndValue",
+      "category": "one-property",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "property",
+          "type": "combo",
+          "name_zh": "属性",
+          "name_en": "Property",
+          "initialValue": "offsetX",
+          "items": [
+            "offsetX",
+            "offsetY",
+            "offsetWidth",
+            "offsetHeight",
+            "offsetAngle",
+            "offsetOpacity",
+            "offsetColor",
+            "offsetZElevation",
+            "offsetScaleX",
+            "offsetScaleY"
+          ],
+          "items_i18n": {
+            "offsetX": {
+              "zh": "X坐标",
+              "en": "X"
+            },
+            "offsetY": {
+              "zh": "Y坐标",
+              "en": "Y"
+            },
+            "offsetWidth": {
+              "zh": "宽度",
+              "en": "Width"
+            },
+            "offsetHeight": {
+              "zh": "高度",
+              "en": "Height"
+            },
+            "offsetAngle": {
+              "zh": "角度",
+              "en": "Angle"
+            },
+            "offsetOpacity": {
+              "zh": "不透明度",
+              "en": "Opacity"
+            },
+            "offsetColor": {
+              "zh": "颜色",
+              "en": "Color"
+            },
+            "offsetZElevation": {
+              "zh": "视距高度",
+              "en": "Z Elevation"
+            },
+            "offsetScaleX": {
+              "zh": "缩放比例 X",
+              "en": "X Scale"
+            },
+            "offsetScaleY": {
+              "zh": "缩放比例 Y",
+              "en": "Y Scale"
+            }
+          }
+        },
+        {
+          "id": "end-value",
+          "type": "number",
+          "name_zh": "目标值",
+          "name_en": "End value",
+          "initialValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "tween-two-properties",
+      "name_zh": "播放补间 (两个参数)",
+      "name_en": "Tween (two properties)",
+      "description_zh": "使两个值同时平滑运动（如坐标：X和Y）",
+      "description_en": "Tween two properties, such as the position (consisting of an X and Y co-ordinate).",
+      "scriptName": "TweenTwoProperties",
+      "isAsync": true,
+      "category": "two-properties",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签(可选)",
+          "name_en": "Tags",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "property",
+          "type": "combo",
+          "name_zh": "属性",
+          "name_en": "Property",
+          "initialValue": "position",
+          "items": [
+            "position",
+            "size",
+            "scale"
+          ],
+          "items_i18n": {
+            "position": {
+              "zh": "位置",
+              "en": "Position"
+            },
+            "size": {
+              "zh": "大小",
+              "en": "Size"
+            },
+            "scale": {
+              "zh": "比例",
+              "en": "Scale"
+            }
+          }
+        },
+        {
+          "id": "end-x",
+          "type": "number",
+          "name_zh": "结束 X",
+          "name_en": "End X",
+          "initialValue": "0"
+        },
+        {
+          "id": "end-y",
+          "type": "number",
+          "name_zh": "结束 Y",
+          "name_en": "End Y",
+          "initialValue": "0"
+        },
+        {
+          "id": "time",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Time",
+          "initialValue": "5"
+        },
+        {
+          "id": "ease",
+          "type": "ease",
+          "name_zh": "曲线",
+          "name_en": "Ease"
+        },
+        {
+          "id": "destroy-on-complete",
+          "type": "combo",
+          "name_zh": "播放完成后销毁",
+          "name_en": "Destroy on complete",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            },
+            "no": {
+              "zh": "否",
+              "en": "No"
+            }
+          }
+        },
+        {
+          "id": "loop",
+          "type": "combo",
+          "name_zh": "循环播放",
+          "name_en": "Loop",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            },
+            "no": {
+              "zh": "否",
+              "en": "No"
+            }
+          }
+        },
+        {
+          "id": "ping-pong",
+          "type": "combo",
+          "name_zh": "反转播放",
+          "name_en": "Ping pong",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            },
+            "no": {
+              "zh": "否",
+              "en": "No"
+            }
+          }
+        },
+        {
+          "id": "repeat-count",
+          "type": "number",
+          "name_zh": "重复次数",
+          "name_en": "Repeat count",
+          "initialValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "set-two-properties-tweens-end-value",
+      "name_zh": "设置目标值",
+      "name_en": "Set end values",
+      "description_zh": "通过指定的标签，设置补间动画的目标值。",
+      "description_en": "Set the end value of the tweens with the given tags.",
+      "scriptName": "SetTwoPropertiesTweensEndValue",
+      "category": "two-properties",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "property",
+          "type": "combo",
+          "name_zh": "属性",
+          "name_en": "Property",
+          "initialValue": "position",
+          "items": [
+            "position",
+            "size",
+            "scale"
+          ],
+          "items_i18n": {
+            "position": {
+              "zh": "位置",
+              "en": "Position"
+            },
+            "size": {
+              "zh": "大小",
+              "en": "Size"
+            },
+            "scale": {
+              "zh": "缩放比例",
+              "en": "Scale"
+            }
+          }
+        },
+        {
+          "id": "end-x",
+          "type": "number",
+          "name_zh": "结束 X",
+          "name_en": "End X",
+          "initialValue": "0"
+        },
+        {
+          "id": "end-y",
+          "type": "number",
+          "name_zh": "结束 Y",
+          "name_en": "End Y",
+          "initialValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "tween-value",
+      "name_zh": "补间动画 (数值)",
+      "name_en": "Tween (value)",
+      "description_zh": "针对一个数值进行补间，不同与对象的属性。",
+      "description_en": "Tween a number value, independent of any properties.",
+      "scriptName": "TweenValue",
+      "isAsync": true,
+      "category": "value",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签(可选)",
+          "name_en": "Tags",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "start-value",
+          "type": "number",
+          "name_zh": "起始值",
+          "name_en": "Start value",
+          "initialValue": "0"
+        },
+        {
+          "id": "end-value",
+          "type": "number",
+          "name_zh": "目标值",
+          "name_en": "End value",
+          "initialValue": "0"
+        },
+        {
+          "id": "time",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Time",
+          "initialValue": "5"
+        },
+        {
+          "id": "ease",
+          "type": "ease",
+          "name_zh": "曲线",
+          "name_en": "Ease"
+        },
+        {
+          "id": "destroy-on-complete",
+          "type": "combo",
+          "name_zh": "播放完成后销毁",
+          "name_en": "Destroy on complete",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            },
+            "no": {
+              "zh": "否",
+              "en": "No"
+            }
+          }
+        },
+        {
+          "id": "loop",
+          "type": "combo",
+          "name_zh": "循环播放",
+          "name_en": "Loop",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            },
+            "no": {
+              "zh": "否",
+              "en": "No"
+            }
+          }
+        },
+        {
+          "id": "ping-pong",
+          "type": "combo",
+          "name_zh": "反转播放",
+          "name_en": "Ping pong",
+          "initialValue": "no",
+          "items": [
+            "no",
+            "yes"
+          ],
+          "items_i18n": {
+            "yes": {
+              "zh": "是",
+              "en": "Yes"
+            },
+            "no": {
+              "zh": "否",
+              "en": "No"
+            }
+          }
+        },
+        {
+          "id": "repeat-count",
+          "type": "number",
+          "name_zh": "重复次数",
+          "name_en": "Repeat count",
+          "initialValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "set-value-property-tweens-start-value",
+      "name_zh": "设置起始值",
+      "name_en": "Set start value",
+      "description_zh": "要设置的起始值。",
+      "description_en": "Set the start value of any value tweens with the given tags.",
+      "scriptName": "SetValuePropertyTweensStartValue",
+      "category": "value",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "start-value",
+          "type": "number",
+          "name_zh": "起始值",
+          "name_en": "Start value",
+          "initialValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "set-value-property-tweens-end-value",
+      "name_zh": "设置目标值",
+      "name_en": "Set end value",
+      "description_zh": "要设置的目标值。",
+      "description_en": "Set the end value of any value tweens with the given tags.",
+      "scriptName": "SetValuePropertyTweensEndValue",
+      "category": "value",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        },
+        {
+          "id": "end-value",
+          "type": "number",
+          "name_zh": "目标值",
+          "name_en": "End value",
+          "initialValue": "0"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "time",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "补间的当前时间",
+      "description_en": "The current time of the tween.",
+      "expressionName": "Time",
+      "returnType": "number",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "value",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在 '补间正在播放' 条件中，补间的当前值。",
+      "description_en": "The current value of a 'Value' tween",
+      "expressionName": "Value",
+      "returnType": "number",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "progress",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "补间的进度在0-1范围内",
+      "description_en": "The progress of the tween in the range 0-1.",
+      "expressionName": "Progress",
+      "returnType": "number",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "playback-rate",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "补间动画的播放速度。1 为正常速度，0.5 为慢动作，2为双倍加速。",
+      "description_en": "The playback rate of the tween.",
+      "expressionName": "PlaybackRate",
+      "returnType": "number",
+      "params": [
+        {
+          "id": "tags",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "tags",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "用于触发补间完成、到达循环、反复时使用的补间标签。",
+      "description_en": "The tags of a tween in 'On any tween finished', 'On any tween looped' and 'On any tween ping pong' triggers.",
+      "expressionName": "Tags",
+      "returnType": "string"
+    }
+  ],
+  "properties": [
+    {
+      "id": "enabled",
+      "name_zh": "启用",
+      "name_en": "Enabled",
+      "description_zh": "设置该行为在初始化时是否启用。",
+      "description_en": "Whether the behavior is initially enabled."
+    }
+  ]
+}

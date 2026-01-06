@@ -1,0 +1,367 @@
+{
+  "id": "ajax",
+  "originalId": "AJAX",
+  "name_zh": "AJAX",
+  "name_en": "AJAX",
+  "description_zh": "用于向远程服务器通信，发送或接收数据。也可用于请求项目本地文件。注意，访问远程网络请求时，请确保目标服务器正确设置了 CORS 跨域权限，包括在预览模式中。",
+  "description_en": "Request and receive other web pages. Note for cross-domain requests (including in preview mode), CORS must be set up on the server.",
+  "path": "web/ajax",
+  "categories": [
+    "ajax",
+    "binary-data"
+  ],
+  "conditions": [
+    {
+      "id": "on-completed",
+      "name_zh": "请求完成",
+      "name_en": "On completed",
+      "description_zh": "AJAX请求成功完成时触发。",
+      "description_en": "Triggered when an AJAX request completes successfully.",
+      "scriptName": "OnComplete",
+      "isTrigger": true,
+      "category": "ajax",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "on-any-completed",
+      "name_zh": "任意请求完成",
+      "name_en": "On any completed",
+      "description_zh": "任意 AJAX 请求完成时触发。在事件中可使用表达式 'AJAX.请求标签' 来区分不同的请求。",
+      "description_en": "Triggered when any AJAX request completes successfully. The 'Tag' expression identifies the request.",
+      "scriptName": "OnAnyComplete",
+      "isTrigger": true,
+      "category": "ajax"
+    },
+    {
+      "id": "on-error",
+      "name_zh": "请求失败",
+      "name_en": "On error",
+      "description_zh": "AJAX请求失败时触发。",
+      "description_en": "Triggered when an AJAX request fails.",
+      "scriptName": "OnError",
+      "isTrigger": true,
+      "category": "ajax",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "on-any-error",
+      "name_zh": "任意请求失败",
+      "name_en": "On any error",
+      "description_zh": "任意AJAX请求失败时触发。使用'标签'表达式区分不同的请求。",
+      "description_en": "Triggered when any AJAX request fails. The 'Tag' expression identifies the request.",
+      "scriptName": "OnAnyError",
+      "isTrigger": true,
+      "category": "ajax"
+    },
+    {
+      "id": "on-progress",
+      "name_zh": "请求进度更新",
+      "name_en": "On progress",
+      "description_zh": "使用 AJAX 处理请求时，进度发生变化时触发。",
+      "description_en": "Triggered when an AJAX request has a progress update.",
+      "scriptName": "OnProgress",
+      "isTrigger": true,
+      "category": "ajax",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "on-upload-progress",
+      "name_zh": "上传进度更新",
+      "name_en": "On upload progress",
+      "description_zh": "使用 AJAX 上传数据，且进度有更新时触发。",
+      "description_en": "Triggered when an AJAX request which is uploading data has a progress update.",
+      "scriptName": "OnUploadProgress",
+      "isTrigger": true,
+      "category": "ajax",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "request-url",
+      "name_zh": "获取请求",
+      "name_en": "Request URL",
+      "description_zh": "向远程地址发送 GET 请求，并返回服务器的响应数据。",
+      "description_en": "Request a URL by a GET request and retrieve the server response.",
+      "scriptName": "Request",
+      "isAsync": true,
+      "category": "ajax",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "url",
+          "type": "string",
+          "name_zh": "URL",
+          "name_en": "URL",
+          "initialValue": "\"https://\""
+        }
+      ]
+    },
+    {
+      "id": "request-project-file",
+      "name_zh": "请求项目文件",
+      "name_en": "Request project file",
+      "description_zh": "请求项目中的文件，并返回文件内容到 AJAX.LastData 表达式。注意，这是一个异步操作，请添加 '请求完成' 触发器获取返回内容，或在下方使用 '等待前面异步完成' 动作。",
+      "description_en": "Request a file in the project and retrieve its contents.",
+      "scriptName": "RequestFile",
+      "isAsync": true,
+      "category": "ajax",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "file",
+          "type": "projectfile",
+          "name_zh": "文件",
+          "name_en": "File"
+        }
+      ]
+    },
+    {
+      "id": "post-to-url",
+      "name_zh": "发送请求",
+      "name_en": "Post to URL",
+      "description_zh": "将带有请求的数据发送到远程服务器，并检索服务器响应。",
+      "description_en": "Send data with a request to a URL and retrieve the server response.",
+      "scriptName": "Post",
+      "isAsync": true,
+      "category": "ajax",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "url",
+          "type": "string",
+          "name_zh": "地址",
+          "name_en": "URL",
+          "initialValue": "\"https://\""
+        },
+        {
+          "id": "data",
+          "type": "string",
+          "name_zh": "数据",
+          "name_en": "Data"
+        },
+        {
+          "id": "method",
+          "type": "string",
+          "name_zh": "请求方法",
+          "name_en": "Method",
+          "initialValue": "\"POST\""
+        }
+      ]
+    },
+    {
+      "id": "set-timeout",
+      "name_zh": "设置超时时间",
+      "name_en": "Set timeout",
+      "description_zh": "设置AJAX请求的超时时间，超时后视为请求失败。",
+      "description_en": "Set the maximum time before a request is considered to have failed.",
+      "scriptName": "SetTimeout",
+      "category": "ajax",
+      "params": [
+        {
+          "id": "timeout",
+          "type": "number",
+          "name_zh": "超时",
+          "name_en": "Timeout"
+        }
+      ]
+    },
+    {
+      "id": "set-request-header",
+      "name_zh": "设置请求标头",
+      "name_en": "Set request header",
+      "description_zh": "指定下一个请求，要使用的 HTTP 标头。",
+      "description_en": "Set an HTTP header on the next request that is made.",
+      "scriptName": "SetHeader",
+      "category": "ajax",
+      "params": [
+        {
+          "id": "header",
+          "type": "string",
+          "name_zh": "标头",
+          "name_en": "Header"
+        },
+        {
+          "id": "value",
+          "type": "string",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "override-mime-type",
+      "name_zh": "设置媒体类型 (MIME)",
+      "name_en": "Override MIME type",
+      "description_zh": "指定下一个 AJAX 请求中，要发送的数据的 MIME 类型。",
+      "description_en": "In the next request, override the MIME type indicated by the response.",
+      "scriptName": "OverrideMIMEType",
+      "category": "ajax",
+      "params": [
+        {
+          "id": "mime-type",
+          "type": "string",
+          "name_zh": "MIME类型",
+          "name_en": "MIME type"
+        }
+      ]
+    },
+    {
+      "id": "set-with-credentials",
+      "name_zh": "设置凭证请求",
+      "name_en": "Set with credentials",
+      "description_zh": "设置下一次请求是否发送凭证信息，例如Cookies或请求头。",
+      "description_en": "Set whether the next request is sent with credentials such as cookies and authorization headers.",
+      "scriptName": "SetWithCredentials",
+      "category": "ajax",
+      "params": [
+        {
+          "id": "with-credentials",
+          "type": "boolean",
+          "name_zh": "凭证信息",
+          "name_en": "With credentials"
+        }
+      ]
+    },
+    {
+      "id": "post-binary",
+      "name_zh": "发送二进制到地址",
+      "name_en": "Post binary to URL",
+      "description_zh": "将二进制数据连同请求一起发送到地址，并检索服务器响应。",
+      "description_en": "Send binary data with a request to a URL and retrieve the server response.",
+      "scriptName": "PostBinary",
+      "isAsync": true,
+      "category": "binary-data",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "url",
+          "type": "string",
+          "name_zh": "URL",
+          "name_en": "URL",
+          "initialValue": "\"https://\""
+        },
+        {
+          "id": "data",
+          "type": "object",
+          "name_zh": "数据",
+          "name_en": "Data"
+        },
+        {
+          "id": "method",
+          "type": "string",
+          "name_zh": "方法",
+          "name_en": "Method",
+          "initialValue": "\"POST\""
+        }
+      ]
+    },
+    {
+      "id": "set-response-binary",
+      "name_zh": "设置请求响应容器",
+      "name_en": "Set response binary",
+      "description_zh": "指定下一个请求，使用二进制对象接收服务器返回数据。",
+      "description_en": "Set a Binary Data object to receive the binary response of the next request.",
+      "scriptName": "SetResponseBinary",
+      "category": "binary-data",
+      "params": [
+        {
+          "id": "destination",
+          "type": "object",
+          "name_zh": "目标",
+          "name_en": "Destination"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "lastdata",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取上次成功请求返回的数据。",
+      "description_en": "Get the data returned by the last successful request.",
+      "expressionName": "LastData",
+      "returnType": "string",
+      "category": "ajax"
+    },
+    {
+      "id": "laststatuscode",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取上一次 HTTP 请求返回的状态码。",
+      "description_en": "Get the HTTP status code of the last request.",
+      "expressionName": "LastStatusCode",
+      "returnType": "number",
+      "category": "ajax"
+    },
+    {
+      "id": "progress",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在 '进度更新' 条件中，返回当前的请求进度，范围在 0 到 1 之间。",
+      "description_en": "Get the progress, from 0 to 1, of the request in 'On progress'.",
+      "expressionName": "Progress",
+      "returnType": "number",
+      "category": "ajax"
+    },
+    {
+      "id": "tag",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "要获取的 AJAX 对应标签的请求数据。",
+      "description_en": "Get the tag for the request in a trigger.",
+      "expressionName": "Tag",
+      "returnType": "string",
+      "category": "ajax"
+    }
+  ]
+}

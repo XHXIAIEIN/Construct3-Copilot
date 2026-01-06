@@ -1,0 +1,106 @@
+{
+  "id": "scrollto",
+  "originalId": "scrollto",
+  "name_zh": "镜头跟随",
+  "name_en": "Scroll To",
+  "description_zh": "始终将画面对焦到此对象的位置。若有多个对象添加此行为，则对准它们的中心点。",
+  "description_en": "Always center the view on this object, or at the mid-point of multiple objects.",
+  "path": "general/scrollto",
+  "categories": [],
+  "conditions": [
+    {
+      "id": "is-enabled",
+      "name_zh": "已启用",
+      "name_en": "Is enabled",
+      "description_zh": "检测当前行为是否已启用。",
+      "description_en": "Test if the behavior is enabled.",
+      "scriptName": "IsEnabled"
+    }
+  ],
+  "actions": [
+    {
+      "id": "shake",
+      "name_zh": "振动",
+      "name_en": "Shake",
+      "description_zh": "在一段时间内，持续振动屏幕。注意，如果可视区域和场景大小相同，需要允许镜头滚动超出场景。",
+      "description_en": "Shake the screen for a duration of time.",
+      "scriptName": "Shake",
+      "params": [
+        {
+          "id": "magnitude",
+          "type": "number",
+          "name_zh": "振动强度",
+          "name_en": "Magnitude",
+          "initialValue": "20"
+        },
+        {
+          "id": "duration",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Duration",
+          "initialValue": "0.4"
+        },
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "模式",
+          "name_en": "Mode",
+          "items": [
+            "reducing-magnitude",
+            "constant-magnitude"
+          ],
+          "items_i18n": {
+            "reducing-magnitude": {
+              "zh": "逐渐减弱",
+              "en": "Reducing magnitude"
+            },
+            "constant-magnitude": {
+              "zh": "保持不变",
+              "en": "Constant magnitude"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-enabled",
+      "name_zh": "设置启用",
+      "name_en": "Set enabled",
+      "description_zh": "启用或禁用此行为。",
+      "description_en": "Enable or disable the behavior.",
+      "scriptName": "SetEnabled",
+      "params": [
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "disabled",
+            "enabled"
+          ],
+          "items_i18n": {
+            "disabled": {
+              "zh": "禁用",
+              "en": "disabled"
+            },
+            "enabled": {
+              "zh": "启用",
+              "en": "enabled"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "expressions": [],
+  "properties": [
+    {
+      "id": "enabled",
+      "name_zh": "启用",
+      "name_en": "Enabled",
+      "description_zh": "游戏初始化时，是否默认启用该行为。",
+      "description_en": "Whether the behavior is initially enabled or disabled."
+    }
+  ]
+}

@@ -1,0 +1,430 @@
+{
+  "version": "1.0",
+  "bars": {
+    "project": {
+      "name_zh": "项目栏",
+      "name_en": "Project"
+    },
+    "properties": {
+      "name_zh": "属性栏",
+      "name_en": "Properties"
+    },
+    "layers": {
+      "name_zh": "图层栏",
+      "name_en": "Layers"
+    },
+    "instances": {
+      "name_zh": "实例对象",
+      "name_en": "Instances"
+    },
+    "tilemap": {
+      "name_zh": "瓦片栏",
+      "name_en": "Tilemap"
+    },
+    "timeline": {
+      "name_zh": "时间轴",
+      "name_en": "Timeline"
+    },
+    "zOrder": {
+      "name_zh": "显示顺序",
+      "name_en": "Z Order"
+    },
+    "bookmarks": {
+      "name_zh": "书签栏",
+      "name_en": "Bookmarks"
+    },
+    "findResults": {
+      "name_zh": "查找结果",
+      "name_en": "Find results"
+    },
+    "findAllReferences": {
+      "name_zh": "查找所有引用",
+      "name_en": "Find all references"
+    },
+    "textEditor": {
+      "name_zh": "文本编辑器",
+      "name_en": "Text editor"
+    },
+    "asset-browser": {
+      "name_zh": "资源库",
+      "name_en": "Asset Browser"
+    }
+  },
+  "dialogs": {
+    "about": {
+      "name_zh": "关于",
+      "name_en": "About"
+    },
+    "accountInfo": {
+      "name_zh": "账号信息",
+      "name_en": "Account information"
+    },
+    "addBehavior": {
+      "name_zh": "添加行为",
+      "name_en": "Add behavior"
+    },
+    "addEffect": {
+      "name_zh": "添加滤镜",
+      "name_en": "Add effect"
+    },
+    "addonConfirmInstall": {
+      "name_zh": "安装 Construct 3 插件",
+      "name_en": "Install Construct 3 addon"
+    },
+    "addonManager": {
+      "name_zh": "插件管理",
+      "name_en": "Addon manager"
+    },
+    "animationFromSpriteStrip": {
+      "name_zh": "导入序列帧",
+      "name_en": "Import Sprite Sheet"
+    },
+    "configure-animations-editor-grid": {
+      "name_zh": "网格设置",
+      "name_en": "Configure grid"
+    },
+    "fileImportMode": {
+      "name_zh": "文件导入方式",
+      "name_en": "File Import Mode"
+    },
+    "imageFormat": {
+      "name_zh": "图片格式",
+      "name_en": "Image Format"
+    },
+    "pasteImage": {
+      "name_zh": "粘贴图像",
+      "name_en": "Paste Image"
+    },
+    "previewAnimation": {
+      "name_zh": "预览动画",
+      "name_en": "Preview"
+    },
+    "cordovaBuildReport": {
+      "name_zh": "'{0}' 导出结果",
+      "name_en": "Build report for '{0}'"
+    },
+    "archive-manager": {
+      "name_zh": "导出管理器",
+      "name_en": "Export Manager"
+    },
+    "cordovaOptions": {
+      "name_zh": "Cordova 选项",
+      "name_en": "Cordova options"
+    },
+    "audioPreview": {
+      "name_zh": "预览音频",
+      "name_en": "Audio preview"
+    },
+    "behaviors": {
+      "name_zh": "{0} 行为",
+      "name_en": "{0} behaviors"
+    },
+    "chooseKey": {
+      "name_zh": "按一个键",
+      "name_en": "Press a key"
+    },
+    "createNewObjectType": {
+      "name_zh": "创建对象类型",
+      "name_en": "Create new object type"
+    },
+    "editFamily": {
+      "name_zh": "编辑家族'{0}'中的对象",
+      "name_en": "Edit object types in family '{0}'"
+    },
+    "effects": {
+      "name_zh": "{0}滤镜",
+      "name_en": "{0} effects"
+    },
+    "exportSelectPlatform": {
+      "name_zh": "选择要导出的平台",
+      "name_en": "Choose platform to export to"
+    },
+    "exportStandardOptions": {
+      "name_zh": "导出选项",
+      "name_en": "Export options"
+    },
+    "exportStats": {
+      "name_zh": "导出统计",
+      "name_en": "Export statistics"
+    },
+    "expressionsDictionary": {
+      "name_zh": "表达式手册",
+      "name_en": "Expressions dictionary"
+    },
+    "fullscreen-prompt": {
+      "name_zh": "进入全屏",
+      "name_en": "Go fullscreen"
+    },
+    "iframe": {
+      "name_zh": "内嵌网页",
+      "name_en": "iframe"
+    },
+    "instanceVariables": {
+      "name_zh": "{0} 实例变量",
+      "name_en": "{0} instance variables"
+    },
+    "invalid-expressions": {
+      "name_zh": "表达式无效",
+      "name_en": "Invalid expressions"
+    },
+    "loadTilemap": {
+      "name_zh": "加载瓦片图",
+      "name_en": "Load Tilemap"
+    },
+    "login": {
+      "name_zh": "登录",
+      "name_en": "Log in"
+    },
+    "missingAddons": {
+      "name_zh": "缺少依赖插件",
+      "name_en": "Missing addons"
+    },
+    "newProject": {
+      "name_zh": "新建项目",
+      "name_en": "New project"
+    },
+    "parameters": {
+      "name_zh": "{0}: {1} 的参数",
+      "name_en": "Parameters for {0}: {1}"
+    },
+    "project-stats": {
+      "name_zh": "项目统计",
+      "name_en": "Project statistics"
+    },
+    "remotePreview": {
+      "name_zh": "远程预览",
+      "name_en": "Remote preview"
+    },
+    "remoteVideo": {
+      "name_zh": "{0}（远程预览）",
+      "name_en": "Remote preview for {0}"
+    },
+    "settings": {
+      "name_zh": "设置",
+      "name_en": "Settings"
+    },
+    "svgPreview": {
+      "name_zh": "预览SVG",
+      "name_en": "SVG preview"
+    },
+    "videoPreview": {
+      "name_zh": "视频预览",
+      "name_en": "Video preview"
+    },
+    "view-spritesheets": {
+      "name_zh": "查看 '{0}' 图集",
+      "name_en": "View '{0}' spritesheets"
+    },
+    "viewUsedAddons": {
+      "name_zh": "项目 '{0}' 插件使用情况",
+      "name_en": "Addons used in '{0}'"
+    },
+    "cordovaExportReport": {
+      "name_zh": "'{0}' 导出报告",
+      "name_en": "Export report for '{0}'"
+    },
+    "webExportReport": {
+      "name_zh": "'{0}'的导出报告",
+      "name_en": "Export report for '{0}'"
+    },
+    "scirraArcadeExportReport": {
+      "name_zh": "'{0}'的导出报告",
+      "name_en": "Export report for '{0}'"
+    },
+    "download": {
+      "name_zh": "下载中...",
+      "name_en": "Downloading..."
+    },
+    "fontPreview": {
+      "name_zh": "字体预览：{0}",
+      "name_en": "Font preview: {0}"
+    },
+    "openPopupWindow": {
+      "name_zh": "弹出窗口被阻止",
+      "name_en": "Popup Blocked"
+    },
+    "freeEditionLimit": {
+      "name_zh": "免费版限制",
+      "name_en": "Free edition limit"
+    },
+    "createKeystoreDialog": {
+      "name_zh": "生成新的签名证书",
+      "name_en": "Create a new keystore"
+    },
+    "create-keystore-report-dialog": {
+      "name_zh": "成功创建签名证书",
+      "name_en": "Successfully created keystore"
+    },
+    "instantGamesExportReport": {
+      "name_zh": "导出{0}的报告",
+      "name_en": "Export report for '{0}'"
+    },
+    "pickTimelineProperty": {
+      "name_zh": "时间轴属性选择器",
+      "name_en": "Timeline property picker"
+    },
+    "transitionsEditor": {
+      "name_zh": "编辑曲线",
+      "name_en": "Ease Editor"
+    },
+    "scriptingFeatureLimit": {
+      "name_zh": "脚本功能已超出使用限制",
+      "name_en": "Scripting feature limit reached"
+    },
+    "tilemapBrushEditor": {
+      "name_zh": "图块笔刷编辑器",
+      "name_en": "Tilemap brush editor"
+    },
+    "storageCleanup": {
+      "name_zh": "清理储存空间",
+      "name_en": "Storage cleanup"
+    },
+    "welcomeTour": {
+      "name_zh": "欢迎！",
+      "name_en": "Welcome!"
+    },
+    "pickTimelines": {
+      "name_zh": "时间轴选择",
+      "name_en": "Timeline picker"
+    },
+    "minifyError": {
+      "name_zh": "编译错误",
+      "name_en": "Minify error"
+    },
+    "windows-webview2-options": {
+      "name_zh": "打包选项",
+      "name_en": "Windows wrapper options"
+    },
+    "wv2ExportReport": {
+      "name_zh": "导出报告：{0}",
+      "name_en": "Export report for '{0}'"
+    },
+    "macExportReport": {
+      "name_zh": "导出报告：{0}",
+      "name_en": "Export report for '{0}'"
+    },
+    "unsupportedEffects": {
+      "name_zh": "不支持的滤镜",
+      "name_en": "Unsupported effects"
+    },
+    "pickTimelineAudioFile": {
+      "name_zh": "选择音频文件",
+      "name_en": "Pick audio file"
+    },
+    "videoExportReport": {
+      "name_zh": "导出视频 '{0}'",
+      "name_en": "Video exported for '{0}'"
+    },
+    "exportVideoOptions": {
+      "name_zh": "导出视频选项",
+      "name_en": "Export video options"
+    },
+    "imageSeqExportReport": {
+      "name_zh": "导出图像切片到 '{0}'",
+      "name_en": "Image sequence exported for '{0}'"
+    },
+    "exportImageSeqOptions": {
+      "name_zh": "导出为图像切片",
+      "name_en": "Export image sequence options"
+    },
+    "gifExportReport": {
+      "name_zh": "导出GIF '{0}'",
+      "name_en": "GIF exported for '{0}'"
+    },
+    "exportGifOptions": {
+      "name_zh": "GIF 导出选项",
+      "name_en": "Export GIF options"
+    },
+    "xboxWV2UWPExportReport": {
+      "name_zh": "{0} 的导出报告",
+      "name_en": "Export report for '{0}'"
+    },
+    "animations-editor-settings": {
+      "name_zh": "设置",
+      "name_en": "Miscellaneous settings"
+    },
+    "transitions-editor-settings": {
+      "name_zh": "其他设置",
+      "name_en": "Miscellaneous settings"
+    },
+    "playableAdZipExportReport": {
+      "name_zh": "'{0}' 导出报告",
+      "name_en": "Export report for '{0}'"
+    },
+    "playableAdSFExportReport": {
+      "name_zh": "'{0}' 导出报告",
+      "name_en": "Export report for '{0}'"
+    },
+    "deprecatedFeatures": {
+      "name_zh": "已弃用的功能",
+      "name_en": "Deprecated features"
+    },
+    "linuxCefVersionManager": {
+      "name_zh": "Linux CEF 版本管理器",
+      "name_en": "Linux CEF version manager"
+    },
+    "linuxCefPlatformManager": {
+      "name_zh": "Linux CEF",
+      "name_en": "Linux CEF platforms"
+    },
+    "linuxCefOptions": {
+      "name_zh": "Linux 选项",
+      "name_en": "Linux options"
+    },
+    "linuxCefExportReport": {
+      "name_zh": "'{0}' 导出报告",
+      "name_en": "Export report for '{0}'"
+    },
+    "pickPresetFlowchartNodes": {
+      "name_zh": "选择节点模板",
+      "name_en": "Preset node picker"
+    },
+    "macos-wkwebview-permissions": {
+      "name_zh": "macOS 权限",
+      "name_en": "macOS permissions"
+    },
+    "macos-wkwebview-options": {
+      "name_zh": "macOS 打包选项",
+      "name_en": "macOS wrapper options"
+    },
+    "pickColorPickCollection": {
+      "name_zh": "选择颜色",
+      "name_en": "Color palette picker"
+    },
+    "addonUpdateReview": {
+      "name_zh": "检查插件更新",
+      "name_en": "Addon update review"
+    },
+    "zipImportOptions": {
+      "name_zh": "导入设置",
+      "name_en": "Zip Import Options"
+    },
+    "textPreview": {
+      "name_zh": "预览 {0}",
+      "name_en": "{0} preview"
+    },
+    "asset-browser-bar-settings": {
+      "name_zh": "资源库设置",
+      "name_en": "Asset Browser settings"
+    }
+  },
+  "views": {
+    "layout-view": {
+      "name_en": "The Layout View"
+    },
+    "event-sheet-view": {
+      "name_en": "The Event Sheet View"
+    },
+    "animations-editor": {
+      "name_en": "The Animations Editor"
+    },
+    "debugger": {
+      "name_en": "The Debugger"
+    }
+  },
+  "stats": {
+    "bars": 12,
+    "dialogs": 89,
+    "views": 4
+  }
+}

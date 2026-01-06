@@ -1,0 +1,419 @@
+{
+  "id": "internationalization",
+  "originalId": "Internationalization",
+  "name_zh": "本地化",
+  "name_en": "Internationalization",
+  "description_zh": "允许管理字符串，对多语言及区域提供国际化和本地化的支持。",
+  "description_en": "Manage strings to translate an application into different languages.",
+  "path": "other/internationalization",
+  "categories": [
+    "internationalization"
+  ],
+  "conditions": [
+    {
+      "id": "compare-current-locale",
+      "name_zh": "比较当前区域",
+      "name_en": "Compare to current locale",
+      "description_zh": "指定一个特定的语言区域标识符，与本地化对象的当前区域设置进行比较。",
+      "description_en": "Compare a locale string against the locale string of the internationalization object.",
+      "scriptName": "CompareCurrentLocale",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "comparison",
+          "type": "cmp",
+          "name_zh": "比较",
+          "name_en": "Comparison"
+        },
+        {
+          "id": "locale",
+          "type": "string",
+          "name_zh": "区域设置",
+          "name_en": "Locale"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "set-locale",
+      "name_zh": "设置区域",
+      "name_en": "Set locale",
+      "description_zh": "设置本地化对象的区域，以提供不同的本地内容。",
+      "description_en": "Sets the locale of the internationalization object.",
+      "scriptName": "SetLocale",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "locale",
+          "type": "string",
+          "name_zh": "区域",
+          "name_en": "Locale"
+        }
+      ]
+    },
+    {
+      "id": "set-context",
+      "name_zh": "设置路径",
+      "name_en": "Set context",
+      "description_zh": "设置本地化对象的路径，用于联系上下文。",
+      "description_en": "Sets the current context of the internationalization object.",
+      "scriptName": "SetContext",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "context",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Context"
+        }
+      ]
+    },
+    {
+      "id": "push-context",
+      "name_zh": "追加路径",
+      "name_en": "Push context",
+      "description_zh": "将路径推入本地化对象的列表中。",
+      "description_en": "Pushes a new context into the internationalization object stack.",
+      "scriptName": "PushContext",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "context",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Context"
+        }
+      ]
+    },
+    {
+      "id": "pop-context",
+      "name_zh": "弹出路径",
+      "name_en": "Pop context",
+      "description_zh": "弹出本地化对象的列表最后一项元素。",
+      "description_en": "Pops the last element of the internationalization's object stack",
+      "scriptName": "PopContext",
+      "category": "internationalization"
+    },
+    {
+      "id": "add-string",
+      "name_zh": "添加文本",
+      "name_en": "Add string",
+      "description_zh": "添加一段新的文本到节点列表中。",
+      "description_en": "Adds a new string for the given context.",
+      "scriptName": "AddString",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "context",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Context"
+        },
+        {
+          "id": "string",
+          "type": "string",
+          "name_zh": "字符串",
+          "name_en": "String"
+        }
+      ]
+    },
+    {
+      "id": "load-from-json",
+      "name_zh": "加载翻译数据",
+      "name_en": "Load from JSON",
+      "description_zh": "从 JSON 字符串中加载翻译数据。特定格式请阅读文档。",
+      "description_en": "Loads translation data from a JSON string.",
+      "scriptName": "LoadFromJSON",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "json",
+          "type": "string",
+          "name_zh": "JSON",
+          "name_en": "JSON string"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "look-up",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取当前路径中的本地化字符串。",
+      "description_en": "Get the internationalized string at the current context.",
+      "expressionName": "Lookup",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "context",
+          "type": "string",
+          "name_zh": "内容",
+          "name_en": "Context"
+        }
+      ]
+    },
+    {
+      "id": "look-up-plural",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "根据定义的复数形式规则，在当前路径获取本地化字符串。",
+      "description_en": "Get the internationalized string at the current context using the defined pluralization rules.",
+      "expressionName": "LookupPlural",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "context",
+          "type": "string",
+          "name_zh": "内容",
+          "name_en": "Context"
+        },
+        {
+          "id": "count",
+          "type": "number",
+          "name_zh": "数量",
+          "name_en": "Count"
+        }
+      ]
+    },
+    {
+      "id": "current-context",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取本地化对象的当前路径。",
+      "description_en": "Get the current context of the internationalization object.",
+      "expressionName": "CurrentContext",
+      "returnType": "string",
+      "category": "internationalization"
+    },
+    {
+      "id": "select-plural",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定数字的复数形式。",
+      "description_en": "Get the plural category for the provided number.",
+      "expressionName": "SelectPlural",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "plural-number",
+          "type": "number",
+          "name_zh": "复数数词",
+          "name_en": "PluralNumber"
+        }
+      ]
+    },
+    {
+      "id": "plural-categorie-count",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取当前语言环境的复数形式的数量。",
+      "description_en": "Get amount of plural categories for the current locale.",
+      "expressionName": "PluralCategoryCount",
+      "returnType": "number",
+      "category": "internationalization"
+    },
+    {
+      "id": "plural-category-at",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定的复数形式类型",
+      "description_en": "Get the plural category for the given index.",
+      "expressionName": "PluralCategoryAt",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "category-index",
+          "type": "number",
+          "name_zh": "分类索引",
+          "name_en": "CategoryIndex"
+        }
+      ]
+    },
+    {
+      "id": "save-to-json",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取当前语言环境的翻译字符串，返回JSON格式。",
+      "description_en": "Get the translation strings for the current locale in JSON format.",
+      "expressionName": "SaveToJSON",
+      "returnType": "string",
+      "category": "internationalization"
+    },
+    {
+      "id": "locale",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取本地化对象的区域设置。",
+      "description_en": "Get the current locale of the internationalization object.",
+      "expressionName": "Locale",
+      "returnType": "string",
+      "category": "internationalization"
+    },
+    {
+      "id": "default-locale",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取系统默认的区域设置。",
+      "description_en": "Get the default system locale.",
+      "expressionName": "DefaultLocale",
+      "returnType": "string",
+      "category": "internationalization"
+    },
+    {
+      "id": "format-number-as-decimal",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将数字格式化为本地区域设置的小数格式。",
+      "description_en": "Format a number as a decimal using the current locale.",
+      "expressionName": "FormatNumberAsDecimal",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "number",
+          "type": "number",
+          "name_zh": "数字",
+          "name_en": "Number"
+        }
+      ]
+    },
+    {
+      "id": "format-number-as-percent",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将数字格式化为本地区域设置的百分比。",
+      "description_en": "Format a number as a percentage using the current locale.",
+      "expressionName": "FormatNumberAsPercent",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "number",
+          "type": "number",
+          "name_zh": "数字",
+          "name_en": "Number"
+        }
+      ]
+    },
+    {
+      "id": "format-number-as-currency",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将数字格式化为本地区域设置的货币。",
+      "description_en": "Format a number as a currency using the current locale.",
+      "expressionName": "FormatNumberAsCurrency",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "number",
+          "type": "number",
+          "name_zh": "数字",
+          "name_en": "Number"
+        },
+        {
+          "id": "currency",
+          "type": "string",
+          "name_zh": "货币",
+          "name_en": "Currency"
+        },
+        {
+          "id": "currency-display",
+          "type": "string",
+          "name_zh": "货币符号",
+          "name_en": "CurrencyDisplay"
+        }
+      ]
+    },
+    {
+      "id": "format-number-with-unit",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将数字格式化为当前区域的货币格式。",
+      "description_en": "Format a number using a specific unit and the current locale.",
+      "expressionName": "FormatNumberWithUnit",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "number",
+          "type": "number",
+          "name_zh": "数字",
+          "name_en": "Number"
+        },
+        {
+          "id": "unit",
+          "type": "string",
+          "name_zh": "单位",
+          "name_en": "Unit"
+        },
+        {
+          "id": "unit-display",
+          "type": "string",
+          "name_zh": "单位显示",
+          "name_en": "UnitDisplay"
+        }
+      ]
+    },
+    {
+      "id": "region-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定区域的本地化名称。",
+      "description_en": "Get the localized name of the provided locale's region",
+      "expressionName": "RegionName",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "locale",
+          "type": "string",
+          "name_zh": "地区",
+          "name_en": "RegionLocale"
+        }
+      ]
+    },
+    {
+      "id": "language-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "根据当前的语言环境，获取语言的名称。",
+      "description_en": "Get the localized name of a language according to the current locale",
+      "expressionName": "LanguageName",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "language",
+          "type": "string",
+          "name_zh": "语言区域",
+          "name_en": "LanguageLocale"
+        }
+      ]
+    },
+    {
+      "id": "currency-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "根据当前的语言环境，获取货币的本地化名称。",
+      "description_en": "Get the localized name of a currency according to the current locale",
+      "expressionName": "CurrencyName",
+      "returnType": "string",
+      "category": "internationalization",
+      "params": [
+        {
+          "id": "currency",
+          "type": "string",
+          "name_zh": "货币符号",
+          "name_en": "CurrencyCode"
+        }
+      ]
+    }
+  ]
+}

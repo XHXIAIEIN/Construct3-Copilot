@@ -1,0 +1,464 @@
+{
+  "id": "eightdir",
+  "originalId": "EightDir",
+  "name_zh": "八方向",
+  "name_en": "8 Direction",
+  "description_zh": "允许对象朝上下左右，及对角线方向移动。",
+  "description_en": "Moves an object up, down, left, right and on diagonals.",
+  "path": "movements/8direction",
+  "categories": [],
+  "conditions": [
+    {
+      "id": "is-moving",
+      "name_zh": "正在移动",
+      "name_en": "Is moving",
+      "description_zh": "检测对象是否正在移动。",
+      "description_en": "True when the object is moving.",
+      "scriptName": "IsMoving"
+    },
+    {
+      "id": "compare-speed",
+      "name_zh": "比较移动速度",
+      "name_en": "Compare speed",
+      "description_zh": "与对象当前的速度进行比较。",
+      "description_en": "Compare the current speed of the object.",
+      "scriptName": "CompareSpeed",
+      "params": [
+        {
+          "id": "comparison",
+          "type": "cmp",
+          "name_zh": "比较",
+          "name_en": "Comparison"
+        },
+        {
+          "id": "speed",
+          "type": "number",
+          "name_zh": "速度",
+          "name_en": "Speed"
+        }
+      ]
+    },
+    {
+      "id": "is-enabled",
+      "name_zh": "已启用",
+      "name_en": "Is enabled",
+      "description_zh": "检测当前行为是否已启用。",
+      "description_en": "Test if the behavior is enabled.",
+      "scriptName": "IsEnabled"
+    },
+    {
+      "id": "is-allow-sliding",
+      "name_zh": "允许沿边缘滑行",
+      "name_en": "Allows sliding",
+      "description_zh": "启用后，沿着倾斜的障碍移动时，会朝倾斜方向继续滑行而不是停下。",
+      "description_en": "Test if the behavior allows sliding along solids.",
+      "scriptName": "IsAllowSliding"
+    }
+  ],
+  "actions": [
+    {
+      "id": "stop",
+      "name_zh": "停止移动",
+      "name_en": "Stop",
+      "description_zh": "设置对象的移动速度为0",
+      "description_en": "Set the speed to zero.",
+      "scriptName": "Stop"
+    },
+    {
+      "id": "reverse",
+      "name_zh": "转向",
+      "name_en": "Reverse",
+      "description_zh": "使对象进行反向移动。",
+      "description_en": "Invert the direction of motion.",
+      "scriptName": "Reverse"
+    },
+    {
+      "id": "set-ignoring-input",
+      "name_zh": "屏蔽玩家控制",
+      "name_en": "Set ignoring input",
+      "description_zh": "是否屏蔽玩家对该对象移动的控制行为。",
+      "description_en": "Set whether to ignore the controls for this movement.",
+      "scriptName": "SetIgnoreInput",
+      "params": [
+        {
+          "id": "input",
+          "type": "combo",
+          "name_zh": "输入",
+          "name_en": "Input",
+          "items": [
+            "stop-ignoring",
+            "start-ignoring"
+          ],
+          "items_i18n": {
+            "stop-ignoring": {
+              "zh": "结束屏蔽",
+              "en": "Stop ignoring"
+            },
+            "start-ignoring": {
+              "zh": "开始屏蔽",
+              "en": "Start ignoring"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-speed",
+      "name_zh": "设置移动速度",
+      "name_en": "Set speed",
+      "description_zh": "设置对象当前的移动速度。",
+      "description_en": "Set the object's current speed.",
+      "scriptName": "SetSpeed",
+      "params": [
+        {
+          "id": "speed",
+          "type": "number",
+          "name_zh": "速度",
+          "name_en": "Speed"
+        }
+      ]
+    },
+    {
+      "id": "set-max-speed",
+      "name_zh": "设置最大移动速度",
+      "name_en": "Set max speed",
+      "description_zh": "设置对象的最大移动速度。",
+      "description_en": "Set the object's maximum speed.",
+      "scriptName": "SetMaxSpeed",
+      "params": [
+        {
+          "id": "max-speed",
+          "type": "number",
+          "name_zh": "最大移动速度",
+          "name_en": "Max Speed"
+        }
+      ]
+    },
+    {
+      "id": "set-acceleration",
+      "name_zh": "设置加速度",
+      "name_en": "Set acceleration",
+      "description_zh": "设置对象的加速度。",
+      "description_en": "Set the object's acceleration.",
+      "scriptName": "SetAcceleration",
+      "params": [
+        {
+          "id": "acceleration",
+          "type": "number",
+          "name_zh": "加速度",
+          "name_en": "Acceleration"
+        }
+      ]
+    },
+    {
+      "id": "set-deceleration",
+      "name_zh": "设置减速度",
+      "name_en": "Set deceleration",
+      "description_zh": "设置对象的减速度。",
+      "description_en": "Set the object's deceleration.",
+      "scriptName": "SetDeceleration",
+      "params": [
+        {
+          "id": "deceleration",
+          "type": "number",
+          "name_zh": "减速度",
+          "name_en": "Deceleration"
+        }
+      ]
+    },
+    {
+      "id": "simulate-control",
+      "name_zh": "模拟控制",
+      "name_en": "Simulate control",
+      "description_zh": "模拟玩家按下按键，来控制角色行动。",
+      "description_en": "Control the movement by events.",
+      "scriptName": "SimulateControl",
+      "params": [
+        {
+          "id": "control",
+          "type": "combo",
+          "name_zh": "控制",
+          "name_en": "Control",
+          "items": [
+            "left",
+            "right",
+            "up",
+            "down"
+          ],
+          "items_i18n": {
+            "left": {
+              "zh": "向左移动",
+              "en": "Left"
+            },
+            "right": {
+              "zh": "向右移动",
+              "en": "Right"
+            },
+            "up": {
+              "zh": "向上移动",
+              "en": "Up"
+            },
+            "down": {
+              "zh": "向下移动",
+              "en": "Down"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-enabled",
+      "name_zh": "设置启用",
+      "name_en": "Set enabled",
+      "description_zh": "启用或禁用此行为。",
+      "description_en": "Set whether this behavior is enabled.",
+      "scriptName": "SetEnabled",
+      "params": [
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "disabled",
+            "enabled"
+          ],
+          "items_i18n": {
+            "disabled": {
+              "zh": "禁用",
+              "en": "Disabled"
+            },
+            "enabled": {
+              "zh": "启用",
+              "en": "Enabled"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-vector-x",
+      "name_zh": "设置向量X",
+      "name_en": "Set vector X",
+      "description_zh": "在X轴方向的运动向量，以每秒像素为单位。大于 0 将向右运动，小于 0 则向左运动。",
+      "description_en": "Set the X component of motion.",
+      "scriptName": "SetVectorX",
+      "params": [
+        {
+          "id": "vector-x",
+          "type": "number",
+          "name_zh": "向量 X",
+          "name_en": "Vector X"
+        }
+      ]
+    },
+    {
+      "id": "set-vector-y",
+      "name_zh": "设置向量Y",
+      "name_en": "Set vector Y",
+      "description_zh": "在Y轴方向的运动向量，以每秒像素为单位。大于 0 将向上运动，小于 0 则向下运动。",
+      "description_en": "Set the Y component of motion.",
+      "scriptName": "SetVectorY",
+      "params": [
+        {
+          "id": "vector-y",
+          "type": "number",
+          "name_zh": "向量 Y",
+          "name_en": "Vector Y"
+        }
+      ]
+    },
+    {
+      "id": "set-default-controls",
+      "name_zh": "启用默认控制方式",
+      "name_en": "Set default controls",
+      "description_zh": "更改默认开启控制的设置。",
+      "description_en": "Change the default controls setting.",
+      "scriptName": "SetDefaultControls",
+      "params": [
+        {
+          "id": "default-controls",
+          "type": "boolean",
+          "name_zh": "默认的控制方式",
+          "name_en": "Default controls"
+        }
+      ]
+    },
+    {
+      "id": "set-allow-sliding",
+      "name_zh": "启用沿边缘滑行",
+      "name_en": "Set allow sliding",
+      "description_zh": "设置启用后，沿着倾斜的障碍移动时，会朝倾斜方向继续滑行而不是停下。",
+      "description_en": "Set whether the behavior allows sliding along solids.",
+      "scriptName": "SetAllowSliding",
+      "params": [
+        {
+          "id": "set-allow-sliding",
+          "type": "boolean",
+          "name_zh": "沿边缘滑行",
+          "name_en": "Allow sliding"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "speed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前的移动速度，以像素每秒为单位。",
+      "description_en": "The current object speed, in pixels per second.",
+      "expressionName": "Speed",
+      "returnType": "number"
+    },
+    {
+      "id": "maxspeed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "最大移动速度，以像素每秒为单位。",
+      "description_en": "The maximum speed setting, in pixels per second.",
+      "expressionName": "MaxSpeed",
+      "returnType": "number"
+    },
+    {
+      "id": "acceleration",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "从静止状态到正常移动速度的加速度，以像素每秒为单位。",
+      "description_en": "The acceleration setting, in pixels per second per second.",
+      "expressionName": "Acceleration",
+      "returnType": "number"
+    },
+    {
+      "id": "deceleration",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "从正常移动至完全停止的减速度，以像素每秒为单位。",
+      "description_en": "The deceleration setting, in pixels per second per second.",
+      "expressionName": "Deceleration",
+      "returnType": "number"
+    },
+    {
+      "id": "movingangle",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前移动的方向，以角度为单位。",
+      "description_en": "The current angle of motion, in degrees.",
+      "expressionName": "MovingAngle",
+      "returnType": "number"
+    },
+    {
+      "id": "vectorx",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在X轴方向的运动向量，以每秒像素为单位。大于 0 将向右运动，小于 0 则向左运动。",
+      "description_en": "The current X component of motion, in pixels per second.",
+      "expressionName": "VectorX",
+      "returnType": "number"
+    },
+    {
+      "id": "vectory",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在Y轴方向的运动向量，以每秒像素为单位。大于 0 将向上运动，小于 0 则向下运动。",
+      "description_en": "The current Y component of motion, in pixels per second.",
+      "expressionName": "VectorY",
+      "returnType": "number"
+    }
+  ],
+  "properties": [
+    {
+      "id": "set-angle",
+      "name_zh": "更改图像角度",
+      "name_en": "Set angle",
+      "description_zh": "启用后，将精灵图像的角度设置为移动角度。",
+      "description_en": "How to set the object's angle while moving.",
+      "items": {
+        "no": {
+          "zh": "关闭",
+          "en": "No"
+        },
+        "interval-90": {
+          "zh": "90° 间隔",
+          "en": "90° intervals"
+        },
+        "interval-45": {
+          "zh": "45° 间隔",
+          "en": "45° intervals"
+        },
+        "smooth": {
+          "zh": "360° 间隔",
+          "en": "Smooth"
+        }
+      }
+    },
+    {
+      "id": "default-controls",
+      "name_zh": "使用默认控制方式",
+      "name_en": "Default controls",
+      "description_zh": "启用后，默认允许使用方向键控制移动。否则，只能通过 '模拟控制' 来移动。",
+      "description_en": "If enabled, arrow keys control movement.  Otherwise, use the 'simulate control' action."
+    },
+    {
+      "id": "enabled",
+      "name_zh": "启用",
+      "name_en": "Enabled",
+      "description_zh": "对象创建时，是否默认启用该行为。",
+      "description_en": "Whether the behavior is initially enabled or disabled."
+    },
+    {
+      "id": "max-speed",
+      "name_zh": "最大速度",
+      "name_en": "Max speed",
+      "description_zh": "最大移动速度，以像素/秒为单位。",
+      "description_en": "The maximum speed, in pixels per second, the object can travel at."
+    },
+    {
+      "id": "acceleration",
+      "name_zh": "加速度",
+      "name_en": "Acceleration",
+      "description_zh": "从静止状态到正常移动速度的加速度，以像素/秒为单位。",
+      "description_en": "The rate of acceleration, in pixels per second per second."
+    },
+    {
+      "id": "deceleration",
+      "name_zh": "减速度",
+      "name_en": "Deceleration",
+      "description_zh": "从正常移动至完全停止的减速度，以像素/秒为单位。",
+      "description_en": "The rate of deceleration, in pixels per second per second."
+    },
+    {
+      "id": "directions",
+      "name_zh": "运动方向",
+      "name_en": "Directions",
+      "description_zh": "对象朝多个方向移动的方式。",
+      "description_en": "The number of directions of movement available.",
+      "items": {
+        "up-down": {
+          "zh": "上下移动",
+          "en": "Up & down"
+        },
+        "left-right": {
+          "zh": "左右移动",
+          "en": "Left & right"
+        },
+        "dir-4": {
+          "zh": "四方向",
+          "en": "4 directions"
+        },
+        "dir-8": {
+          "zh": "八方向",
+          "en": "8 directions"
+        }
+      }
+    },
+    {
+      "id": "allow-sliding",
+      "name_zh": "沿边缘滑行",
+      "name_en": "Allow sliding",
+      "description_zh": "启用后，沿着倾斜的障碍移动时，会朝倾斜方向继续滑行而不是停下。",
+      "description_en": "If enabled, moving along sloped obstacles allows sliding along them rather than stopping."
+    }
+  ],
+  "productTypes": "games"
+}

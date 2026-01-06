@@ -1,0 +1,35 @@
+{
+  "id": "bookmarks",
+  "name_zh": "书签栏",
+  "name_en": "Bookmarks",
+  "menuItems": [
+    {
+      "id": "go-to",
+      "name_zh": "跳转",
+      "name_en": "Go To"
+    },
+    {
+      "id": "remove",
+      "name_zh": "移除",
+      "name_en": "Remove"
+    },
+    {
+      "id": "remove-all",
+      "name_zh": "移除所有",
+      "name_en": "Remove All"
+    },
+    {
+      "id": "toggle-bookmark",
+      "name_zh": "书签",
+      "name_en": "Toggle Bookmark"
+    },
+    {
+      "id": "help",
+      "name_zh": "帮助",
+      "name_en": "Help"
+    }
+  ],
+  "description_en": "Paid plans only The Bookmarks Bar shows an overview of all the bookmarks in the project. Bookmarks are a way of marking and quickly moving between events in the Event Sheet View . The Bookmarks Bar In the Event Sheet View, bookmarks can be toggled by pressing F2 or right-clicking and selecting Toggle bookmark . Bookmarks can also be navigated between with Ctrl+F2 (for next bookmark) and Shift+F2 (for previous bookmark). Alternatively you can double-click the bookmark listed in the Bookmarks Bar.",
+  "url": "/en/make-games/manuals/construct-3/interface/bars/bookmarks-bar",
+  "sections": []
+}

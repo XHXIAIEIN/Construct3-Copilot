@@ -1,0 +1,197 @@
+{
+  "id": "speechsynthesis",
+  "originalId": "SpeechSynthesis",
+  "name_zh": "语音合成",
+  "name_en": "Speech synthesis",
+  "description_zh": "使用文本转语音引擎自动读出文本",
+  "description_en": "Use a text-to-speech engine to automatically read text aloud.",
+  "path": "media/speechsynthesis",
+  "categories": [
+    "speech-synthesis"
+  ],
+  "conditions": [
+    {
+      "id": "supports-speech-synthesis",
+      "name_zh": "支持语音合成",
+      "name_en": "Supports speech synthesis",
+      "description_zh": "测试设备是否支持语音合成。",
+      "description_en": "True if the current browser supports speech synthesis.",
+      "scriptName": "SupportsSpeechSynthesis",
+      "category": "speech-synthesis"
+    },
+    {
+      "id": "is-speaking",
+      "name_zh": "正在讲话",
+      "name_en": "Is speaking",
+      "description_zh": "检测当前是否正在讲话。",
+      "description_en": "True if currently speaking some text.",
+      "scriptName": "IsSpeaking",
+      "category": "speech-synthesis"
+    },
+    {
+      "id": "on-speech-ended",
+      "name_zh": "说话结束",
+      "name_en": "On speech ended",
+      "description_zh": "在说完话后被触发",
+      "description_en": "Triggered when a phrase finishes being spoken.",
+      "scriptName": "OnSpeechEnded",
+      "isTrigger": true,
+      "category": "speech-synthesis"
+    },
+    {
+      "id": "on-speech-error",
+      "name_zh": "发声错误",
+      "name_en": "On speech error",
+      "description_zh": "在语音合成失败时触发",
+      "description_en": "Triggered if an error occurs when trying to speak text.",
+      "scriptName": "OnSpeechError",
+      "isTrigger": true,
+      "category": "speech-synthesis"
+    }
+  ],
+  "actions": [
+    {
+      "id": "speak-text",
+      "name_zh": "说话",
+      "name_en": "Speak text",
+      "description_zh": "用语音合成读出一些文本。",
+      "description_en": "Read out some text with speech synthesis.",
+      "scriptName": "SpeakText",
+      "category": "speech-synthesis",
+      "params": [
+        {
+          "id": "text",
+          "type": "string",
+          "name_zh": "文本",
+          "name_en": "Text"
+        },
+        {
+          "id": "language",
+          "type": "string",
+          "name_zh": "语言",
+          "name_en": "Language"
+        },
+        {
+          "id": "voice-uri",
+          "type": "string",
+          "name_zh": "声音文件地址",
+          "name_en": "Voice URI"
+        },
+        {
+          "id": "volume",
+          "type": "number",
+          "name_zh": "音量",
+          "name_en": "Volume"
+        },
+        {
+          "id": "rate",
+          "type": "number",
+          "name_zh": "速率",
+          "name_en": "Rate",
+          "initialValue": "1"
+        },
+        {
+          "id": "pitch",
+          "type": "number",
+          "name_zh": "音高",
+          "name_en": "Pitch",
+          "initialValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "stop-speaking",
+      "name_zh": "停止语音输入",
+      "name_en": "Stop speaking",
+      "description_zh": "取消任何活动的语音合成。",
+      "description_en": "Cancel any active speech synthesis.",
+      "scriptName": "StopSpeaking",
+      "category": "speech-synthesis"
+    },
+    {
+      "id": "pause-speaking",
+      "name_zh": "暂停语音输入",
+      "name_en": "Pause speaking",
+      "description_zh": "暂停任何活动的语音合成。",
+      "description_en": "Pause any active speech synthesis.",
+      "scriptName": "PauseSpeaking",
+      "category": "speech-synthesis"
+    },
+    {
+      "id": "resume-speaking",
+      "name_zh": "恢复语音输入",
+      "name_en": "Resume speaking",
+      "description_zh": "恢复先前暂停的语音合成。",
+      "description_en": "Resume a previously paused speech synthesis.",
+      "scriptName": "ResumeSpeaking",
+      "category": "speech-synthesis"
+    }
+  ],
+  "expressions": [
+    {
+      "id": "voicecount",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回可用语音的数量。",
+      "description_en": "Return the number of available voices.",
+      "expressionName": "VoiceCount",
+      "returnType": "number",
+      "category": "speech-synthesis"
+    },
+    {
+      "id": "voicenameat",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回索引处的语音名称。",
+      "description_en": "Return the name of a voice at an index.",
+      "expressionName": "VoiceNameAt",
+      "returnType": "string",
+      "category": "speech-synthesis",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "voicelangat",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在索引处返回语音的语言。",
+      "description_en": "Return the language of a voice at an index.",
+      "expressionName": "VoiceLangAt",
+      "returnType": "string",
+      "category": "speech-synthesis",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "voiceuriat",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回索引处语音的URI。",
+      "description_en": "Return the URI of a voice at an index.",
+      "expressionName": "VoiceURIAt",
+      "returnType": "string",
+      "category": "speech-synthesis",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    }
+  ],
+  "productTypes": "games"
+}

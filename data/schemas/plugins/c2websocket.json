@@ -1,0 +1,212 @@
+{
+  "id": "c2websocket",
+  "originalId": "C2WebSocket",
+  "name_zh": "WebSocket",
+  "name_en": "WebSocket",
+  "description_zh": "发送和接收文本消息到 WebSocket 服务器。",
+  "description_en": "Send and receive text messages to a WebSocket server.",
+  "path": "web/websocket",
+  "categories": [
+    "connection",
+    "data"
+  ],
+  "conditions": [
+    {
+      "id": "on-opened",
+      "name_zh": "连接打开",
+      "name_en": "On opened",
+      "description_zh": "与 WebSocket 服务器成功建立连接时触发。",
+      "description_en": "Triggered when the connection to the WebSocket server is successfully established.",
+      "scriptName": "OnOpened",
+      "isTrigger": true,
+      "category": "connection"
+    },
+    {
+      "id": "on-closed",
+      "name_zh": "连接关闭",
+      "name_en": "On closed",
+      "description_zh": "关闭活动连接时触发。",
+      "description_en": "Triggered when an active connection is closed.",
+      "scriptName": "OnClosed",
+      "isTrigger": true,
+      "category": "connection"
+    },
+    {
+      "id": "on-error",
+      "name_zh": "连接错误",
+      "name_en": "On error",
+      "description_zh": "出现连接错误时触发。",
+      "description_en": "Triggered when there is a connection error.",
+      "scriptName": "OnError",
+      "isTrigger": true,
+      "category": "connection"
+    },
+    {
+      "id": "is-open",
+      "name_zh": "已开启",
+      "name_en": "Is open",
+      "description_zh": "检测连接当前是否已打开。",
+      "description_en": "True if the connection is currently open.",
+      "scriptName": "IsOpen",
+      "category": "connection"
+    },
+    {
+      "id": "is-connecting",
+      "name_zh": "正在连接",
+      "name_en": "Is connecting",
+      "description_zh": "检测当前是否正在建立连接。",
+      "description_en": "True if the connection is currently being established.",
+      "scriptName": "IsConnecting",
+      "category": "connection"
+    },
+    {
+      "id": "is-supported",
+      "name_zh": "设备受支持",
+      "name_en": "Is supported",
+      "description_zh": "检测当前运行设备是否支持 WebSocket 连接。",
+      "description_en": "True if the user's client supports WebSocket connections.",
+      "scriptName": "IsSupported",
+      "category": "connection"
+    },
+    {
+      "id": "on-message",
+      "name_zh": "收到文字消息",
+      "name_en": "On text message",
+      "description_zh": "从服务器收到消息时触发。",
+      "description_en": "Triggered when a message is received from the server in text format.",
+      "scriptName": "OnMessage",
+      "isTrigger": true,
+      "category": "data"
+    },
+    {
+      "id": "on-binary-message",
+      "name_zh": "接收到二进制消息",
+      "name_en": "On binary message",
+      "description_zh": "当服务器收到二进制数据消息时触发。",
+      "description_en": "Triggered when a message is received from the server in binary format.",
+      "scriptName": "OnBinaryMessage",
+      "isTrigger": true,
+      "category": "data",
+      "params": [
+        {
+          "id": "receive-to",
+          "type": "object",
+          "name_zh": "接收到",
+          "name_en": "Receive to"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "connect",
+      "name_zh": "连接",
+      "name_en": "Connect",
+      "description_zh": "连接到 WebSocket 服务器。",
+      "description_en": "Connect to a WebSocket server.",
+      "scriptName": "Connect",
+      "isAsync": true,
+      "category": "connection",
+      "params": [
+        {
+          "id": "url",
+          "type": "string",
+          "name_zh": "URL",
+          "name_en": "URL",
+          "initialValue": "\"ws://\""
+        },
+        {
+          "id": "protocol-optional",
+          "type": "string",
+          "name_zh": "子协议(可选)",
+          "name_en": "Protocol (optional)"
+        }
+      ]
+    },
+    {
+      "id": "close",
+      "name_zh": "关闭连接",
+      "name_en": "Close",
+      "description_zh": "关闭所有活跃的 WebSocket 连接。",
+      "description_en": "Close any active WebSocket connection.",
+      "scriptName": "Close",
+      "category": "connection"
+    },
+    {
+      "id": "send-text",
+      "name_zh": "发送文本",
+      "name_en": "Send text",
+      "description_zh": "将文本字符串发送到服务器。",
+      "description_en": "Send a text string to the server.",
+      "scriptName": "Send",
+      "category": "data",
+      "params": [
+        {
+          "id": "data",
+          "type": "string",
+          "name_zh": "数据",
+          "name_en": "Data"
+        }
+      ]
+    },
+    {
+      "id": "send-binary",
+      "name_zh": "发送二进制",
+      "name_en": "Send binary",
+      "description_zh": "将二进制数据对象的内容发送到服务器。",
+      "description_en": "Send the contents of a Binary Data object to the server.",
+      "scriptName": "SendBinary",
+      "category": "data",
+      "params": [
+        {
+          "id": "data",
+          "type": "object",
+          "name_zh": "二进制数据",
+          "name_en": "Binary data"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "errormsg",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在触发事件 '连接出错' 中的错误消息。",
+      "description_en": "The error message in 'On error'.",
+      "expressionName": "ErrorMsg",
+      "returnType": "string",
+      "category": "connection"
+    },
+    {
+      "id": "closecode",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "触发事件 '已关闭' 的关闭代码。",
+      "description_en": "The close code in 'On closed'.",
+      "expressionName": "CloseCode",
+      "returnType": "string",
+      "category": "connection"
+    },
+    {
+      "id": "closereason",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "触发事件 '连接被关闭' 的关闭原因。",
+      "description_en": "The reason for closing in 'On closed'.",
+      "expressionName": "CloseReason",
+      "returnType": "string",
+      "category": "connection"
+    },
+    {
+      "id": "messagetext",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在 '收到文字消息' 条件中，收到的文本内容。",
+      "description_en": "The text content of the message in 'On message'.",
+      "expressionName": "MessageText",
+      "returnType": "string",
+      "category": "data"
+    }
+  ]
+}

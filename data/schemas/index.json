@@ -1,0 +1,42 @@
+{
+  "version": "3.0",
+  "source": "r466",
+  "generatedAt": "2026-01-02T08:17:30.490Z",
+  "languages": [
+    "zh",
+    "en"
+  ],
+  "directories": {
+    "plugins": "plugins/",
+    "behaviors": "behaviors/",
+    "effects": "effects/",
+    "editor": "editor/",
+    "features": "features/"
+  },
+  "stats": {
+    "plugins": {
+      "count": 72,
+      "conditions": 677,
+      "actions": 776,
+      "expressions": 957
+    },
+    "behaviors": {
+      "count": 31,
+      "conditions": 115,
+      "actions": 248,
+      "expressions": 138
+    },
+    "effects": {
+      "count": 89
+    },
+    "editor": {
+      "bars": 12,
+      "dialogs": 89,
+      "views": 4
+    },
+    "features": {
+      "count": 1
+    },
+    "total_aces": 2911
+  }
+}

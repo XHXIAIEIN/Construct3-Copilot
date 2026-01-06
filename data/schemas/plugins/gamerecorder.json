@@ -1,0 +1,775 @@
+{
+  "id": "gamerecorder",
+  "originalId": "GameRecorder",
+  "name_zh": "屏幕录制",
+  "name_en": "Video recorder",
+  "description_zh": "录制游戏画面或整个屏幕的视频。",
+  "description_en": "Record videos of the project or the whole screen in real-time.",
+  "path": "media/videorecorder",
+  "categories": [
+    "recording"
+  ],
+  "conditions": [
+    {
+      "id": "on-recording-ready",
+      "name_zh": "录制完成",
+      "name_en": "On recording ready",
+      "description_zh": "执行 '停止录制' 动作后，返回的 '录屏文件地址' 表达式可用时触发。",
+      "description_en": "Triggered after 'Stop recording' when the recording is available in the RecordingURL expression.",
+      "scriptName": "OnRecordingReady",
+      "isTrigger": true,
+      "category": "recording"
+    },
+    {
+      "id": "on-recording-error",
+      "name_zh": "录制失败",
+      "name_en": "On recording error",
+      "description_zh": "如果在录制期间发生了错误，则触发此条件。",
+      "description_en": "Triggered if an error occurs during recording.",
+      "scriptName": "OnRecordingError",
+      "isTrigger": true,
+      "category": "recording"
+    },
+    {
+      "id": "is-recording-supported",
+      "name_zh": "支持屏幕录制",
+      "name_en": "Is recording supported",
+      "description_zh": "检测运行设备是否支持屏幕录制。",
+      "description_en": "True if the current browser supports video recording.",
+      "scriptName": "SupportsRecording",
+      "category": "recording"
+    },
+    {
+      "id": "is-screen-recording-supported",
+      "name_zh": "设备支持录制",
+      "name_en": "Is screen recording supported",
+      "description_zh": "检测浏览器是否支持使用屏幕录制功能。",
+      "description_en": "True if the current browser supports screen recording.",
+      "scriptName": "SupportsScreenRecording",
+      "category": "recording"
+    },
+    {
+      "id": "is-video-format-supported",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsVideoFormatSupported",
+      "isDeprecated": true,
+      "category": "recording",
+      "params": [
+        {
+          "id": "format",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "webm-vp8",
+            "webm-vp9",
+            "mpeg4-h264"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "is-audio-format-supported",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsAudioFormatSupported",
+      "isDeprecated": true,
+      "category": "recording",
+      "params": [
+        {
+          "id": "format",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "ogg-opus",
+            "webm-opus",
+            "mpeg4-aac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "is-video-format-supported-2",
+      "name_zh": "支持视频格式",
+      "name_en": "Is video format supported",
+      "description_zh": "测试指定的视频格式是否受支持。",
+      "description_en": "Check if a particular video format is supported for recording.",
+      "scriptName": "IsVideoFormatSupported2",
+      "category": "recording",
+      "params": [
+        {
+          "id": "container",
+          "type": "combo",
+          "name_zh": "格式",
+          "name_en": "Container",
+          "items": [
+            "webm",
+            "mp4"
+          ],
+          "items_i18n": {
+            "webm": {
+              "zh": "WebM",
+              "en": "WebM"
+            },
+            "mp4": {
+              "zh": "MP4",
+              "en": "MP4"
+            }
+          }
+        },
+        {
+          "id": "codec",
+          "type": "combo",
+          "name_zh": "视频编解码器",
+          "name_en": "Video codec",
+          "items": [
+            "vp8",
+            "vp9",
+            "h264",
+            "h265"
+          ],
+          "items_i18n": {
+            "vp8": {
+              "zh": "VP8",
+              "en": "VP8"
+            },
+            "vp9": {
+              "zh": "VP9",
+              "en": "VP9"
+            },
+            "h264": {
+              "zh": "H.264",
+              "en": "H.264"
+            },
+            "h265": {
+              "zh": "H.265",
+              "en": "H.265"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "is-audio-format-supported-2",
+      "name_zh": "支持音频格式",
+      "name_en": "Is audio format supported",
+      "description_zh": "检查音频格式录制是否受支持。",
+      "description_en": "Check if a particular audio format is supported for recording.",
+      "scriptName": "IsAudioFormatSupported2",
+      "category": "recording",
+      "params": [
+        {
+          "id": "container",
+          "type": "combo",
+          "name_zh": "视频格式",
+          "name_en": "Container",
+          "items": [
+            "webm",
+            "mp4"
+          ],
+          "items_i18n": {
+            "webm": {
+              "zh": "WebM",
+              "en": "WebM"
+            },
+            "mp4": {
+              "zh": "MP4",
+              "en": "MP4"
+            }
+          }
+        },
+        {
+          "id": "codec",
+          "type": "combo",
+          "name_zh": "音频编解码器",
+          "name_en": "Audio codec",
+          "items": [
+            "opus",
+            "aac"
+          ],
+          "items_i18n": {
+            "opus": {
+              "zh": "Opus",
+              "en": "Opus"
+            },
+            "aac": {
+              "zh": "AAC",
+              "en": "AAC"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "is-recording",
+      "name_zh": "正在录制",
+      "name_en": "Is recording",
+      "description_zh": "检测目前是否正处于录制状态。",
+      "description_en": "True while actively recording a video.",
+      "scriptName": "IsRecording",
+      "category": "recording"
+    }
+  ],
+  "actions": [
+    {
+      "id": "start-recording",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "StartRecording",
+      "isDeprecated": true,
+      "category": "recording",
+      "params": [
+        {
+          "id": "video-format",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "webm-vp8",
+            "webm-vp9",
+            "mpeg4-h264"
+          ]
+        },
+        {
+          "id": "framerate",
+          "type": "number",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "audio-format",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "ogg-opus",
+            "webm-opus",
+            "mpeg4-aac"
+          ]
+        },
+        {
+          "id": "quality-kbps",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "2500"
+        }
+      ]
+    },
+    {
+      "id": "start-recording-2",
+      "name_zh": "开始实时录制",
+      "name_en": "Start recording",
+      "description_zh": "实时录制项目，保存为视频。",
+      "description_en": "Record a real-time video of the project.",
+      "scriptName": "StartRecording2",
+      "category": "recording",
+      "params": [
+        {
+          "id": "container",
+          "type": "combo",
+          "name_zh": "格式",
+          "name_en": "Container",
+          "initialValue": "auto",
+          "items": [
+            "auto",
+            "webm",
+            "mp4"
+          ],
+          "items_i18n": {
+            "auto": {
+              "zh": "自动",
+              "en": "Auto"
+            },
+            "webm": {
+              "zh": "WebM",
+              "en": "WebM"
+            },
+            "mp4": {
+              "zh": "MP4",
+              "en": "MP4"
+            }
+          }
+        },
+        {
+          "id": "video-codec",
+          "type": "combo",
+          "name_zh": "视频编解码器",
+          "name_en": "Video codec",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "vp8",
+            "vp9",
+            "h264",
+            "h265"
+          ],
+          "items_i18n": {
+            "none": {
+              "zh": "无(没有画面)",
+              "en": "None (no video)"
+            },
+            "auto": {
+              "zh": "自动",
+              "en": "Auto"
+            },
+            "vp8": {
+              "zh": "VP8",
+              "en": "VP8"
+            },
+            "vp9": {
+              "zh": "VP9",
+              "en": "VP9"
+            },
+            "h264": {
+              "zh": "H.264",
+              "en": "H.264"
+            },
+            "h265": {
+              "zh": "H.265",
+              "en": "H.265"
+            }
+          }
+        },
+        {
+          "id": "framerate",
+          "type": "number",
+          "name_zh": "帧率",
+          "name_en": "Framerate"
+        },
+        {
+          "id": "audio-codec",
+          "type": "combo",
+          "name_zh": "音频编解码器",
+          "name_en": "Audio codec",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "opus",
+            "aac"
+          ],
+          "items_i18n": {
+            "none": {
+              "zh": "无(没有音频)",
+              "en": "None (no audio)"
+            },
+            "auto": {
+              "zh": "自动",
+              "en": "Auto"
+            },
+            "opus": {
+              "zh": "Opus",
+              "en": "Opus"
+            },
+            "aac": {
+              "zh": "AAC",
+              "en": "AAC"
+            }
+          }
+        },
+        {
+          "id": "quality-kbps",
+          "type": "number",
+          "name_zh": "质量(kbps)",
+          "name_en": "Quality (kbps)",
+          "initialValue": "2500"
+        }
+      ]
+    },
+    {
+      "id": "start-screen-recording",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "StartScreenRecording",
+      "isDeprecated": true,
+      "category": "recording",
+      "params": [
+        {
+          "id": "video-format",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "webm-vp8",
+            "webm-vp9",
+            "mpeg4-h264"
+          ]
+        },
+        {
+          "id": "audio-format",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "ogg-opus",
+            "webm-opus",
+            "mpeg4-aac"
+          ]
+        },
+        {
+          "id": "system-audio",
+          "type": "boolean",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "quality-kbps",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "2500"
+        }
+      ]
+    },
+    {
+      "id": "start-screen-recording-2",
+      "name_zh": "开始屏幕录制",
+      "name_en": "Start screen recording",
+      "description_zh": "实时录制用户画面，保存为视频。",
+      "description_en": "Record a real-time video of the user's screen.",
+      "scriptName": "StartScreenRecording2",
+      "category": "recording",
+      "params": [
+        {
+          "id": "container",
+          "type": "combo",
+          "name_zh": "格式",
+          "name_en": "Container",
+          "initialValue": "auto",
+          "items": [
+            "auto",
+            "webm",
+            "mp4"
+          ],
+          "items_i18n": {
+            "auto": {
+              "zh": "自动",
+              "en": "Auto"
+            },
+            "webm": {
+              "zh": "WebM",
+              "en": "WebM"
+            },
+            "mp4": {
+              "zh": "MP4",
+              "en": "MP4"
+            }
+          }
+        },
+        {
+          "id": "video-codec",
+          "type": "combo",
+          "name_zh": "视频编解码器",
+          "name_en": "Video codec",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "vp8",
+            "vp9",
+            "h264",
+            "h265"
+          ],
+          "items_i18n": {
+            "none": {
+              "zh": "无(没有画面)",
+              "en": "None (no video)"
+            },
+            "auto": {
+              "zh": "自动",
+              "en": "Auto"
+            },
+            "vp8": {
+              "zh": "VP8",
+              "en": "VP8"
+            },
+            "vp9": {
+              "zh": "VP9",
+              "en": "VP9"
+            },
+            "h264": {
+              "zh": "H.264",
+              "en": "H.264"
+            },
+            "h265": {
+              "zh": "H.265",
+              "en": "H.265"
+            }
+          }
+        },
+        {
+          "id": "audio-codec",
+          "type": "combo",
+          "name_zh": "音频编解码器",
+          "name_en": "Audio codec",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "opus",
+            "aac"
+          ],
+          "items_i18n": {
+            "none": {
+              "zh": "无(没有音频)",
+              "en": "None (no audio)"
+            },
+            "auto": {
+              "zh": "自动",
+              "en": "Auto"
+            },
+            "opus": {
+              "zh": "Opus",
+              "en": "Opus"
+            },
+            "aac": {
+              "zh": "AAC",
+              "en": "AAC"
+            }
+          }
+        },
+        {
+          "id": "system-audio",
+          "type": "boolean",
+          "name_zh": "系统音频",
+          "name_en": "System audio"
+        },
+        {
+          "id": "quality-kbps",
+          "type": "number",
+          "name_zh": "质量(kbps)",
+          "name_en": "Quality (kbps)",
+          "initialValue": "2500"
+        }
+      ]
+    },
+    {
+      "id": "start-user-media-recording",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "StartUserMediaRecording",
+      "isDeprecated": true,
+      "category": "recording",
+      "params": [
+        {
+          "id": "video-format",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "webm-vp8",
+            "webm-vp9",
+            "mpeg4-h264"
+          ]
+        },
+        {
+          "id": "audio-format",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "ogg-opus",
+            "webm-opus",
+            "mpeg4-aac"
+          ]
+        },
+        {
+          "id": "quality-kbps",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "2500"
+        }
+      ]
+    },
+    {
+      "id": "start-user-media-recording-2",
+      "name_zh": "媒体录制",
+      "name_en": "Start User Media recording",
+      "description_zh": "录制来自用户媒体对象的音频或视频。",
+      "description_en": "Record the audio or video from an active User Media object.",
+      "scriptName": "StartUserMediaRecording2",
+      "category": "recording",
+      "params": [
+        {
+          "id": "container",
+          "type": "combo",
+          "name_zh": "格式",
+          "name_en": "Container",
+          "initialValue": "auto",
+          "items": [
+            "auto",
+            "webm",
+            "mp4"
+          ],
+          "items_i18n": {
+            "auto": {
+              "zh": "自动",
+              "en": "Auto"
+            },
+            "webm": {
+              "zh": "WebM",
+              "en": "WebM"
+            },
+            "mp4": {
+              "zh": "MP4",
+              "en": "MP4"
+            }
+          }
+        },
+        {
+          "id": "video-codec",
+          "type": "combo",
+          "name_zh": "视频编解码器",
+          "name_en": "Video codec",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "vp8",
+            "vp9",
+            "h264",
+            "h265"
+          ],
+          "items_i18n": {
+            "none": {
+              "zh": "无(没有画面)",
+              "en": "None (no video)"
+            },
+            "auto": {
+              "zh": "自动",
+              "en": "Auto"
+            },
+            "vp8": {
+              "zh": "VP8",
+              "en": "VP8"
+            },
+            "vp9": {
+              "zh": "VP9",
+              "en": "VP9"
+            },
+            "h264": {
+              "zh": "H.264",
+              "en": "H.264"
+            },
+            "h265": {
+              "zh": "H.265",
+              "en": "H.265"
+            }
+          }
+        },
+        {
+          "id": "audio-codec",
+          "type": "combo",
+          "name_zh": "音频编解码器",
+          "name_en": "Audio codec",
+          "initialValue": "auto",
+          "items": [
+            "none",
+            "auto",
+            "opus",
+            "aac"
+          ],
+          "items_i18n": {
+            "none": {
+              "zh": "无(没有音频)",
+              "en": "None (no audio)"
+            },
+            "auto": {
+              "zh": "自动",
+              "en": "Auto"
+            },
+            "opus": {
+              "zh": "Opus",
+              "en": "Opus"
+            },
+            "aac": {
+              "zh": "AAC",
+              "en": "AAC"
+            }
+          }
+        },
+        {
+          "id": "quality-kbps",
+          "type": "number",
+          "name_zh": "质量(kbps)",
+          "name_en": "Quality (kbps)",
+          "initialValue": "2500"
+        }
+      ]
+    },
+    {
+      "id": "stop-recording",
+      "name_zh": "停止录制",
+      "name_en": "Stop recording",
+      "description_zh": "结束视频录制。处理完成后将触发 '录制完成' 条件。",
+      "description_en": "Finish recording a video. Triggers 'On recording ready' when available.",
+      "scriptName": "StopRecording",
+      "category": "recording"
+    }
+  ],
+  "expressions": [
+    {
+      "id": "recordingurl",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回可被浏览器对象下载使用的录像文件URL。",
+      "description_en": "Return a URL of the recording that can be downloaded with the Browser object.",
+      "expressionName": "RecordingURL",
+      "returnType": "string",
+      "category": "recording"
+    },
+    {
+      "id": "recording-type",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回录制结果的MIME类型，如：\"\"video/webm\"\"",
+      "description_en": "Return the MIME type of the recording, e.g. \"\"video/webm\"\".",
+      "expressionName": "RecordingType",
+      "returnType": "string",
+      "category": "recording"
+    },
+    {
+      "id": "recording-file-extension",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回录制结果的文件扩展名，如：\"\".webm\"\"",
+      "description_en": "Return the file extension for the recording, e.g. \"\".webm\"\".",
+      "expressionName": "RecordingFileExtension",
+      "returnType": "string",
+      "category": "recording"
+    }
+  ]
+}

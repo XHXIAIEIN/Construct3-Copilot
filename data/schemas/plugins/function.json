@@ -1,0 +1,179 @@
+{
+  "id": "function",
+  "originalId": "Function",
+  "name_zh": "",
+  "name_en": "",
+  "description_zh": "",
+  "description_en": "",
+  "path": "deprecated/function",
+  "categories": [
+    "function"
+  ],
+  "conditions": [
+    {
+      "id": "on-function",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnFunction",
+      "isTrigger": true,
+      "category": "function",
+      "params": [
+        {
+          "id": "name",
+          "type": "functionname",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "compare-parameter",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "CompareParam",
+      "category": "function",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "comparison",
+          "type": "cmp",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "call-function",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "CallFunction",
+      "category": "function",
+      "params": [
+        {
+          "id": "name",
+          "type": "functionname",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "parameter-n",
+          "type": "variadic",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "set-return-value",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetReturnValue",
+      "category": "function",
+      "params": [
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "call-expression",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "CallExpression",
+      "category": "function",
+      "params": [
+        {
+          "id": "expression",
+          "type": "any",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "returnvalue",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "ReturnValue",
+      "returnType": "any",
+      "category": "function"
+    },
+    {
+      "id": "paramcount",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "ParamCount",
+      "returnType": "number",
+      "category": "function"
+    },
+    {
+      "id": "param",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "Param",
+      "returnType": "any",
+      "category": "function",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "call",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "Call",
+      "returnType": "any",
+      "category": "function",
+      "params": [
+        {
+          "id": "name",
+          "type": "functionname",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    }
+  ],
+  "productTypes": "games"
+}

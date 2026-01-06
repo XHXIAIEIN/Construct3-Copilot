@@ -1,0 +1,296 @@
+{
+  "id": "dictionary",
+  "originalId": "Dictionary",
+  "name_zh": "字典",
+  "name_en": "Dictionary",
+  "description_zh": "将数据存储在对应的字段里。相比本地变量，字典的数据存储方式更自由。",
+  "description_en": "Store data under named keys, e.g. set \"\"key\"\" to \"\"value\"\".",
+  "path": "data-and-storage/dictionary",
+  "categories": [
+    "dictionary",
+    "for-each",
+    "json"
+  ],
+  "conditions": [
+    {
+      "id": "compare-value",
+      "name_zh": "比较值",
+      "name_en": "Compare value",
+      "description_zh": "比较一个字段对应的值。",
+      "description_en": "Compare the value at a key.",
+      "scriptName": "CompareValue",
+      "category": "dictionary",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "字段",
+          "name_en": "Key"
+        },
+        {
+          "id": "comparison",
+          "type": "cmp",
+          "name_zh": "比较",
+          "name_en": "Comparison"
+        },
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "has-key",
+      "name_zh": "字段已存在",
+      "name_en": "Has key",
+      "description_zh": "检测指定的字段是否已储存。",
+      "description_en": "Check if a key name has been stored.",
+      "scriptName": "HasKey",
+      "category": "dictionary",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "字段",
+          "name_en": "Key"
+        }
+      ]
+    },
+    {
+      "id": "is-empty",
+      "name_zh": "如果为空",
+      "name_en": "Is empty",
+      "description_zh": "检测字典是否为空，没有储存任何字段。",
+      "description_en": "True if no keys are in storage.",
+      "scriptName": "IsEmpty",
+      "category": "dictionary"
+    },
+    {
+      "id": "for-each-key",
+      "name_zh": "遍历字段",
+      "name_en": "For each key",
+      "description_zh": "对当前字典中的所有字段执行一遍动作。",
+      "description_en": "Repeat the event for each key/value pair that has been stored.",
+      "scriptName": "ForEachKey",
+      "category": "for-each"
+    },
+    {
+      "id": "compare-current-value",
+      "name_zh": "比较当前值",
+      "name_en": "Compare current value",
+      "description_zh": "在循环中遍历当前字段的值。",
+      "description_en": "Compare the value at the current key in the for-each loop.",
+      "scriptName": "CompareCurrentValue",
+      "category": "for-each",
+      "params": [
+        {
+          "id": "comparison",
+          "type": "cmp",
+          "name_zh": "比较",
+          "name_en": "Comparison"
+        },
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "add-key",
+      "name_zh": "添加字段",
+      "name_en": "Add key",
+      "description_zh": "添加新的字段到字典中，如果字段已存在，则覆盖旧的字段值。",
+      "description_en": "Add a new key in to storage. If it already exists, its value will be overwritten.",
+      "scriptName": "AddKey",
+      "category": "dictionary",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "字段",
+          "name_en": "Key"
+        },
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "set-key",
+      "name_zh": "设置字段",
+      "name_en": "Set key",
+      "description_zh": "设置字段的值。如果字段不存在，此操作无效。",
+      "description_en": "Set an existing key in to storage. If it does not exist, this will have no effect.",
+      "scriptName": "SetKey",
+      "category": "dictionary",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "字段",
+          "name_en": "Key"
+        },
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "delete-key",
+      "name_zh": "删除字段",
+      "name_en": "Delete key",
+      "description_zh": "从本地存储中删除字段。",
+      "description_en": "Delete a key from storage.",
+      "scriptName": "DeleteKey",
+      "category": "dictionary",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "字段",
+          "name_en": "Key"
+        }
+      ]
+    },
+    {
+      "id": "clear",
+      "name_zh": "清空字典",
+      "name_en": "Clear",
+      "description_zh": "从本地存储中删除所有字段和值，返回空白对象。",
+      "description_en": "Delete all keys and values from storage, returning to empty.",
+      "scriptName": "Clear",
+      "category": "dictionary"
+    },
+    {
+      "id": "load",
+      "name_zh": "导入数据",
+      "name_en": "Load",
+      "description_zh": "字典文件的JSON格式。如果想希望导入项目的字典文件，通过 AJAX 对象请求项目文件，请求完成后通过 'AJAX.请求数据' 表达式获得数组文件的数据导入。",
+      "description_en": "Load from a dictionary previously encoded in JSON format.",
+      "scriptName": "JSONLoad",
+      "category": "json",
+      "params": [
+        {
+          "id": "json",
+          "type": "string",
+          "name_zh": "JSON",
+          "name_en": "JSON"
+        }
+      ]
+    },
+    {
+      "id": "download",
+      "name_zh": "下载",
+      "name_en": "Download",
+      "description_zh": "将字典的内容下载为JSON文件。",
+      "description_en": "Download the contents of the dictionary as a JSON file.",
+      "scriptName": "JSONDownload",
+      "category": "json",
+      "params": [
+        {
+          "id": "filename",
+          "type": "string",
+          "name_zh": "文件名",
+          "name_en": "Filename",
+          "initialValue": "\"data.json\""
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "get",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定字段的值。 如果字段不存在，则返回0。",
+      "description_en": "Get the value from a key.  0 is returned if it does not exist.",
+      "expressionName": "Get",
+      "returnType": "any",
+      "category": "dictionary",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "字段",
+          "name_en": "Key"
+        }
+      ]
+    },
+    {
+      "id": "get-default",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定字段的值，或者字段不存在时返回的自定义字符。",
+      "description_en": "Get the value from a key, or return a custom value if it does not exist.",
+      "expressionName": "GetDefault",
+      "returnType": "any",
+      "category": "dictionary",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "字段",
+          "name_en": "Key"
+        },
+        {
+          "id": "default",
+          "type": "any",
+          "name_zh": "默认值",
+          "name_en": "Default"
+        }
+      ]
+    },
+    {
+      "id": "keycount",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取本地存储中已存在的字段总数。",
+      "description_en": "Get the number of keys in storage.",
+      "expressionName": "KeyCount",
+      "returnType": "number",
+      "category": "dictionary"
+    },
+    {
+      "id": "currentkey",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在循环中获取当前字段的名称。",
+      "description_en": "Get the current key name in a for-each loop.",
+      "expressionName": "CurrentKey",
+      "returnType": "string",
+      "category": "for-each"
+    },
+    {
+      "id": "currentvalue",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在循环中获取当前字段的值。",
+      "description_en": "Get the current key value in a for-each loop.",
+      "expressionName": "CurrentValue",
+      "returnType": "any",
+      "category": "for-each"
+    },
+    {
+      "id": "asjson",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将字典导出为JSON格式的字符串。后续在 '导入数据' 动作中使用，常用于保存在本地存储中。",
+      "description_en": "Return the contents of the dictionary in JSON format.",
+      "expressionName": "AsJSON",
+      "returnType": "string",
+      "category": "json"
+    }
+  ]
+}

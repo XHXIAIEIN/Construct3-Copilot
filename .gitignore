@@ -1,0 +1,38 @@
+# 数据文件（见 README 获取说明）
+mate/
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# 向量数据库
+qdrant_storage/
+
+# IDE / 系统
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# 环境变量
+.env
+.env.local
+
+# 日志
+*.log
+.local/
+.history/
+
+# Claude Code
+# .claude
+
+# Gradio / MCP
+.gradio/
+.mcp.json
+
+# Claude Code local settings
+.claude/settings.local.json

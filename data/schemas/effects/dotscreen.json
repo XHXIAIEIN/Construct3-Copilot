@@ -1,0 +1,34 @@
+{
+  "id": "dotscreen",
+  "name_zh": "半调",
+  "name_en": "Dot screen",
+  "description_zh": "黑白网面的印花效果。",
+  "description_en": "A black and white halftone effect.",
+  "category": "color",
+  "author": "Evan Wallace",
+  "supportedRenderers": [
+    "webgl",
+    "webgpu"
+  ],
+  "blendsBackground": false,
+  "preservesOpaqueness": true,
+  "animated": false,
+  "parameters": [
+    {
+      "id": "scale",
+      "type": "percent",
+      "name_zh": "scale",
+      "name_en": "scale",
+      "initialValue": 1,
+      "interpolatable": true
+    },
+    {
+      "id": "angle",
+      "type": "float",
+      "name_zh": "angle",
+      "name_en": "angle",
+      "initialValue": 15,
+      "interpolatable": true
+    }
+  ]
+}

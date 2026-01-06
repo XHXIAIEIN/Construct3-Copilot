@@ -1,0 +1,35 @@
+{
+  "id": "findResults",
+  "name_zh": "查找结果",
+  "name_en": "Find results",
+  "menuItems": [
+    {
+      "id": "go-to",
+      "name_zh": "跳转",
+      "name_en": "Go to"
+    },
+    {
+      "id": "remove-result",
+      "name_zh": "移除结果",
+      "name_en": "Remove result"
+    },
+    {
+      "id": "redo-search",
+      "name_zh": "重新查找",
+      "name_en": "Redo search"
+    },
+    {
+      "id": "clear-all",
+      "name_zh": "清理所有",
+      "name_en": "Clear all"
+    },
+    {
+      "id": "help",
+      "name_zh": "帮助",
+      "name_en": "Help"
+    }
+  ],
+  "description_en": "Paid plans only The Find Results Bar is displayed either when you search for text in an event sheet (using Ctrl + F or Event sheet ► Find... ), or when you use the Find all references feature (e.g. via the Project Bar to search for an object type's references). The results are listed with highlighting and information about their location, and they can be used to navigate to the result in the project. Find results for 'Find all references' Find results for a search term There are various differen",
+  "url": "/en/make-games/manuals/construct-3/interface/bars/find-results-bar",
+  "sections": []
+}
