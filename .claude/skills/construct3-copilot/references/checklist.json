@@ -1,0 +1,15 @@
+{
+  "validation_rules": [
+    {"id": "clipboard-flag", "description": "Root object must include \"is-c3-clipboard-data\": true."},
+    {"id": "type", "description": "\"type\" must be one of events, object-types, layouts, world-instances, event-sheets, conditions, actions."},
+    {"id": "items-array", "description": "\"items\" must be an array with at least one entry."},
+    {"id": "behavior-display-name", "description": "Actions referencing behaviors must set behaviorType using display name (see behavior-names.md)."},
+    {"id": "string-format", "description": "All string parameters requiring quotes use nested format (e.g., \"\\\"Text\\\"\")."},
+    {"id": "comparison-numeric", "description": "Comparison operators use numeric codes 0–5."},
+    {"id": "variable-comment", "description": "Variables declare type, initialValue, and comment fields."},
+    {"id": "image-reuse", "description": "Object/layout payloads reuse shared imageData indexes instead of duplicating blobs."},
+    {"id": "resource-manifest", "description": "Response includes variables/assets/mapping manifests covering every referenced symbol."},
+    {"id": "validation-script", "description": "scripts/validate_output.py executed; include status + warnings in the reply."},
+    {"id": "instructions", "description": "Final reply states paste location + manual verification step + assumptions/clarifications."}
+  ]
+}

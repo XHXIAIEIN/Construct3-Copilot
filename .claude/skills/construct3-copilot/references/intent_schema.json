@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Construct 3 Intent IR",
+  "type": "object",
+  "properties": {
+    "gameplay": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Gameplay mechanics or behaviors requested (e.g., player movement, enemy spawn)."
+    },
+    "ui": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "UI or HUD requirements (score text, pause menu, etc.)."
+    },
+    "assets": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Objects, sprites, audio, or layout assets that must exist."
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Ambiguities or missing info that block generation."
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Documented assumptions when clarification is unavailable."
+    }
+  },
+  "required": ["gameplay", "assets"],
+  "additionalProperties": false
+}
