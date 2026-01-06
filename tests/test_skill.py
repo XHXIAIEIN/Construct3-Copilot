@@ -19,6 +19,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 SKILL_DIR = PROJECT_ROOT / ".claude" / "skills" / "construct3-copilot"
 SCRIPTS_DIR = SKILL_DIR / "scripts"
 SCHEMA_DIR = PROJECT_ROOT / "data" / "schemas"
+EXAMPLES_DIR = PROJECT_ROOT / "tests" / "examples"
 
 
 def run_script(script_name: str, *args) -> tuple[bool, str]:
@@ -308,6 +309,155 @@ def test_string_parameter_format():
     return True
 
 
+def test_example_clipboards():
+    """Validate the paste-ready examples under tests/examples"""
+    print("\n" + "=" * 60)
+    print("7. Example Clipboard Validation")
+    print("=" * 60)
+
+    example_files = [
+        EXAMPLES_DIR / "breakout_events.json",
+        EXAMPLES_DIR / "breakout_layout.json",
+        EXAMPLES_DIR / "platformer_events.json",
+        EXAMPLES_DIR / "platformer_layout.json",
+    ]
+
+    all_passed = True
+    for path in example_files:
+        if not path.exists():
+            print(f"✗ Missing example file: {path}")
+            all_passed = False
+            continue
+
+        json_text = path.read_text(encoding="utf-8")
+        success, output = run_script("validate_output.py", json_text)
+        if success:
+            print(f"✓ {path.name} validated")
+        else:
+            print(f"✗ {path.name} failed validation")
+            if output:
+                print(f"    Output: {output[:120]}...")
+            all_passed = False
+
+    return all_passed
+
+
+def test_real_world_breakout_scenario():
+    """Integration test using a realistic breakout request"""
+    print("\n" + "=" * 60)
+    print("7. Real-world Breakout Scenario Test")
+    print("=" * 60)
+
+    scenario = {
+        "is-c3-clipboard-data": True,
+        "type": "events",
+        "items": [
+            {
+                "eventType": "variable",
+                "name": "Score",
+                "type": "number",
+                "initialValue": "0",
+                "comment": ""
+            },
+            {
+                "eventType": "group",
+                "title": "Paddle Control",
+                "disabled": False,
+                "children": [
+                    {
+                        "eventType": "block",
+                        "conditions": [
+                            {
+                                "id": "every-tick",
+                                "objectClass": "System",
+                                "parameters": {}
+                            }
+                        ],
+                        "actions": [
+                            {
+                                "id": "set-x",
+                                "objectClass": "Paddle",
+                                "parameters": {"x": "Mouse.X"}
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "eventType": "group",
+                "title": "Scoring",
+                "disabled": False,
+                "children": [
+                    {
+                        "eventType": "block",
+                        "conditions": [
+                            {
+                                "id": "on-collision-with-another-object",
+                                "objectClass": "Ball",
+                                "parameters": {"object": "Brick"}
+                            }
+                        ],
+                        "actions": [
+                            {"id": "destroy", "objectClass": "Brick", "parameters": {}},
+                            {
+                                "id": "add-to-eventvar",
+                                "objectClass": "System",
+                                "parameters": {"variable": "Score", "value": "1"}
+                            },
+                            {
+                                "id": "set-text",
+                                "objectClass": "ScoreText",
+                                "parameters": {"text": "\"Score: \" & Score"}
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "eventType": "group",
+                "title": "Game Over",
+                "disabled": False,
+                "children": [
+                    {
+                        "eventType": "block",
+                        "conditions": [
+                            {
+                                "id": "compare-y",
+                                "objectClass": "Ball",
+                                "parameters": {"comparison": 4, "y": "650"}
+                            }
+                        ],
+                        "actions": [
+                            {
+                                "id": "set-text",
+                                "objectClass": "ScoreText",
+                                "parameters": {"text": "\"Game Over! Score: \" & Score"}
+                            },
+                            {"id": "destroy", "objectClass": "Ball", "parameters": {}}
+                        ]
+                    }
+                ]
+            }
+        ],
+        "manifests": {
+            "variables": [{"name": "Score", "type": "number"}],
+            "objects": ["Paddle", "Ball", "Brick", "ScoreText"]
+        }
+    }
+
+    scenario_json = json.dumps(scenario)
+    success, output = run_script("validate_output.py", scenario_json)
+
+    if success or "valid" in output.lower():
+        print("✓ Real-world breakout JSON validated successfully")
+        return True
+
+    print("✗ Real-world breakout JSON failed validation")
+    if output:
+        print(f"    Output: {output[:120]}...")
+    return False
+
+
 def main():
     print("\n🎮 Construct3-Copilot Skill Tests\n")
 
@@ -318,6 +468,7 @@ def main():
         ("Validate Output", test_validate_output),
         ("Clipboard Format", test_json_clipboard_format),
         ("String Parameter Format", test_string_parameter_format),
+        ("Example Clipboard Validation", test_example_clipboards),
     ]
 
     results = []

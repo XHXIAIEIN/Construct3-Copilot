@@ -126,3 +126,48 @@ this file.
 
 See `references/examples.md` for canonical input/Intent IR/output combinations. Use them as
 groundtruth when the user request resembles those scenarios.
+
+## 10. Construct 3 Design Guidelines
+
+- **State machine naming** – Use numeric enums such as `GameState`, `EnemyState` with inline comments
+  (`0=playing,1=gameover`). Reserve `Is*` prefixes for boolean flags (`IsPaused`, `IsInvincible`) and
+  keep their values strictly true/false or 0/1.
+- **Separate logic from presentation** – Logic events manipulate variables/behaviors only; UI updates
+  (text, animations) live in dedicated groups. When listing resources, keep manifests for data objects
+  separate from visual assets so they can be swapped independently.
+- **Visual style spec** – Always ask for or infer a style brief (palette, resolution, shape language).
+  When using `scripts/generate_imagedata.py`, set color/shape parameters to match that brief instead
+  of defaulting to flat retro squares. Document the style in the resource manifest so future assets
+  stay coherent.
+- **Coordinate discipline** – Construct layouts use a top-left origin (0,0) with +X to the right and
+  +Y down. When emitting world instances or comparing positions, double-check you are not assuming a
+  bottom-left origin; align brick grids and camera clamps using this convention and the objects’
+  actual origins.
+- **End-of-game settlement** – Dedicate a group that freezes gameplay state (`GameState` enum, disable
+  controls), surfaces summary UI (“Score”, remaining lives, clear reason), and exposes the restart
+  input. Avoid leaving only partial actions (e.g., destroying the ball without updating the UI); the
+  manifest should describe which text objects display the final totals.
+- **Complete loop mandate** – Before responding, make sure every output provides a full playable
+  loop: controls → core mechanics → scoring/progression → lose/win handling → restart or next-step
+  hook. If the user only asked for a snippet, either scope it explicitly (“this pastes into the
+  Collision group only”) or fill in the missing scaffolding (variables, UI text, restart action) so
+  the user can immediately run the result.
+- **Lifecycle coverage** – Structure the event groups so they read like a lifecycle: `On start`
+  initialization (variables, HUD, object spawns) → runtime loops (input, AI, timers) → failure/win
+  detection → cleanup/restart. If any stage is intentionally omitted, clearly label the gap and avoid
+  referencing undeclared state from the missing stages.
+- **TiledBackground discipline** – Keep tile textures small and seamless (e.g., 32x32 or 64x64). Use
+  repeat wrapping for infinite backgrounds; only use full-screen sprites when a single stretched
+  image is required.
+- **Layered event organization** – Group events by responsibility (input, movement, collisions, UI,
+  reset, etc.) using `eventType: "group"` and clear comments. Never dump unrelated events into the
+  same group.
+- **Preferred patterns**:
+  - Model multi-step flows with enum state machines instead of multiple loosely coupled booleans.
+  - Favor data-driven layouts (arrays/dictionaries describing bricks/enemies) and loops over
+    hard-coded duplicates.
+  - Route gameplay → UI interactions through variables or messages rather than directly referencing
+    UI details everywhere.
+- **Naming consistency** – Use consistent naming across variables/objects/behaviors. If custom rules
+  are needed (e.g., score multipliers, power-up states), document them inside the manifest or inline
+  comments so follow-up actions can reason about them.

@@ -24,14 +24,22 @@ Minimal metadata keeps context small. Load the referenced files when executing t
 
 ## Quick Start (Claude-facing)
 
-1. Parse the user request into the Intent IR defined in
+1. Review the combined governance notes in
+   [`references/guidelines.md`](references/guidelines.md) so updates stay compliant with both Claude
+   and Codex skill specs.
+2. Parse the user request into the Intent IR defined in
    [`references/intent_schema.json`](references/intent_schema.json).
-2. Use clarification templates from [`references/prompts.md`](references/prompts.md) if
+3. Use clarification templates from [`references/prompts.md`](references/prompts.md) if
    `open_questions` remains.
-3. Follow the full workflow in [`references/instructions.md`](references/instructions.md) covering
+4. Follow the full workflow in [`references/instructions.md`](references/instructions.md) covering
    planning, modular generation, resource manifests, validation, and delivery.
-4. Before responding, run the checklist in [`references/checklist.json`](references/checklist.json)
+5. Before responding, run the checklist in [`references/checklist.json`](references/checklist.json)
    and execute `scripts/validate_output.py`.
+
+## Governance
+
+- Combined Claude/Codex guidance: [`references/guidelines.md`](references/guidelines.md)
+- Clipboard grammar + ACE parameters: [`references/clipboard-format.md`](references/clipboard-format.md)
 
 ## Script Inventory
 

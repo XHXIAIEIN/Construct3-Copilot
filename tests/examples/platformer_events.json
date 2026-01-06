@@ -1,0 +1,133 @@
+{
+  "is-c3-clipboard-data": true,
+  "type": "events",
+  "items": [
+    {"eventType": "variable", "name": "Score", "type": "number", "initialValue": "0", "comment": "Coins collected"},
+    {"eventType": "variable", "name": "PlayerHealth", "type": "number", "initialValue": "100", "comment": "0-100"},
+    {"eventType": "variable", "name": "GameState", "type": "number", "initialValue": "0", "comment": "0=active,1=KO"},
+    {
+      "eventType": "group",
+      "title": "Start",
+      "disabled": false,
+      "children": [
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "on-start-of-layout", "objectClass": "System", "parameters": {}}
+          ],
+          "actions": [
+            {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "Score", "value": "0"}},
+            {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "PlayerHealth", "value": "100"}},
+            {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "GameState", "value": "0"}},
+            {"id": "set-text", "objectClass": "ScoreText", "parameters": {"text": "\"Score: \" & Score & \" | HP: \" & PlayerHealth"}},
+            {"id": "set-enabled", "objectClass": "Player", "behaviorType": "Platform", "parameters": {"state": "enabled"}}
+          ]
+        }
+      ]
+    },
+    {
+      "eventType": "group",
+      "title": "Controls",
+      "disabled": false,
+      "children": [
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "GameState", "comparison": 0, "value": "0"}},
+            {"id": "key-is-down", "objectClass": "Keyboard", "parameters": {"key": 37}}
+          ],
+          "actions": [
+            {"id": "simulate-control", "objectClass": "Player", "behaviorType": "Platform", "parameters": {"control": "left"}}
+          ]
+        },
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "GameState", "comparison": 0, "value": "0"}},
+            {"id": "key-is-down", "objectClass": "Keyboard", "parameters": {"key": 39}}
+          ],
+          "actions": [
+            {"id": "simulate-control", "objectClass": "Player", "behaviorType": "Platform", "parameters": {"control": "right"}}
+          ]
+        },
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "GameState", "comparison": 0, "value": "0"}},
+            {"id": "key-is-down", "objectClass": "Keyboard", "parameters": {"key": 32}}
+          ],
+          "actions": [
+            {"id": "simulate-control", "objectClass": "Player", "behaviorType": "Platform", "parameters": {"control": "jump"}}
+          ]
+        }
+      ]
+    },
+    {
+      "eventType": "group",
+      "title": "Coins",
+      "disabled": false,
+      "children": [
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "on-collision-with-another-object", "objectClass": "Player", "parameters": {"object": "Coin"}}
+          ],
+          "actions": [
+            {"id": "destroy", "objectClass": "Coin", "parameters": {}},
+            {"id": "add-to-eventvar", "objectClass": "System", "parameters": {"variable": "Score", "value": "1"}},
+            {"id": "set-text", "objectClass": "ScoreText", "parameters": {"text": "\"Score: \" & Score & \" | HP: \" & PlayerHealth"}}
+          ]
+        }
+      ]
+    },
+    {
+      "eventType": "group",
+      "title": "Damage",
+      "disabled": false,
+      "children": [
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "GameState", "comparison": 0, "value": "0"}},
+            {"id": "on-collision-with-another-object", "objectClass": "Player", "parameters": {"object": "Enemy"}}
+          ],
+          "actions": [
+            {"id": "add-to-eventvar", "objectClass": "System", "parameters": {"variable": "PlayerHealth", "value": "-10"}},
+            {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "PlayerHealth", "value": "max(PlayerHealth, 0)"}},
+            {"id": "set-text", "objectClass": "ScoreText", "parameters": {"text": "\"Score: \" & Score & \" | HP: \" & PlayerHealth"}}
+          ],
+          "children": [
+            {
+              "eventType": "block",
+              "conditions": [
+                {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "PlayerHealth", "comparison": 3, "value": "0"}}
+              ],
+              "actions": [
+                {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "GameState", "value": "1"}},
+                {"id": "set-enabled", "objectClass": "Player", "behaviorType": "Platform", "parameters": {"state": "disabled"}},
+                {"id": "set-text", "objectClass": "ScoreText", "parameters": {"text": "\"Score: \" & Score & \" | HP: 0 (press R)\""}}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "eventType": "group",
+      "title": "Reset",
+      "disabled": false,
+      "children": [
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "GameState", "comparison": 0, "value": "1"}},
+            {"id": "on-key-pressed", "objectClass": "Keyboard", "parameters": {"key": 82}}
+          ],
+          "actions": [
+            {"id": "restart-layout", "objectClass": "System", "parameters": {}}
+          ]
+        }
+      ]
+    }
+  ]
+}

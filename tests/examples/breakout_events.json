@@ -1,0 +1,161 @@
+{
+  "is-c3-clipboard-data": true,
+  "type": "events",
+  "items": [
+    {"eventType": "variable", "name": "Score", "type": "number", "initialValue": "0", "comment": "Points earned"},
+    {"eventType": "variable", "name": "Lives", "type": "number", "initialValue": "3", "comment": "Attempts remaining"},
+    {"eventType": "variable", "name": "GameState", "type": "number", "initialValue": "0", "comment": "0=serve,1=active,2=end"},
+    {
+      "eventType": "group",
+      "title": "Setup",
+      "disabled": false,
+      "children": [
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "on-start-of-layout", "objectClass": "System", "parameters": {}}
+          ],
+          "actions": [
+            {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "Score", "value": "0"}},
+            {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "Lives", "value": "3"}},
+            {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "GameState", "value": "0"}},
+            {"id": "set-text", "objectClass": "ScoreText", "parameters": {"text": "\"Score: \" & Score & \"  Lives: \" & Lives"}},
+            {"id": "set-x", "objectClass": "Ball", "parameters": {"x": "Paddle.X"}},
+            {"id": "set-y", "objectClass": "Ball", "parameters": {"y": "Paddle.Y-32"}},
+            {"id": "set-speed", "objectClass": "Ball", "behaviorType": "Bullet", "parameters": {"speed": "0"}}
+          ]
+        }
+      ]
+    },
+    {
+      "eventType": "group",
+      "title": "Input & Serve",
+      "disabled": false,
+      "children": [
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "every-tick", "objectClass": "System", "parameters": {}}
+          ],
+          "actions": [
+            {"id": "set-x", "objectClass": "Paddle", "parameters": {"x": "clamp(Mouse.X, 56, 584)"}}
+          ]
+        },
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "GameState", "comparison": 0, "value": "0"}},
+            {"id": "every-tick", "objectClass": "System", "parameters": {}}
+          ],
+          "actions": [
+            {"id": "set-x", "objectClass": "Ball", "parameters": {"x": "Paddle.X"}},
+            {"id": "set-y", "objectClass": "Ball", "parameters": {"y": "Paddle.Y-32"}}
+          ]
+        },
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "GameState", "comparison": 0, "value": "0"}},
+            {"id": "on-click", "objectClass": "Mouse", "parameters": {"mouse-button": "left", "click-type": "clicked"}}
+          ],
+          "actions": [
+            {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "GameState", "value": "1"}},
+            {"id": "set-speed", "objectClass": "Ball", "behaviorType": "Bullet", "parameters": {"speed": "360"}},
+            {"id": "set-angle-of-motion", "objectClass": "Ball", "behaviorType": "Bullet", "parameters": {"angle": "-60"}}
+          ]
+        }
+      ]
+    },
+    {
+      "eventType": "group",
+      "title": "Collisions",
+      "disabled": false,
+      "children": [
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "on-collision-with-another-object", "objectClass": "Ball", "parameters": {"object": "Paddle"}}
+          ],
+          "actions": [
+            {"id": "bounce-off-object", "objectClass": "Ball", "behaviorType": "Bullet", "parameters": {"object": "Paddle"}}
+          ]
+        },
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "on-collision-with-another-object", "objectClass": "Ball", "parameters": {"object": "Wall"}}
+          ],
+          "actions": [
+            {"id": "bounce-off-object", "objectClass": "Ball", "behaviorType": "Bullet", "parameters": {"object": "Wall"}}
+          ]
+        },
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "on-collision-with-another-object", "objectClass": "Ball", "parameters": {"object": "Brick"}}
+          ],
+          "actions": [
+            {"id": "bounce-off-object", "objectClass": "Ball", "behaviorType": "Bullet", "parameters": {"object": "Brick"}},
+            {"id": "destroy", "objectClass": "Brick", "parameters": {}},
+            {"id": "add-to-eventvar", "objectClass": "System", "parameters": {"variable": "Score", "value": "10"}},
+            {"id": "set-text", "objectClass": "ScoreText", "parameters": {"text": "\"Score: \" & Score & \"  Lives: \" & Lives"}}
+          ]
+        }
+      ]
+    },
+    {
+      "eventType": "group",
+      "title": "Lives & Restart",
+      "disabled": false,
+      "children": [
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "GameState", "comparison": 0, "value": "1"}},
+            {"id": "compare-y", "objectClass": "Ball", "parameters": {"comparison": 4, "y": "520"}}
+          ],
+          "actions": [
+            {"id": "add-to-eventvar", "objectClass": "System", "parameters": {"variable": "Lives", "value": "-1"}},
+            {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "Lives", "value": "max(Lives, 0)"}},
+            {"id": "set-text", "objectClass": "ScoreText", "parameters": {"text": "\"Score: \" & Score & \"  Lives: \" & Lives"}}
+          ],
+          "children": [
+            {
+              "eventType": "block",
+              "conditions": [
+                {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "Lives", "comparison": 3, "value": "0"}}
+              ],
+              "actions": [
+                {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "GameState", "value": "2"}},
+                {"id": "set-text", "objectClass": "ScoreText", "parameters": {"text": "\"Game Over! Final Score: \" & Score & \"  (click to restart)\""}},
+                {"id": "destroy", "objectClass": "Ball", "parameters": {}}
+              ]
+            },
+            {
+              "eventType": "block",
+              "conditions": [
+                {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "Lives", "comparison": 4, "value": "0"}}
+              ],
+              "actions": [
+                {"id": "set-eventvar-value", "objectClass": "System", "parameters": {"variable": "GameState", "value": "0"}},
+                {"id": "set-x", "objectClass": "Ball", "parameters": {"x": "Paddle.X"}},
+                {"id": "set-y", "objectClass": "Ball", "parameters": {"y": "Paddle.Y-32"}},
+                {"id": "set-speed", "objectClass": "Ball", "behaviorType": "Bullet", "parameters": {"speed": "0"}}
+              ]
+            }
+          ]
+        },
+        {
+          "eventType": "block",
+          "conditions": [
+            {"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "GameState", "comparison": 5, "value": "2"}},
+            {"id": "on-click", "objectClass": "Mouse", "parameters": {"mouse-button": "left", "click-type": "clicked"}}
+          ],
+          "actions": [
+            {"id": "restart-layout", "objectClass": "System", "parameters": {}}
+          ]
+        }
+      ]
+    }
+  ]
+}
