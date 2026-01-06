@@ -14,53 +14,71 @@ keep the context lean.
 
 ## 1. Purpose & Capabilities
 
-- Generate **event sheets** (logic), **object types**, and **layouts/world instances**
-- Produce valid **imageData** (PNG base64) for sprites/tiles and map them into objects/layouts
-- Query ACE schemas to avoid hallucinated IDs or missing parameters
-- Validate all clipboard payloads before presenting them to the user
-- Provide localized ACE terms by referencing the zh-CN lexicon when necessary
+- Generate **event sheets**, **object types**, **layouts/world instances**, and supporting resource
+  manifests so the user can paste once and run.
+- Produce valid **imageData** and reuse deterministic assets to avoid bloat.
+- Query ACE schemas + historical examples to ground every action/condition.
+- Maintain session memory (objects/variables defined so far) for multi-turn workflows.
+- Validate/auto-review output before handing it to the user.
 
-## 2. Quick Start (default workflow)
+## 2. Conversation Workflow (Claude-facing)
 
-1. **Capture the requirement**
-   - Clarify whether the user needs events, objects, layouts, or a combination.
-   - Confirm target object/behavior names and any custom variables.
-2. **Plan the output type** using the table in Section 4.
-3. **Map intents to ACEs**
-   - Search schemas via `scripts/query_schema.py` or the RAG generator when uncertain.
-   - Use `references/behavior-names.md` for correct `behaviorType` values.
-4. **Author JSON** following the structures in `references/clipboard-format.md`.
-5. **Validate**
-   - Run `scripts/validate_output.py '<json>'`.
-   - Resolve every error; surface warnings with remediation guidance.
-6. **Deliver**
-   - Explain where to paste (`events`, `object-types`, etc.).
-   - Include any setup assumptions (objects already in project, required behaviors, etc.).
+### 2.1 Intent parsing (IR step)
+1. Read the user request and emit an **Intent IR** before generating anything else:
+   ```json
+   {
+     "gameplay": ["player movement", "collision damage"],
+     "ui": ["score text"],
+     "assets": ["player sprite", "brick"],
+     "open_questions": ["scoring amount?", "win/lose condition?"]
+   }
+   ```
+2. Use this structure to drive the rest of the workflow. Keep the IR concise but exhaustive.
 
-## 3. Core Workflow Details
+### 2.2 Clarification loop
+- If `open_questions` is non-empty or requirements conflict, ask the user targeted follow-ups.
+- Example follow-up: "Should each hit award +1 point, or do you need score multipliers?"
+- Do not proceed to generation until blocking questions are answered or assumptions are recorded and
+  clearly communicated.
 
-1. **Intent triage**
-   - Movement/AI/collision/score requests → events
-   - Requests for sprites/UI assets → object-types
-   - Full scenes/levels → layouts or world-instances
-2. **Schema alignment**
-   - Open `references/clipboard-format.md` for structural rules.
-   - Use `scripts/query_schema.py plugin <name> <ace>` whenever ACE IDs/params are uncertain.
-3. **Object/image pipeline**
-   - Derive assets from `references/object-templates.md`.
-   - Use `scripts/generate_imagedata.py` presets to keep imageData deterministic. Store reused
-     assets in layouts rather than duplicating blobs.
-4. **Layout construction**
-   - Start from `references/layout-templates.md`; adjust layers, parallax, and event sheet mapping.
-5. **Localization/terminology**
-   - Use `references/zh-cn.md` when the requirement is written in Chinese to keep ACE terminology
-     consistent with localized schema entries.
-6. **Validation & packaging**
-   - Always run `scripts/validate_output.py` and report success/failure.
-   - For large payloads, suggest saving to file + clipboard instructions (Blob API snippet is in
-     `references/clipboard-format.md`).
+### 2.3 Session memory
+- Track previously created objects, variables, layouts, and assumptions in a short bullet list.
+- Reuse this memory when the user requests incremental changes (“加个暂停菜单”).
+- Update the memory snapshot each time new resources are added.
 
-## 4. Output Types
+## 3. Structured Generation Pipeline
+
+1. **Plan outputs**
+   - Use the table in Section 5 to decide which clipboard payloads are needed.
+2. **Schema/RAG retrieval**
+   - Use `scripts/query_schema.py` and, when `data/project_analysis` exists, `scripts/query_examples.py`
+     to fetch usage patterns. Inject relevant snippets into the prompt before drafting events.
+3. **Modular design**
+   - Outline groups: player control, enemy AI, scoring, UI, etc.
+   - Map each Intent IR item to a group so that resulting JSON is clustered, not flat.
+4. **Resource manifests**
+   - Assemble `variables.json`, `assets.json`, and `mapping.json` style summaries (can be embedded
+     after the event payload). Ensure every referenced object/variable exists in the manifests.
+5. **Author JSON**
+   - Follow `references/clipboard-format.md`.
+   - Ensure groups are emitted via `eventType: "group"` with children, or return a structured JSON
+     object containing `groups`, `variables`, `objects`, `events`.
+6. **Self-review**
+   - Perform an explicit checklist review (Section 8) and fix issues before responding.
+7. **Validation + test suggestions**
+   - Run `scripts/validate_output.py`.
+   - Suggest at least one verification step (e.g., "After pasting, run the test layout and confirm ScoreText updates").
+
+## 4. Clarification & Iteration Prompts
+
+- Opening clarifiers:
+  - “需要键鼠还是触摸控制？”
+  - “关卡结束条件是什么？”
+- Iterative loop:
+  - Present a concise summary of planned groups/resources, await confirmation, then emit JSON.
+  - After delivery, offer to patch/extend existing events instead of regenerating from scratch.
+
+## 5. Output Types
 
 | Type | Paste Location | Use When |
 |------|----------------|----------|
@@ -71,7 +89,7 @@ keep the context lean.
 | `event-sheets` | Project Bar → Event sheets | Entire sheet replacement |
 | `conditions` / `actions` | Inline in Event Editor | Partial snippets |
 
-## 5. Automation & Tools
+## 6. Automation & Tools
 
 - **ImageData generation** (`scripts/generate_imagedata.py`)
   - Solid shapes: `python3 scripts/generate_imagedata.py --color red --width 32 --height 32`
@@ -93,7 +111,7 @@ keep the context lean.
   - `python3 scripts/validate_output.py '<json>'`
   - Accepts stdin or file path; review warnings and fix root causes.
 
-## 6. Reference Library (load on demand)
+## 7. Reference Library (load on demand)
 
 | File | When to read |
 |------|--------------|
@@ -105,7 +123,7 @@ keep the context lean.
 | [references/troubleshooting.md](references/troubleshooting.md) | Handling paste failures, ACE errors, or parameter mismatches |
 | [references/deprecated-features.md](references/deprecated-features.md) | Replacing Function plugin/Pin/Fade usage with modern equivalents |
 
-## 7. Quality Checklist
+## 8. Quality Checklist
 
 - [ ] Every JSON payload includes `"is-c3-clipboard-data": true`, correct `type`, and `items` array.
 - [ ] Strings use nested quotes (`"\"Text\""`), comparisons use numeric operators (0–5), key codes are
@@ -116,11 +134,15 @@ keep the context lean.
       blobs from templates or generator.
 - [ ] Validation script reports success; share warnings plus remediation with the user.
 - [ ] Document paste instructions (event sheet margin, Project Bar path, etc.) in the final reply.
+- [ ] Provide resource manifests (variables/assets) and mention any dependencies or tests to run.
+- [ ] Confirm clarifications/assumptions in the response so the user can correct you.
 
-## 8. Troubleshooting
+## 9. Troubleshooting
 
 - Paste errors → run validator + consult `references/troubleshooting.md`.
 - Missing ACE → rerun `scripts/query_schema.py` or inspect schema JSON under `data/schemas`.
 - Deprecated APIs → check `references/deprecated-features.md` and suggest modern constructs (Functions
   system, hierarchies, Tween).
 - Image decoding issues → regenerate PNG via script; never embed ad-hoc base64 blobs without testing.
+- Visual/style inconsistencies → request a style spec from the user (palette, resolution, animation
+  states) before generating new assets.
