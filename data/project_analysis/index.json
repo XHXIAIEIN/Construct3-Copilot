@@ -1,0 +1,33 @@
+{
+  "source": "/Users/test/Documents/dev/github/Construct-Example-Projects/example-projects",
+  "project_count": 403,
+  "event_sheet_count": 497,
+  "unique_actions": 6276,
+  "unique_conditions": 2495,
+  "total_action_usage": 20657,
+  "total_condition_usage": 15503,
+  "top_10_actions": [
+    "System:set-eventvar-value",
+    "System:create-object",
+    "System:wait",
+    "System:set-boolean-eventvar",
+    "System:wait-for-previous-actions",
+    "Audio:play",
+    "PlayerGraphics:set-animation",
+    "System:restart-layout",
+    "System:set-group-active",
+    "System:add-to-eventvar"
+  ],
+  "top_10_conditions": [
+    "System:else",
+    "System:evaluate-expression",
+    "Keyboard:key-is-down",
+    "System:for-each",
+    "Keyboard:on-key-pressed",
+    "System:compare-eventvar",
+    "System:on-start-of-layout",
+    "System:compare-two-values",
+    "System:every-tick",
+    "Gamepad:is-button-down"
+  ]
+}

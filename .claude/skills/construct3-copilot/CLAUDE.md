@@ -52,6 +52,34 @@
 
 用户请求增量修改时，复用已有资源而非重建。
 
+### 4. 强制检索规则 ⚠️
+
+**生成任何 ACE ID 之前，必须先检索确认其存在。禁止凭记忆猜测！**
+
+```bash
+# 1. 查询 ACE Schema（确认 ID 存在）
+python3 scripts/query_schema.py plugin sprite set-animation
+python3 scripts/query_schema.py behavior platform simulate-control
+python3 scripts/query_schema.py search <关键词>
+
+# 2. 查询案例库（学习真实用法）
+python3 scripts/query_examples.py action set-animation
+python3 scripts/query_examples.py condition on-collision
+python3 scripts/query_examples.py top actions 20
+```
+
+**检索流程**：
+1. 识别需要的 ACE 类型（条件/动作/表达式）
+2. 用 `query_schema.py` 确认 ACE ID 正确拼写
+3. 用 `query_examples.py` 查看真实项目中的参数用法
+4. 只使用检索到的 ACE ID，不要发明新的
+
+**常见幻觉陷阱**：
+- ❌ `set-angle-toward-position` → 不存在
+- ✅ `set-angle` + `angle(x1,y1,x2,y2)` 表达式
+- ❌ `move-toward` → 不存在
+- ✅ 使用 MoveTo 行为或手动计算
+
 ## 输出规范
 
 ### JSON 格式要求

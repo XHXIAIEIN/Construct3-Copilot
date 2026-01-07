@@ -33,16 +33,24 @@ Read @CLAUDE.md for workflow rules (Intent IR, Clarification, output format).
 ## 2. Available Scripts
 
 ```bash
+# ⚠️ 必须先检索再生成！禁止凭记忆猜测 ACE ID
+
+# ACE schema lookup (确认 ACE ID 存在)
+python3 scripts/query_schema.py plugin {name} {ace}
+python3 scripts/query_schema.py behavior {name} {ace}
+python3 scripts/query_schema.py search {keyword}
+
+# 案例库查询 (学习真实用法，403 个官方项目)
+python3 scripts/query_examples.py action {ace_id}
+python3 scripts/query_examples.py condition {ace_id}
+python3 scripts/query_examples.py top actions 20
+
 # ImageData generation
 python3 scripts/generate_imagedata.py --color {color} --width {W} --height {H}
 python3 scripts/generate_imagedata.py --kenney {preset} --color {color}
 
 # Layout presets
 python3 scripts/generate_layout.py --preset {platformer|breakout} -W {W} -H {H}
-
-# ACE schema lookup (use when unsure about ACE IDs)
-python3 scripts/query_schema.py plugin {name} {ace}
-python3 scripts/query_schema.py behavior {name} {ace}
 
 # Validate before output
 python3 scripts/validate_output.py '<json>'
