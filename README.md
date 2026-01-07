@@ -1,10 +1,10 @@
-# Construct-3 Copilot
+# Construct 3 Copilot
 
-**中文** | [English](README_EN.md)
+[中文](README_CN.md) | **English**
 
-用自然语言生成 Construct 3 事件表 JSON，直接粘贴到编辑器。
+Generate Construct 3 event sheet JSON with natural language, paste directly into editor.
 
-## 快速开始
+## Quick Start
 
 ```bash
 git clone https://github.com/XHXIAIEIN/Construct3-Copilot.git
@@ -12,61 +12,89 @@ cd Construct3-Copilot
 claude
 ```
 
-> 需要安装 [Claude Code CLI](https://claude.ai/download)
+> Requires [Claude Code CLI](https://claude.ai/download)
 
-## 示例
+## Usage Examples
 
+**Complete Game**
 ```
-> 创建一个打砖块游戏，球拍用鼠标控制
+> 做一个打砖块游戏，球拍跟随鼠标移动
 
-AI 会生成两个 JSON 文件：
-- layout.json  → 粘贴到 Project Bar → Layouts
-- events.json  → 粘贴到事件表边缘
-```
-
-```
-> 添加 WASD 控制的 8 方向移动
-
-AI 会生成事件 JSON → 粘贴到事件表边缘
+AI generates:
+- layout.json  → Paste to: Project Bar → Layouts
+- events.json  → Paste to: Event sheet margin
 ```
 
-## 功能
+**Add Feature**
+```
+> 添加 WASD 八方向移动控制
 
-| 功能 | 说明 |
-|------|------|
-| 生成事件 | 游戏逻辑（移动、碰撞、计分等） |
-| 生成对象 | Sprite、Text、TiledBackground 等 |
-| 生成布局 | 完整场景（对象 + 实例 + 位置） |
-| 生成图像 | 有效的 PNG base64 imageData |
+AI generates events JSON → Paste to: Event sheet margin
+```
 
-## 项目结构
+**UI Snippet**
+```
+> 加一个暂停功能，按 ESC 暂停
+
+AI generates events JSON → Paste to: Existing event sheet
+```
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| Events | Game logic (movement, collision, scoring, AI, timers) |
+| Objects | Sprite, Text, TiledBackground with behaviors |
+| Layouts | Complete scenes (layers + instances + event sheet) |
+| ImageData | Placeholder PNG base64 (colored shapes) |
+| Validation | Verify JSON format before paste |
+
+## Paste Locations
+
+| Output Type | Paste To |
+|-------------|----------|
+| `layouts` | Project Bar → Layouts |
+| `object-types` | Project Bar → Object types |
+| `events` | Event sheet margin |
+| `world-instances` | Layout view |
+
+## Limitations
+
+- ❌ Does NOT generate .c3p project files
+- ❌ Does NOT generate production art (placeholder shapes only)
+- ❌ Construct 3 only (no other engines)
+
+## Project Structure
 
 ```
 Construct3-Copilot/
 ├── .claude/
 │   └── skills/
 │       └── construct3-copilot/    # Claude Code Skill
-│           ├── SKILL.md           # Skill 入口
-│           ├── references/        # 参考文档
-│           └── scripts/           # 辅助脚本
-└── data/
-    └── schemas/                   # ACE Schema (72 插件 + 31 行为)
+│           ├── SKILL.md           # Execution instructions
+│           ├── CLAUDE.md          # Behavior constraints
+│           ├── references/        # Reference docs
+│           └── scripts/           # Helper scripts
+├── data/
+│   └── schemas/                   # ACE Schema (72 plugins + 31 behaviors)
+└── tests/
+    └── examples/                  # JSON examples (breakout, platformer)
 ```
 
 ### ACE Schema
 
-由 `source/zh-CN_R466.csv` 通过 `scripts/generate-schema.js` 生成：
+Generated from `source/zh-CN_R466.csv` via `scripts/generate-schema.js`:
 
 ```
 data/schemas/
-├── index.json          # 概要索引
-├── plugins/            # 72 插件 (677 条件, 776 动作, 957 表达式)
-├── behaviors/          # 31 行为 (115 条件, 248 动作, 138 表达式)
-├── effects/            # 89 特效
-└── editor/             # 编辑器配置
+├── index.json          # Summary index
+├── plugins/            # 72 plugins (677 conditions, 776 actions, 957 expressions)
+├── behaviors/          # 31 behaviors (115 conditions, 248 actions, 138 expressions)
+├── effects/            # 89 effects
+└── editor/             # Editor configuration
 ```
 
-**统计**: 2,911 ACE (792 条件 + 1,024 动作 + 1,095 表达式)
+**Statistics**: 2,911 ACE (792 conditions + 1,024 actions + 1,095 expressions)
 
 ## License
 

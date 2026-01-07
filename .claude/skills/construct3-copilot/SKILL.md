@@ -1,68 +1,67 @@
 name: construct3-copilot
 description: >
-  Generates Construct 3 clipboard JSON (events, object-types, layouts, imageData) for paste-ready
-  workflows. Trigger whenever a request mentions Construct 3/C3 event sheets, behaviors, objects,
-  layouts, clipboard JSON, schema-mapped actions, or validation of generated logic.
+  Construct 3 游戏开发助手。生成可直接粘贴到 C3 编辑器的剪贴板 JSON（事件表、对象、布局）。
+  适用于：游戏逻辑（移动、碰撞、计分）、角色控制（键盘、鼠标、触摸）、UI 界面、场景布局。
+  Generates Construct 3 clipboard JSON for events, objects, layouts. game logic,
+  character control, collision, scoring, UI elements, and level design.
 triggers:
   keywords:
     - construct 3
     - c3
     - event sheet
-    - clipboard json
-    - layout
-    - behavior
-    - object type
+    - 事件表
+    - 场景
+    - 精灵
+    - 行为
+    - 玩法
+    - 目标
+    - 逻辑
+    - 移动
+    - 控制
+    - 碰撞
   intents:
-    - generate_construct3_events
-    - generate_construct3_layout
-    - validate_construct3_logic
+    - generate_c3_json
+    - paste_to_c3
 ---
 
-# Construct 3 Copilot
+# Execution Instructions
 
-Minimal metadata keeps context small. Load the referenced files when executing the skill.
+## 1. Load Constraints
 
-## Quick Start (Claude-facing)
+Read @CLAUDE.md for workflow rules (Intent IR, Clarification, output format).
 
-1. Review the combined governance notes in
-   [`references/guidelines.md`](references/guidelines.md) so updates stay compliant with both Claude
-   and Codex skill specs.
-2. Parse the user request into the Intent IR defined in
-   [`references/intent_schema.json`](references/intent_schema.json).
-3. Use clarification templates from [`references/prompts.md`](references/prompts.md) if
-   `open_questions` remains.
-4. Follow the full workflow in [`references/instructions.md`](references/instructions.md) covering
-   planning, modular generation, resource manifests, validation, and delivery.
-5. Before responding, run the checklist in [`references/checklist.json`](references/checklist.json)
-   and execute `scripts/validate_output.py`.
+## 2. Available Scripts
 
-## Governance
+```bash
+# ImageData generation
+python3 scripts/generate_imagedata.py --color {color} --width {W} --height {H}
+python3 scripts/generate_imagedata.py --kenney {preset} --color {color}
 
-- Combined Claude/Codex guidance: [`references/guidelines.md`](references/guidelines.md)
-- Clipboard grammar + ACE parameters: [`references/clipboard-format.md`](references/clipboard-format.md)
+# Layout presets
+python3 scripts/generate_layout.py --preset {platformer|breakout} -W {W} -H {H}
 
-## Script Inventory
+# ACE schema lookup (use when unsure about ACE IDs)
+python3 scripts/query_schema.py plugin {name} {ace}
+python3 scripts/query_schema.py behavior {name} {ace}
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/generate_imagedata.py` | Deterministic PNG base64 generation |
-| `scripts/generate_layout.py` | Layout presets (platformer, breakout, etc.) |
-| `scripts/query_schema.py` | ACE schema lookup |
-| `scripts/query_examples.py` | Mine usage stats/examples (requires `data/project_analysis`) |
-| `scripts/validate_output.py` | Clipboard JSON validation |
+# Validate before output
+python3 scripts/validate_output.py '<json>'
+```
 
-## Reference Map
+## 3. Reference Files
 
-| Resource | Description |
-|----------|-------------|
-| `references/instructions.md` | Full workflow + automation details |
-| `references/prompts.md` | Intent, clarification, generation, self-review templates |
-| `references/intent_schema.json` | Intent IR schema |
-| `references/checklist.json` | Validation rules |
-| `references/clipboard-format.md` | Clipboard format + parameter rules |
-| `references/object-templates.md` | Object templates + imageData |
-| `references/layout-templates.md` | Layout/world-instance templates |
-| `references/behavior-names.md` | behaviorId ↔ behaviorType mapping |
-| `references/zh-cn.md` | Localized terminology/search hints |
-| `references/troubleshooting.md` | Error mitigation steps |
-| `references/deprecated-features.md` | Modern replacements for legacy features |
+| When | Load |
+|------|------|
+| JSON format rules | @references/clipboard-format.md |
+| Object templates | @references/object-templates.md |
+| Layout templates | @references/layout-templates.md |
+| Behavior mapping | @references/behavior-names.md |
+| Chinese terms | @references/zh-cn.md |
+| Error debugging | @references/troubleshooting.md |
+| Full examples | @references/examples.md |
+
+## 4. Boundaries
+
+- Output: Clipboard JSON only (events, objects, layouts)
+- Images: Placeholder shapes only (no real art)
+- Engine: Construct 3 only
