@@ -1,11 +1,21 @@
 # Construct 3 Copilot - 项目规范
 
-本项目是 Construct 3 事件表 JSON 生成工具。以下是项目级行为约束。
+本项目是 Construct 3 开发辅助工具，支持事件表 JSON 生成和插件开发指导。
 
 ## 参考资料
 
+### 事件表 & 脚本
 - 完整示例: @references/examples.md
 - JSON 格式规范: @references/clipboard-format.md
+- 运行时脚本 API: @references/runtime-api.md
+- 完整类型定义: source/scripts/ts-defs/
+
+### 插件开发 (Addon SDK)
+- 快速参考: @references/addon-sdk-index.md
+- 开发指南: @references/addon-sdk/guide/
+- API 参考: @references/addon-sdk/reference/
+
+### 其他
 - 中文术语: @references/zh-cn.md
 - 详细工具指南: @references/instructions.md
 
@@ -91,6 +101,23 @@ python3 scripts/query_examples.py top actions 20
 - 按键码使用数字: 87=W, 65=A, 83=S, 68=D, 32=Space
 - Behavior 动作必须指定 `behaviorType` (使用显示名如 "Platform", "8Direction")
 - Variable 必须包含 `comment`, `type`, `initialValue` 字段
+
+### 脚本动作格式
+
+事件表中可以嵌入 JavaScript/TypeScript 脚本块：
+
+```json
+{
+  "type": "script",
+  "language": "javascript",
+  "script": ["localVars.result = localVars.a + localVars.b;"]
+}
+```
+
+- `language`: 必须指定 `"javascript"` 或 `"typescript"`
+- `script`: 字符串数组，每行一个元素
+- 可用对象: `runtime`, `localVars`, `runtime.objects`, `runtime.globalVars`
+- 参考 @references/runtime-api.md 了解完整 API
 
 ### 输出前验证
 

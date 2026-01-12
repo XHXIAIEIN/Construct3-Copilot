@@ -184,6 +184,64 @@ With return value: `"value": "Functions.{FunctionName}({params})"`
 {"id":"wait","objectClass":"System","parameters":{"seconds":"{N}"}}
 ```
 
+### Script Actions
+
+Inline JavaScript/TypeScript code blocks within event sheets.
+
+**Script Action Format**
+```json
+{
+  "type": "script",
+  "language": "javascript",  // Required: "javascript" | "typescript"
+  "script": [                // Required: Array of strings (one per line)
+    "// Available objects:",
+    "// - runtime (IRuntime)",
+    "// - localVars (local variables)",
+    "// - eventSheetManager",
+    "localVars.result = myFunction(localVars.input);"
+  ]
+}
+```
+
+**Function with Script Return Value**
+```json
+{
+  "functionName": "add",
+  "functionDescription": "Add two numbers via script.",
+  "functionReturnType": "number",
+  "functionIsAsync": false,
+  "functionParameters": [
+    {"name": "firstNumber", "type": "number", "initialValue": "0", "comment": ""},
+    {"name": "secondNumber", "type": "number", "initialValue": "0", "comment": ""}
+  ],
+  "eventType": "function-block",
+  "conditions": [],
+  "actions": [
+    {
+      "type": "script",
+      "language": "javascript",
+      "script": ["runtime.setReturnValue(add(localVars.firstNumber, localVars.secondNumber));"]
+    }
+  ]
+}
+```
+
+**Script Action Only (paste as action)**
+```json
+{"is-c3-clipboard-data":true,"type":"actions","items":[
+  {"type":"script","language":"javascript","script":["localVars.result = add(localVars.firstNumber, localVars.secondNumber);"]}
+]}
+```
+
+**Available Script Objects**
+| Object | Description |
+|--------|-------------|
+| `runtime` | IRuntime - main runtime API |
+| `localVars` | Local variables in current scope |
+| `runtime.objects` | Access object types |
+| `runtime.globalVars` | Global variables |
+| `runtime.setReturnValue(v)` | Return value from function |
+
 ### Animation
 
 **Tween Property**

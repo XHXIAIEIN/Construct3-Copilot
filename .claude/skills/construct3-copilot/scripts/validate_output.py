@@ -225,6 +225,19 @@ class C3ClipboardValidator:
 
     def _validate_layouts(self, data: dict):
         """Validate layouts format"""
+        # Build map of object type names to their behavior names
+        obj_behaviors = {}
+        if "object-types" in data:
+            for ot in data["object-types"]:
+                name = ot.get("name")
+                behaviors = set()
+                if "behaviorTypes" in ot:
+                    for b in ot["behaviorTypes"]:
+                        if "name" in b:
+                            behaviors.add(b["name"])
+                if name:
+                    obj_behaviors[name] = behaviors
+
         items = data.get("items", [])
         for i, layout in enumerate(items):
             prefix = f"layouts[{i}]"
@@ -237,8 +250,23 @@ class C3ClipboardValidator:
                     layer_prefix = f"{prefix}.layers[{j}]"
                     if "name" not in layer:
                         self.errors.append(f"{layer_prefix}: missing 'name'")
-                    if "instances" not in layer:
-                        self.warnings.append(f"{layer_prefix}: missing 'instances' array")
+                    
+                    # Validate instances
+                    if "instances" in layer and isinstance(layer["instances"], list):
+                        for k, inst in enumerate(layer["instances"]):
+                            inst_prefix = f"{layer_prefix}.instances[{k}]"
+                            obj_type = inst.get("type")
+                            
+                            # Check if object type exists
+                            if obj_type and obj_type not in obj_behaviors:
+                                self.warnings.append(f"{inst_prefix}: unknown object type '{obj_type}'")
+                            
+                            # Check behavior properties keys match behavior names
+                            if "behaviors" in inst and obj_type in obj_behaviors:
+                                defined_behaviors = obj_behaviors[obj_type]
+                                for bh_key in inst["behaviors"]:
+                                    if bh_key not in defined_behaviors:
+                                        self.errors.append(f"{inst_prefix}: behavior key '{bh_key}' not found in object '{obj_type}' behaviors {defined_behaviors}")
 
         if "object-types" not in data:
             self.warnings.append("layouts should include 'object-types' array")

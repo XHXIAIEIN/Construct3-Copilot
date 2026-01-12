@@ -40,7 +40,8 @@ def list_aces(schema: dict):
             print(f"## {ace_type.title()} ({len(aces)})\n")
             for ace in aces:
                 params = ', '.join(p.get('id', '?') for p in ace.get('params', []))
-                print(f"  `{ace['id']}` ({params or '-'})")
+                ace_name = ace.get('name_zh', ace.get('name_en', ''))
+                print(f"  `{ace['id']}` - {ace_name} ({params or '-'})")
             print()
 
 def get_ace(schema: dict, ace_id: str):
@@ -78,9 +79,10 @@ def search_all(query: str):
                 schema = json.load(file)
             for ace_type in ['conditions', 'actions']:
                 for ace in schema.get(ace_type, []):
-                    if query.lower() in ace.get('id', '').lower():
+                    if query.lower() in ace.get('id', '').lower() or query.lower() in ace.get('name_zh', '').lower() or query.lower() in ace.get('name_en', '').lower():
                         params = ', '.join(p.get('id', '?') for p in ace.get('params', []))
-                        print(f"  [{schema_type[:-1]}:{f.stem}] `{ace['id']}` ({params or '-'})")
+                        ace_name = ace.get('name_zh', ace.get('name_en', ''))
+                        print(f"  [{schema_type[:-1]}:{f.stem}] `{ace['id']}` - {ace_name} ({params or '-'})")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:

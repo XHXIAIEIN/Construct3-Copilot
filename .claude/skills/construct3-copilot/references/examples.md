@@ -159,3 +159,98 @@ JSON before sharing with users.
   - `Coin` → 碰撞目标对象
   - `Score` → 要修改的变量
   - `add-to` / `destroy` → 需要的动作
+
+## Example 6 – Script Integration (Event + JavaScript)
+
+在事件表中嵌入 JavaScript 脚本块。
+
+- **Intent IR**
+  ```json
+  {
+    "gameplay": ["function that adds two numbers using JavaScript"],
+    "ui": [],
+    "assets": [],
+    "open_questions": []
+  }
+  ```
+- **Events JSON (with script action)**
+  ```json
+  {"is-c3-clipboard-data": true, "type": "events", "items": [
+    {"eventType": "comment", "text": "Script integration example: Call JavaScript function from events"},
+    {"eventType": "group", "disabled": false, "title": "Script Functions", "description": "Event functions that wrap JavaScript code", "isActiveOnStart": true, "children": [
+      {
+        "functionName": "add",
+        "functionDescription": "Add two numbers via JavaScript.",
+        "functionCategory": "",
+        "functionReturnType": "number",
+        "functionCopyPicked": false,
+        "functionIsAsync": false,
+        "functionParameters": [
+          {"name": "firstNumber", "type": "number", "initialValue": "0", "comment": ""},
+          {"name": "secondNumber", "type": "number", "initialValue": "0", "comment": ""}
+        ],
+        "eventType": "function-block",
+        "conditions": [],
+        "actions": [
+          {"type": "script", "language": "javascript", "script": ["runtime.setReturnValue(localVars.firstNumber + localVars.secondNumber);"]}
+        ]
+      },
+      {
+        "functionName": "distance",
+        "functionDescription": "Calculate distance between two points.",
+        "functionCategory": "",
+        "functionReturnType": "number",
+        "functionCopyPicked": false,
+        "functionIsAsync": false,
+        "functionParameters": [
+          {"name": "x1", "type": "number", "initialValue": "0", "comment": ""},
+          {"name": "y1", "type": "number", "initialValue": "0", "comment": ""},
+          {"name": "x2", "type": "number", "initialValue": "0", "comment": ""},
+          {"name": "y2", "type": "number", "initialValue": "0", "comment": ""}
+        ],
+        "eventType": "function-block",
+        "conditions": [],
+        "actions": [
+          {"type": "script", "language": "javascript", "script": [
+            "const dx = localVars.x2 - localVars.x1;",
+            "const dy = localVars.y2 - localVars.y1;",
+            "runtime.setReturnValue(Math.sqrt(dx * dx + dy * dy));"
+          ]}
+        ]
+      }
+    ]}
+  ]}
+  ```
+- **Usage**:
+  - 粘贴后可在表达式中使用 `Functions.add(1, 2)` 或 `Functions.distance(0, 0, 100, 100)`
+  - 脚本通过 `localVars` 访问函数参数
+  - 使用 `runtime.setReturnValue()` 返回结果
+
+## Example 7 – Script Action for Runtime Access
+
+直接在事件中使用脚本访问运行时 API。
+
+- **Events JSON**
+  ```json
+  {"is-c3-clipboard-data": true, "type": "events", "items": [
+    {"eventType": "variable", "name": "PlayerSpeed", "type": "number", "initialValue": "0", "comment": "Calculated speed"},
+    {"eventType": "block",
+     "conditions": [{"id": "every-tick", "objectClass": "System", "parameters": {}}],
+     "actions": [
+       {"type": "script", "language": "javascript", "script": [
+         "const player = runtime.objects.Player.getFirstInstance();",
+         "if (player) {",
+         "  const vx = player.behaviors.Platform?.vectorX ?? 0;",
+         "  const vy = player.behaviors.Platform?.vectorY ?? 0;",
+         "  localVars.PlayerSpeed = Math.sqrt(vx * vx + vy * vy);",
+         "}"
+       ]}
+     ]}
+  ]}
+  ```
+- **Key Points**:
+  - `runtime.objects.Player.getFirstInstance()` 获取对象实例
+  - `runtime.dt` 获取帧间隔时间
+  - `localVars` 读写事件表局部变量
+  - 脚本可以包含多行，每行是数组中的一个字符串
+  - 参考 `references/runtime-api.md` 了解完整 API

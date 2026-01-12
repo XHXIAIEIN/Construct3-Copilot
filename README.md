@@ -18,7 +18,7 @@ claude
 
 **Complete Game**
 ```
-> 做一个打砖块游戏，球拍跟随鼠标移动
+> Create a breakout game, paddle follows mouse
 
 AI generates:
 - layout.json  → Paste to: Project Bar → Layouts
@@ -27,14 +27,14 @@ AI generates:
 
 **Add Feature**
 ```
-> 添加 WASD 八方向移动控制
+> Add WASD 8-direction movement controls
 
 AI generates events JSON → Paste to: Event sheet margin
 ```
 
 **UI Snippet**
 ```
-> 加一个暂停功能，按 ESC 暂停
+> Add a pause feature, press ESC to pause
 
 AI generates events JSON → Paste to: Existing event sheet
 ```

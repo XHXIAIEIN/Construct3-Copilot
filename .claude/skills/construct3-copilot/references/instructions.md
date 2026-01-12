@@ -99,11 +99,16 @@ this file.
 
 | Resource | Purpose |
 |----------|---------|
-| `references/clipboard-format.md` | JSON structures, parameter rules, clipboard write instructions |
+| `references/clipboard-format.md` | JSON structures, parameter rules, clipboard write instructions, script actions |
+| `references/runtime-api.md` | JavaScript/TypeScript scripting API (IRuntime, IInstance, etc.) |
+| `source/scripts/ts-defs/` | Complete TypeScript type definitions |
 | `references/object-templates.md` | Sprite/UI/global templates with imageData |
 | `references/layout-templates.md` | Layout/world instance templates |
 | `references/behavior-names.md` | behaviorId → behaviorType mapping |
 | `references/zh-cn.md` | Localized terminology/search tips |
+| `references/addon-sdk-index.md` | Plugin/Behavior development quick reference |
+| `references/addon-sdk/guide/` | Addon SDK development guides |
+| `references/addon-sdk/reference/` | Addon SDK API reference |
 | `references/troubleshooting.md` | Paste errors, ACE issues, parameter mismatches |
 | `references/deprecated-features.md` | Modern replacements for Function/Pin/Fade |
 | `references/prompts.md` | Intent extraction, clarification, generation, review templates |

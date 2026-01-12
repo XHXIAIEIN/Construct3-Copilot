@@ -15,6 +15,7 @@ import json
 import subprocess
 import sys
 import os
+import math
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 IMAGEDATA_SCRIPT = os.path.join(SCRIPT_DIR, "generate_imagedata.py")
@@ -420,7 +421,7 @@ def generate_breakout_layout(width, height):
     ball_inst = make_sprite_instance("Ball", width // 2, height - 80, 16, 16, {
         "Bullet": {"properties": {"speed": 300, "acceleration": 0, "gravity": 0, "bounce-off-solids": False, "set-angle": False, "enabled": True}}
     })
-    ball_inst["world"]["angle"] = -60  # Initial angle of motion (up-right)
+    ball_inst["world"]["angle"] = -60 * (math.pi / 180)  # Initial angle of motion (up-right) in radians
     game_instances.append(ball_inst)
 
     # Bricks (grid)
