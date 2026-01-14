@@ -1,0 +1,77 @@
+{
+  "is-c3-clipboard-data": true,
+  "type": "events",
+  "items": [
+    {
+      "eventType": "variable",
+      "name": "Score",
+      "type": "number",
+      "initialValue": "0",
+      "comment": ""
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "on-start-of-layout",
+          "objectClass": "System",
+          "parameters": {}
+        }
+      ],
+      "actions": [
+        {
+          "id": "set-eventvar-value",
+          "objectClass": "System",
+          "parameters": {
+            "variable": "Score",
+            "value": "0"
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "key-is-down",
+          "objectClass": "Keyboard",
+          "parameters": {
+            "key": 87
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "simulate-control",
+          "objectClass": "Player",
+          "behaviorType": "8Direction",
+          "parameters": {
+            "control": "up"
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "every-x-seconds",
+          "objectClass": "System",
+          "parameters": {
+            "interval-seconds": "1"
+          }
+        }
+      ],
+      "actions": [
+        {
+          "type": "script",
+          "language": "javascript",
+          "script": [
+            "// noop",
+            "const x = 1;"
+          ]
+        }
+      ]
+    }
+  ]
+}

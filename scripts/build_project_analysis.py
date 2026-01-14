@@ -199,6 +199,28 @@ def main():
     with open(output_dir / "plugins_knowledge.json", 'w', encoding='utf-8') as f:
         json.dump(plugins, f, indent=2, ensure_ascii=False)
 
+    # Write sorted indexes for quick "top" queries
+    sorted_indexes = {
+        "top_50_actions": [
+            {"key": k, "usage_count": v["usage_count"]} for k, v in list(actions_sorted.items())[:50]
+        ],
+        "top_50_conditions": [
+            {"key": k, "usage_count": v["usage_count"]} for k, v in list(conditions_sorted.items())[:50]
+        ],
+        "top_50_behaviors": [
+            {"key": k, "usage_count": v["usage_count"]} for k, v in sorted(
+                behaviors.items(), key=lambda x: x[1]["usage_count"], reverse=True
+            )[:50]
+        ],
+        "top_50_plugins": [
+            {"key": k, "usage_count": v["usage_count"]} for k, v in sorted(
+                plugins.items(), key=lambda x: x[1]["usage_count"], reverse=True
+            )[:50]
+        ],
+    }
+    with open(output_dir / "sorted_indexes.json", 'w', encoding='utf-8') as f:
+        json.dump(sorted_indexes, f, indent=2, ensure_ascii=False)
+
     # Write index
     index = {
         "source": str(projects_dir),

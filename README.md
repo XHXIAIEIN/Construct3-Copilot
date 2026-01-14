@@ -49,6 +49,12 @@ AI generates events JSON → Paste to: Existing event sheet
 | ImageData | Placeholder PNG base64 (colored shapes) |
 | Validation | Verify JSON format before paste |
 
+## Validation
+
+```bash
+python scripts/preflight.py output.json
+```
+
 ## Paste Locations
 
 | Output Type | Paste To |
@@ -78,7 +84,7 @@ Construct3-Copilot/
 ├── data/
 │   └── schemas/                   # ACE Schema (72 plugins + 31 behaviors)
 └── tests/
-    └── examples/                  # JSON examples (breakout, platformer)
+    └── fixtures/                  # Minimal JSON fixtures (validation)
 ```
 
 ### ACE Schema

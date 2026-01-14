@@ -14,6 +14,7 @@ Usage:
 import json
 import sys
 import re
+from pathlib import Path
 from typing import Any
 
 class ValidationError(Exception):
@@ -29,6 +30,7 @@ class C3ClipboardValidator:
     def __init__(self):
         self.errors = []
         self.warnings = []
+        self.schema_index = SchemaIndex()
 
     def validate(self, data: dict) -> bool:
         """Main validation entry point"""
@@ -154,6 +156,7 @@ class C3ClipboardValidator:
             # Check ID format
             if "id" in cond:
                 self._validate_ace_id(cond["id"], cond_prefix)
+                self._validate_schema_ace(cond, "conditions", cond_prefix)
 
             # Check parameters
             if "parameters" in cond and isinstance(cond["parameters"], dict):
@@ -166,6 +169,10 @@ class C3ClipboardValidator:
 
             if not isinstance(action, dict):
                 self.errors.append(f"{action_prefix}: must be an object")
+                continue
+
+            if action.get("type") == "script":
+                self._validate_script_action(action, action_prefix)
                 continue
 
             # Special handling for function calls
@@ -186,6 +193,7 @@ class C3ClipboardValidator:
             # Check ID format
             if "id" in action:
                 self._validate_ace_id(action["id"], action_prefix)
+                self._validate_schema_ace(action, "actions", action_prefix)
 
             # Check parameters
             if "parameters" in action and isinstance(action["parameters"], dict):
@@ -309,6 +317,116 @@ class C3ClipboardValidator:
                 if isinstance(value, str) and value and not value.startswith('"'):
                     if not any(c in value for c in ['+', '&', '(', '.']):  # Not an expression
                         self.warnings.append(f"{param_prefix}: string parameter may be missing nested quotes, got: {value}")
+
+    def _validate_script_action(self, action: dict, prefix: str):
+        """Validate script action block"""
+        language = action.get("language")
+        script = action.get("script")
+        if language not in ("javascript", "typescript"):
+            self.errors.append(f"{prefix}: script action missing or invalid 'language'")
+        if not isinstance(script, list) or not all(isinstance(line, str) for line in script):
+            self.errors.append(f"{prefix}: script action 'script' must be an array of strings")
+
+    def _validate_schema_ace(self, item: dict, ace_type: str, prefix: str):
+        ace_id = item.get("id")
+        if not ace_id:
+            return
+        schema = self.schema_index.find_schema(item)
+        if not schema:
+            return
+        ace = schema.get_ace(ace_type, ace_id)
+        if not ace:
+            self.errors.append(f"{prefix}: unknown {ace_type[:-1]} id '{ace_id}' for schema '{schema.name}'")
+            return
+        params = item.get("parameters")
+        if isinstance(params, dict):
+            warnings = self.schema_index.validate_params(ace, params, f"{prefix}.parameters")
+            self.warnings.extend(warnings)
+
+
+class SchemaInfo:
+    def __init__(self, name: str, schema: dict):
+        self.name = name
+        self.schema = schema
+        self._ace_index = {
+            "conditions": {a.get("id"): a for a in schema.get("conditions", [])},
+            "actions": {a.get("id"): a for a in schema.get("actions", [])},
+        }
+
+    def get_ace(self, ace_type: str, ace_id: str):
+        return self._ace_index.get(ace_type, {}).get(ace_id)
+
+
+class SchemaIndex:
+    def __init__(self):
+        script_dir = Path(__file__).resolve().parent
+        project_root = script_dir.parent.parent.parent.parent
+        self.schemas_dir = project_root / "data" / "schemas"
+        self.plugin_map = {}
+        self.behavior_map = {}
+        self._load_schemas()
+
+    def _normalize(self, name: str) -> str:
+        return re.sub(r"[^a-z0-9]", "", name.lower())
+
+    def _load_schemas(self):
+        plugins_dir = self.schemas_dir / "plugins"
+        behaviors_dir = self.schemas_dir / "behaviors"
+        if plugins_dir.exists():
+            for path in plugins_dir.glob("*.json"):
+                with open(path, "r", encoding="utf-8") as f:
+                    schema = json.load(f)
+                info = SchemaInfo(schema.get("name_en", path.stem), schema)
+                for key in self._schema_keys(schema, path.stem):
+                    self.plugin_map[key] = info
+        if behaviors_dir.exists():
+            for path in behaviors_dir.glob("*.json"):
+                with open(path, "r", encoding="utf-8") as f:
+                    schema = json.load(f)
+                info = SchemaInfo(schema.get("name_en", path.stem), schema)
+                for key in self._schema_keys(schema, path.stem):
+                    self.behavior_map[key] = info
+
+    def _schema_keys(self, schema: dict, stem: str):
+        keys = {stem}
+        for key in [schema.get("id"), schema.get("name_en"), schema.get("name_zh")]:
+            if key:
+                keys.add(key)
+        return {self._normalize(k) for k in keys if k}
+
+    def find_schema(self, item: dict):
+        behavior_type = item.get("behaviorType")
+        if behavior_type:
+            return self.behavior_map.get(self._normalize(behavior_type))
+        obj_class = item.get("objectClass")
+        if not obj_class:
+            return None
+        return self.plugin_map.get(self._normalize(obj_class))
+
+    def validate_params(self, ace: dict, params: dict, prefix: str):
+        warnings = []
+        schema_params = ace.get("params", [])
+        schema_ids = {p.get("id") for p in schema_params if p.get("id")}
+        for pid in schema_ids:
+            if pid not in params:
+                warnings.append(f"{prefix}: missing parameter '{pid}'")
+        for pid in params.keys():
+            if pid not in schema_ids:
+                warnings.append(f"{prefix}: unknown parameter '{pid}'")
+        for p in schema_params:
+            pid = p.get("id")
+            items = p.get("items")
+            if not pid or not items or pid not in params:
+                continue
+            value = params.get(pid)
+            if isinstance(value, str):
+                normalized = value.strip('"')
+                if normalized in items:
+                    continue
+                if not re.search(r"[()+\\-*/&.]", value):
+                    warnings.append(f"{prefix}.{pid}: value '{value}' not in {items}")
+        return warnings
+
 
 def main():
     # Read input

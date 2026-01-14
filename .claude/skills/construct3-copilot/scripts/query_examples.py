@@ -51,7 +51,7 @@ def query(data_type: str, search: str):
         print(f"### `{key}` (used {count} times)\n")
 
         # Show raw samples as examples
-        samples = info.get('raw_samples', info.get('examples', []))
+        samples = info.get('raw_samples', info.get('examples', info.get('param_examples', [])))
         if samples:
             print("```json")
             for ex in samples[:2]:
@@ -77,12 +77,23 @@ def query(data_type: str, search: str):
             print(f"\nCommonly attached to: {', '.join(p[0] for p in top_plugins)}")
 
 def show_top(ace_type: str, count: int = 10):
-    data = load_json("sorted_indexes.json")
     index_key = f"top_50_{ace_type}"
+    data = None
+    sorted_path = ANALYSIS_DIR / "sorted_indexes.json"
+    if sorted_path.exists():
+        with open(sorted_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
 
-    if index_key not in data:
-        print(f"❌ Unknown: {ace_type}\n   Valid: actions, conditions, behaviors, plugins")
-        return
+    if not data or index_key not in data:
+        if ace_type not in ["actions", "conditions", "behaviors", "plugins"]:
+            print(f"❌ Unknown: {ace_type}\n   Valid: actions, conditions, behaviors, plugins")
+            return
+        raw = load_json(FILE_MAP[ace_type[:-1]] if ace_type.endswith("s") else FILE_MAP[ace_type])
+        if ace_type in ["actions", "conditions"]:
+            items = sorted(raw.items(), key=lambda x: x[1].get("usage_count", 0), reverse=True)
+        else:
+            items = sorted(raw.items(), key=lambda x: x[1].get("usage_count", 0), reverse=True)
+        data = {index_key: [{"key": k, "usage_count": v.get("usage_count", 0)} for k, v in items[:50]]}
 
     print(f"\n📊 Top {count} {ace_type}\n")
     print("| # | ID | Count |")

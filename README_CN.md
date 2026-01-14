@@ -49,6 +49,12 @@ AI 生成事件 JSON → 粘贴到：已有事件表
 | 图像 | 占位符 PNG base64（几何图形） |
 | 验证 | 粘贴前检查 JSON 格式 |
 
+## 校验
+
+```bash
+python scripts/preflight.py output.json
+```
+
 ## 粘贴位置
 
 | 输出类型 | 粘贴到 |
@@ -58,11 +64,6 @@ AI 生成事件 JSON → 粘贴到：已有事件表
 | `events` | 事件表边缘 |
 | `world-instances` | 布局视图 |
 
-## 限制
-
-- ❌ 不生成 .c3p 项目文件
-- ❌ 不生成专业美术资源（仅占位符图形）
-- ❌ 仅支持 Construct 3
 
 ## 项目结构
 
@@ -78,7 +79,7 @@ Construct3-Copilot/
 ├── data/
 │   └── schemas/                   # ACE Schema (72 插件 + 31 行为)
 └── tests/
-    └── examples/                  # JSON 示例 (打砖块、平台跳跃)
+    └── fixtures/                  # 最小 JSON 夹具（校验）
 ```
 
 ### ACE Schema
