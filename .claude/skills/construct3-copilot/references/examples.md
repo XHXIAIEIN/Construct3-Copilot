@@ -254,3 +254,202 @@ JSON before sharing with users.
   - `localVars` 读写事件表局部变量
   - 脚本可以包含多行，每行是数组中的一个字符串
   - 参考 `references/runtime-api.md` 了解完整 API
+
+## Example 8 – Complete Platformer Character (Keyboard Input)
+
+为简单平台游戏角色生成完整的事件表，响应键盘输入（左、右、跳跃）。
+
+- **Intent IR**
+  ```json
+  {
+    "gameplay": [
+      "left arrow moves player left",
+      "right arrow moves player right",
+      "space bar makes player jump",
+      "player has Platform behavior"
+    ],
+    "ui": [],
+    "assets": ["Player (Platform)", "Ground (Solid)", "Keyboard"],
+    "open_questions": []
+  }
+  ```
+
+- **Events JSON (Complete Event Sheet)**
+  ```json
+  {"is-c3-clipboard-data": true, "type": "events", "items": [
+    {"eventType": "comment", "text": "=== Platformer Character Controls ==="},
+    {"eventType": "comment", "text": "Player must have Platform behavior. Ground must have Solid behavior."},
+
+    {"eventType": "group", "disabled": false, "title": "Player Movement", "description": "Keyboard controls for platformer character", "isActiveOnStart": true, "children": [
+      {"eventType": "block",
+       "conditions": [{"id": "key-is-down", "objectClass": "Keyboard", "parameters": {"key": 37}}],
+       "actions": [
+         {"id": "simulate-control", "objectClass": "Player", "behaviorType": "Platform", "parameters": {"control": "left"}},
+         {"id": "set-mirrored", "objectClass": "Player", "parameters": {"state": 1}}
+       ]},
+      {"eventType": "block",
+       "conditions": [{"id": "key-is-down", "objectClass": "Keyboard", "parameters": {"key": 39}}],
+       "actions": [
+         {"id": "simulate-control", "objectClass": "Player", "behaviorType": "Platform", "parameters": {"control": "right"}},
+         {"id": "set-mirrored", "objectClass": "Player", "parameters": {"state": 0}}
+       ]},
+      {"eventType": "block",
+       "conditions": [{"id": "key-is-down", "objectClass": "Keyboard", "parameters": {"key": 32}}],
+       "actions": [{"id": "simulate-control", "objectClass": "Player", "behaviorType": "Platform", "parameters": {"control": "jump"}}]}
+    ]},
+
+    {"eventType": "group", "disabled": false, "title": "Animation States", "description": "Switch animations based on movement", "isActiveOnStart": true, "children": [
+      {"eventType": "block",
+       "conditions": [{"id": "is-moving", "objectClass": "Player", "behaviorType": "Platform", "parameters": {}}],
+       "actions": [{"id": "set-animation", "objectClass": "Player", "parameters": {"animation": "\"Run\"", "from": "current-frame"}}]},
+      {"eventType": "block",
+       "conditions": [
+         {"id": "invert", "objectClass": "System", "parameters": {}},
+         {"id": "is-moving", "objectClass": "Player", "behaviorType": "Platform", "parameters": {}}
+       ],
+       "actions": [{"id": "set-animation", "objectClass": "Player", "parameters": {"animation": "\"Idle\"", "from": "current-frame"}}]},
+      {"eventType": "block",
+       "conditions": [{"id": "is-jumping", "objectClass": "Player", "behaviorType": "Platform", "parameters": {}}],
+       "actions": [{"id": "set-animation", "objectClass": "Player", "parameters": {"animation": "\"Jump\"", "from": "beginning"}}]},
+      {"eventType": "block",
+       "conditions": [{"id": "is-falling", "objectClass": "Player", "behaviorType": "Platform", "parameters": {}}],
+       "actions": [{"id": "set-animation", "objectClass": "Player", "parameters": {"animation": "\"Fall\"", "from": "beginning"}}]}
+    ]}
+  ]}
+  ```
+
+- **Required Setup**:
+  1. Player sprite with Platform behavior (set `default-controls: false`)
+  2. Ground with Solid behavior
+  3. Keyboard object in project
+  4. Player animations: "Idle", "Run", "Jump", "Fall"
+
+- **Key Codes**: 37=←, 39=→, 32=Space
+
+## Example 9 – Pause Menu with Resume/Settings/Quit Buttons
+
+完整的暂停菜单系统，包含恢复、设置、退出按钮和可见性切换逻辑。
+
+- **Intent IR**
+  ```json
+  {
+    "gameplay": [
+      "ESC toggles pause state",
+      "pause sets time scale to 0",
+      "resume continues game"
+    ],
+    "ui": [
+      "PauseOverlay darkens screen",
+      "PauseTitle shows 'PAUSED'",
+      "ResumeButton resumes game",
+      "SettingsButton goes to settings",
+      "QuitButton returns to main menu"
+    ],
+    "assets": ["PauseOverlay", "PauseTitle", "ResumeButton", "SettingsButton", "QuitButton", "Keyboard", "Mouse"],
+    "open_questions": []
+  }
+  ```
+
+- **Layout Objects (paste to Layout view)**
+  ```json
+  {"is-c3-clipboard-data": true, "type": "world-instances", "items": [
+    {"type": "PauseOverlay", "properties": {"initially-visible": false}, "world": {"x": 0, "y": 0, "width": 1280, "height": 720, "color": [0, 0, 0, 0.7]}},
+    {"type": "PauseTitle", "properties": {"text": "PAUSED", "font": "Arial", "size": 48, "bold": true, "color": [1, 1, 1, 1], "horizontal-alignment": "center", "initially-visible": false}, "world": {"x": 640, "y": 200, "width": 400, "height": 60}},
+    {"type": "ResumeButton", "properties": {"text": "Resume", "font": "Arial", "size": 24, "color": [1, 1, 1, 1], "horizontal-alignment": "center", "initially-visible": false}, "world": {"x": 540, "y": 320, "width": 200, "height": 50}},
+    {"type": "SettingsButton", "properties": {"text": "Settings", "font": "Arial", "size": 24, "color": [1, 1, 1, 1], "horizontal-alignment": "center", "initially-visible": false}, "world": {"x": 540, "y": 390, "width": 200, "height": 50}},
+    {"type": "QuitButton", "properties": {"text": "Quit", "font": "Arial", "size": 24, "color": [1, 1, 1, 1], "horizontal-alignment": "center", "initially-visible": false}, "world": {"x": 540, "y": 460, "width": 200, "height": 50}}
+  ], "object-types": [
+    {"name": "PauseOverlay", "plugin-id": "TiledBg"},
+    {"name": "PauseTitle", "plugin-id": "Text"},
+    {"name": "ResumeButton", "plugin-id": "Text"},
+    {"name": "SettingsButton", "plugin-id": "Text"},
+    {"name": "QuitButton", "plugin-id": "Text"}
+  ]}
+  ```
+
+- **Events JSON (Complete Pause System)**
+  ```json
+  {"is-c3-clipboard-data": true, "type": "events", "items": [
+    {"eventType": "variable", "name": "IsPaused", "type": "boolean", "initialValue": "false", "comment": "Pause state flag"},
+
+    {"eventType": "group", "disabled": false, "title": "Pause System", "description": "Toggle pause with ESC, show/hide menu", "isActiveOnStart": true, "children": [
+      {"eventType": "comment", "text": "Toggle pause on ESC"},
+      {"eventType": "block",
+       "conditions": [{"id": "on-key-pressed", "objectClass": "Keyboard", "parameters": {"key": 27}}],
+       "actions": [{"id": "toggle-boolean-eventvar", "objectClass": "System", "parameters": {"variable": "IsPaused"}}]},
+
+      {"eventType": "comment", "text": "Show pause menu when paused"},
+      {"eventType": "block",
+       "conditions": [{"id": "compare-boolean-eventvar", "objectClass": "System", "parameters": {"variable": "IsPaused", "comparison": 0, "value": "true"}}],
+       "actions": [
+         {"id": "set-time-scale", "objectClass": "System", "parameters": {"time-scale": "0"}},
+         {"id": "set-visible", "objectClass": "PauseOverlay", "parameters": {"visibility": 1}},
+         {"id": "set-visible", "objectClass": "PauseTitle", "parameters": {"visibility": 1}},
+         {"id": "set-visible", "objectClass": "ResumeButton", "parameters": {"visibility": 1}},
+         {"id": "set-visible", "objectClass": "SettingsButton", "parameters": {"visibility": 1}},
+         {"id": "set-visible", "objectClass": "QuitButton", "parameters": {"visibility": 1}}
+       ]},
+
+      {"eventType": "comment", "text": "Hide pause menu when unpaused"},
+      {"eventType": "block",
+       "conditions": [{"id": "compare-boolean-eventvar", "objectClass": "System", "parameters": {"variable": "IsPaused", "comparison": 0, "value": "false"}}],
+       "actions": [
+         {"id": "set-time-scale", "objectClass": "System", "parameters": {"time-scale": "1"}},
+         {"id": "set-visible", "objectClass": "PauseOverlay", "parameters": {"visibility": 0}},
+         {"id": "set-visible", "objectClass": "PauseTitle", "parameters": {"visibility": 0}},
+         {"id": "set-visible", "objectClass": "ResumeButton", "parameters": {"visibility": 0}},
+         {"id": "set-visible", "objectClass": "SettingsButton", "parameters": {"visibility": 0}},
+         {"id": "set-visible", "objectClass": "QuitButton", "parameters": {"visibility": 0}}
+       ]}
+    ]},
+
+    {"eventType": "group", "disabled": false, "title": "Pause Menu Buttons", "description": "Handle button clicks", "isActiveOnStart": true, "children": [
+      {"eventType": "block",
+       "conditions": [{"id": "on-object-clicked", "objectClass": "Mouse", "parameters": {"mouse-button": "left", "click-type": "clicked", "object-clicked": "ResumeButton"}}],
+       "actions": [{"id": "set-boolean-eventvar", "objectClass": "System", "parameters": {"variable": "IsPaused", "value": "false"}}]},
+
+      {"eventType": "block",
+       "conditions": [{"id": "on-object-clicked", "objectClass": "Mouse", "parameters": {"mouse-button": "left", "click-type": "clicked", "object-clicked": "SettingsButton"}}],
+       "actions": [{"id": "go-to-layout", "objectClass": "System", "parameters": {"layout": "\"Settings\""}}]},
+
+      {"eventType": "block",
+       "conditions": [{"id": "on-object-clicked", "objectClass": "Mouse", "parameters": {"mouse-button": "left", "click-type": "clicked", "object-clicked": "QuitButton"}}],
+       "actions": [{"id": "go-to-layout", "objectClass": "System", "parameters": {"layout": "\"MainMenu\""}}]}
+    ]},
+
+    {"eventType": "group", "disabled": false, "title": "Button Hover Effects", "description": "Visual feedback on hover", "isActiveOnStart": true, "children": [
+      {"eventType": "block",
+       "conditions": [{"id": "cursor-is-over-object", "objectClass": "Mouse", "parameters": {"object": "ResumeButton"}}],
+       "actions": [{"id": "set-opacity", "objectClass": "ResumeButton", "parameters": {"opacity": "70"}}]},
+      {"eventType": "block",
+       "conditions": [{"id": "invert", "objectClass": "System", "parameters": {}}, {"id": "cursor-is-over-object", "objectClass": "Mouse", "parameters": {"object": "ResumeButton"}}],
+       "actions": [{"id": "set-opacity", "objectClass": "ResumeButton", "parameters": {"opacity": "100"}}]},
+
+      {"eventType": "block",
+       "conditions": [{"id": "cursor-is-over-object", "objectClass": "Mouse", "parameters": {"object": "SettingsButton"}}],
+       "actions": [{"id": "set-opacity", "objectClass": "SettingsButton", "parameters": {"opacity": "70"}}]},
+      {"eventType": "block",
+       "conditions": [{"id": "invert", "objectClass": "System", "parameters": {}}, {"id": "cursor-is-over-object", "objectClass": "Mouse", "parameters": {"object": "SettingsButton"}}],
+       "actions": [{"id": "set-opacity", "objectClass": "SettingsButton", "parameters": {"opacity": "100"}}]},
+
+      {"eventType": "block",
+       "conditions": [{"id": "cursor-is-over-object", "objectClass": "Mouse", "parameters": {"object": "QuitButton"}}],
+       "actions": [{"id": "set-opacity", "objectClass": "QuitButton", "parameters": {"opacity": "70"}}]},
+      {"eventType": "block",
+       "conditions": [{"id": "invert", "objectClass": "System", "parameters": {}}, {"id": "cursor-is-over-object", "objectClass": "Mouse", "parameters": {"object": "QuitButton"}}],
+       "actions": [{"id": "set-opacity", "objectClass": "QuitButton", "parameters": {"opacity": "100"}}]}
+    ]}
+  ]}
+  ```
+
+- **Usage**:
+  1. Place UI objects on UI layer (parallax 0,0)
+  2. Paste events to event sheet
+  3. Ensure "Settings" and "MainMenu" layouts exist (or change names)
+  4. Add Keyboard and Mouse objects
+
+- **Key Points**:
+  - All pause menu objects start invisible (`initially-visible: false`)
+  - `set-time-scale: 0` freezes gameplay while keeping UI responsive
+  - Button text objects double as clickable buttons
+  - Hover effect uses opacity change for visual feedback

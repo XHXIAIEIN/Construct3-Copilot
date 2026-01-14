@@ -88,7 +88,7 @@ python3 scripts/query_examples.py top actions 20
 - ❌ `set-angle-toward-position` → 不存在
 - ✅ `set-angle` + `angle(x1,y1,x2,y2)` 表达式
 - ❌ `move-toward` → 不存在
-- ✅ 使用 MoveTo 行为或手动计算
+- ✅ 使用 MoveTo 行为或 Tween 行为
 
 ## 输出规范
 

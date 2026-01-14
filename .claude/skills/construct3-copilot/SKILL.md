@@ -58,6 +58,7 @@ python3 scripts/validate_output.py '<json>'
 
 ## 3. Reference Files
 
+### Core References
 | When | Load |
 |------|------|
 | JSON format rules | @references/clipboard-format.md |
@@ -67,6 +68,16 @@ python3 scripts/validate_output.py '<json>'
 | Chinese terms | @references/zh-cn.md |
 | Error debugging | @references/troubleshooting.md |
 | Full examples | @references/examples.md |
+
+### Advanced Topics
+| When | Load |
+|------|------|
+| Multi-layer layouts (Background/Game/UI) | @references/multi-layer-layouts.md |
+| Complete game levels | @references/complete-levels.md |
+| Multiplayer networking | @references/multiplayer-patterns.md |
+| Complex state management | @references/limitations-and-refinement.md |
+| Prompt patterns & templates | @references/prompt-patterns.md |
+| Advanced JSON examples | @references/advanced-examples.md |
 
 ## 4. Boundaries
 
