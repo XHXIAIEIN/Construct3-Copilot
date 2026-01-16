@@ -6,22 +6,76 @@ description: >
   character control, collision, scoring, UI elements, and level design.
 triggers:
   keywords:
+    # English - Core
     - construct 3
     - c3
     - event sheet
+    - clipboard json
+    # English - Game Types
+    - platformer
+    - shooter
+    - rpg game
+    - puzzle game
+    - breakout
+    - tower defense
+    # English - Features
+    - sprite
+    - behavior
+    - animation
+    - physics
+    - collision
+    - spawn
+    - bullet
+    - platform movement
+    - 8direction
+    - pathfinding
+    - tween
+    # English - Input
+    - keyboard input
+    - mouse click
+    - touch controls
+    - gamepad
+    # English - Systems
+    - save load
+    - inventory
+    - dialogue system
+    - particle
+    - audio
+    - multiplayer
+    # 中文 - 核心
     - 事件表
     - 场景
+    - 布局
     - 精灵
     - 行为
+    # 中文 - 游戏类型
+    - 平台游戏
+    - 射击游戏
+    - 角色扮演
+    - 塔防
+    - 消除游戏
+    # 中文 - 功能
     - 玩法
     - 目标
     - 逻辑
     - 移动
     - 控制
     - 碰撞
+    - 生成敌人
+    - 生成子弹
+    - 存档
+    - 读档
+    - 动画
+    - 物理
+    - 粒子效果
+    - 音频播放
+    - 对话系统
+    - 背包系统
   intents:
     - generate_c3_json
     - paste_to_c3
+    - create_event_sheet
+    - create_game_logic
 ---
 
 # Execution Instructions
@@ -78,6 +132,9 @@ python3 scripts/validate_output.py '<json>'
 | Complex state management | @references/limitations-and-refinement.md |
 | Prompt patterns & templates | @references/prompt-patterns.md |
 | Advanced JSON examples | @references/advanced-examples.md |
+| Family system patterns | @references/family-patterns.md |
+| Effects & shaders | @references/effects-guide.md |
+| Validation rules | @references/checklist.json |
 
 ## 4. Boundaries
 

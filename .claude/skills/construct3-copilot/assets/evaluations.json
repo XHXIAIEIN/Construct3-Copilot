@@ -1,6 +1,6 @@
 {
   "skill": "construct3-copilot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "evaluations": [
     {
       "id": "basic-trigger",
@@ -125,6 +125,214 @@
         "\"compare-eventvar\"",
         "\"comparison\":4",
         "\"set-text\""
+      ]
+    },
+    {
+      "id": "mouse-click",
+      "name": "鼠标点击对象测试",
+      "priority": "P0",
+      "query": "生成点击 Button 对象时触发的事件，点击后切换到 GameLayout 布局",
+      "expected_behavior": [
+        "使用 Mouse.on-object-clicked 条件",
+        "指定正确的 mouse-button 和 click-type 参数",
+        "使用 System.go-to-layout 动作",
+        "layout 参数使用内嵌引号格式"
+      ],
+      "expected_output_contains": [
+        "\"on-object-clicked\"",
+        "\"object-clicked\":\"Button\"",
+        "\"go-to-layout\"",
+        "\"\\\"GameLayout\\\"\""
+      ]
+    },
+    {
+      "id": "collision-detection",
+      "name": "碰撞检测响应测试",
+      "priority": "P0",
+      "query": "生成 Player 与 Spike 碰撞时减少生命值并闪烁的事件",
+      "expected_behavior": [
+        "使用 on-collision-with-another-object 条件",
+        "使用 subtract-from-eventvar 或 add-to-eventvar 负值减少生命",
+        "使用 Flash 行为的 flash 动作",
+        "behaviorType 使用 'Flash'"
+      ],
+      "expected_output_contains": [
+        "\"on-collision-with-another-object\"",
+        "\"object\":\"Spike\"",
+        "\"flash\"",
+        "\"behaviorType\":\"Flash\""
+      ]
+    },
+    {
+      "id": "function-definition",
+      "name": "函数定义与调用测试",
+      "priority": "P0",
+      "query": "生成一个名为 SpawnEnemy 的函数，接受 x, y 坐标参数，在指定位置创建 Enemy 对象",
+      "expected_behavior": [
+        "使用 eventType: function-block",
+        "包含 functionName, functionParameters 字段",
+        "参数类型正确定义",
+        "函数体使用 create-object 动作"
+      ],
+      "expected_output_contains": [
+        "\"eventType\":\"function-block\"",
+        "\"functionName\":\"SpawnEnemy\"",
+        "\"functionParameters\"",
+        "\"create-object\""
+      ]
+    },
+    {
+      "id": "error-handling",
+      "name": "无效 ACE ID 警告测试",
+      "priority": "P0",
+      "query": "生成让 Player 朝向目标位置移动的事件 (使用 move-toward 动作)",
+      "expected_behavior": [
+        "警告 move-toward 动作不存在",
+        "推荐使用 MoveTo 行为或手动计算角度+位移",
+        "提供正确的替代方案代码"
+      ],
+      "should_warn_about": ["move-toward", "不存在", "MoveTo"]
+    },
+    {
+      "id": "for-loop",
+      "name": "循环结构测试",
+      "priority": "P1",
+      "query": "生成循环创建 5 行 10 列砖块网格的事件，每个砖块间距 40 像素",
+      "expected_behavior": [
+        "使用 System.for 或 System.repeat 条件",
+        "嵌套循环处理行列",
+        "位置计算使用 loopindex 表达式",
+        "使用 create-object 动作"
+      ],
+      "expected_output_contains": [
+        "\"for\"",
+        "\"loopindex\"",
+        "\"create-object\""
+      ]
+    },
+    {
+      "id": "script-action",
+      "name": "JavaScript 脚本嵌入测试",
+      "priority": "P1",
+      "query": "生成一个事件，使用 JavaScript 脚本计算两点之间的距离并存储到变量中",
+      "expected_behavior": [
+        "使用 type: script 的动作格式",
+        "language 指定为 javascript",
+        "script 为字符串数组格式",
+        "使用 localVars 访问变量"
+      ],
+      "expected_output_contains": [
+        "\"type\":\"script\"",
+        "\"language\":\"javascript\"",
+        "\"script\":[",
+        "localVars"
+      ]
+    },
+    {
+      "id": "layout-generation",
+      "name": "布局实例生成测试",
+      "priority": "P1",
+      "query": "生成一个包含 Player 和 Ground 实例的 world-instances JSON，Player 在 (100, 200) 位置",
+      "expected_behavior": [
+        "type 为 world-instances",
+        "包含 items 和 object-types 数组",
+        "实例有正确的 world 坐标",
+        "包含必要的 properties 字段"
+      ],
+      "expected_output_contains": [
+        "\"type\":\"world-instances\"",
+        "\"items\":[",
+        "\"object-types\":[",
+        "\"x\":100",
+        "\"y\":200"
+      ]
+    },
+    {
+      "id": "group-organization",
+      "name": "事件分组组织测试",
+      "priority": "P2",
+      "query": "生成一个带有 'Player Controls' 分组的事件表，包含移动和跳跃事件",
+      "expected_behavior": [
+        "使用 eventType: group",
+        "包含 title 和 children 字段",
+        "children 包含实际事件块",
+        "分组默认启用"
+      ],
+      "expected_output_contains": [
+        "\"eventType\":\"group\"",
+        "\"title\":\"Player Controls\"",
+        "\"children\":[",
+        "\"isActiveOnStart\":true"
+      ]
+    },
+    {
+      "id": "audio-playback",
+      "name": "音频播放控制测试",
+      "priority": "P2",
+      "query": "生成播放背景音乐并循环、点击时播放音效的事件",
+      "expected_behavior": [
+        "使用 Audio.play 动作",
+        "背景音乐使用 loop: looping",
+        "音效使用 loop: not-looping",
+        "使用 tag 参数标识音频"
+      ],
+      "expected_output_contains": [
+        "\"objectClass\":\"Audio\"",
+        "\"play\"",
+        "\"loop\":\"looping\"",
+        "\"tag"
+      ]
+    },
+    {
+      "id": "touch-input",
+      "name": "触摸输入事件测试",
+      "priority": "P2",
+      "query": "生成触摸 Button 对象时触发的事件",
+      "expected_behavior": [
+        "使用 Touch.on-touched-object 条件",
+        "指定正确的 object 参数",
+        "type 参数为 touch"
+      ],
+      "expected_output_contains": [
+        "\"on-touched-object\"",
+        "\"object\":\"Button\"",
+        "\"objectClass\":\"Touch\""
+      ]
+    },
+    {
+      "id": "behavior-mapping",
+      "name": "行为名称映射测试",
+      "priority": "P1",
+      "query": "生成使用 EightDir 行为设置速度为 300 的事件",
+      "expected_behavior": [
+        "警告或自动纠正 EightDir 为 8Direction",
+        "使用正确的 behaviorType: 8Direction",
+        "使用 set-max-speed 动作"
+      ],
+      "expected_output_contains": [
+        "\"behaviorType\":\"8Direction\"",
+        "\"set-max-speed\""
+      ],
+      "should_not_contain": [
+        "\"behaviorType\":\"EightDir\""
+      ]
+    },
+    {
+      "id": "angle-rotation",
+      "name": "角度旋转测试",
+      "priority": "P1",
+      "query": "生成让 Player 面向鼠标位置旋转的事件",
+      "expected_behavior": [
+        "不使用不存在的 set-angle-toward-position",
+        "使用 set-angle 配合 angle() 表达式",
+        "使用 Mouse.X 和 Mouse.Y 表达式"
+      ],
+      "expected_output_contains": [
+        "\"set-angle\"",
+        "\"angle("
+      ],
+      "should_not_contain": [
+        "\"set-angle-toward-position\""
       ]
     }
   ],

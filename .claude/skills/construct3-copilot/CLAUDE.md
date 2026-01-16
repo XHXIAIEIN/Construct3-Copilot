@@ -2,6 +2,49 @@
 
 本项目是 Construct 3 开发辅助工具，支持事件表 JSON 生成和插件开发指导。
 
+---
+
+## ⚠️ 关键约束 (Critical Constraints)
+
+### 强制 ACE 检索 (不可跳过!)
+
+**生成任何 ACE ID 之前，必须先运行检索脚本确认其存在。绝对禁止凭记忆猜测！**
+
+```bash
+# 必须执行！
+python3 scripts/query_schema.py search {关键词}
+python3 scripts/query_schema.py plugin sprite {ace}
+python3 scripts/query_schema.py behavior platform {ace}
+```
+
+### 常见幻觉陷阱 (Hallucination Traps)
+
+| ❌ 错误 (不存在) | ✅ 正确 (实际存在) |
+|------------------|-------------------|
+| `set-angle-toward-position` | `set-angle` + `angle(x1,y1,x2,y2)` 表达式 |
+| `move-toward` | MoveTo 行为 或 手动计算位移 |
+| `move-to-position` | MoveTo 行为的 `move-to-position` |
+| `EightDir` | `8Direction` (behaviorType 用显示名) |
+| `set-speed` (8Direction) | `set-max-speed` |
+| `on-click` (无参数) | `on-click` 需要 `mouse-button` 参数 |
+| `toggle-boolean` | `toggle-boolean-eventvar` |
+| `compare-boolean` | `compare-boolean-eventvar` |
+| `add-to` | `add-to-eventvar` |
+
+### 输出前检查清单 (Pre-Output Checklist)
+
+生成 JSON 前必须确认:
+
+- [ ] `"is-c3-clipboard-data": true` 已包含
+- [ ] 所有 ACE ID 已通过 `query_schema.py` 验证
+- [ ] Variable 定义包含 `comment` 字段
+- [ ] 字符串参数使用内嵌引号: `"\"value\""`
+- [ ] Behavior 动作包含 `behaviorType` (使用显示名)
+- [ ] 比较运算符使用数字: 0=等于, 4=大于
+- [ ] 按键码使用数字: 32=Space, 87=W, 65=A
+
+---
+
 ## 参考资料
 
 ### 事件表 & 脚本
@@ -62,9 +105,9 @@
 
 用户请求增量修改时，复用已有资源而非重建。
 
-### 4. 强制检索规则 ⚠️
+### 4. ACE 检索流程
 
-**生成任何 ACE ID 之前，必须先检索确认其存在。禁止凭记忆猜测！**
+详细约束见文档顶部的 **⚠️ 关键约束** 部分。
 
 ```bash
 # 1. 查询 ACE Schema（确认 ID 存在）
@@ -83,12 +126,6 @@ python3 scripts/query_examples.py top actions 20
 2. 用 `query_schema.py` 确认 ACE ID 正确拼写
 3. 用 `query_examples.py` 查看真实项目中的参数用法
 4. 只使用检索到的 ACE ID，不要发明新的
-
-**常见幻觉陷阱**：
-- ❌ `set-angle-toward-position` → 不存在
-- ✅ `set-angle` + `angle(x1,y1,x2,y2)` 表达式
-- ❌ `move-toward` → 不存在
-- ✅ 使用 MoveTo 行为或 Tween 行为
 
 ## 输出规范
 

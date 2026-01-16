@@ -1,15 +1,178 @@
 {
-  "validation_rules": [
-    {"id": "clipboard-flag", "description": "Root object must include \"is-c3-clipboard-data\": true."},
-    {"id": "type", "description": "\"type\" must be one of events, object-types, layouts, world-instances, event-sheets, conditions, actions."},
-    {"id": "items-array", "description": "\"items\" must be an array with at least one entry."},
-    {"id": "behavior-display-name", "description": "Actions referencing behaviors must set behaviorType using display name (see behavior-names.md)."},
-    {"id": "string-format", "description": "All string parameters requiring quotes use nested format (e.g., \"\\\"Text\\\"\")."},
-    {"id": "comparison-numeric", "description": "Comparison operators use numeric codes 0–5."},
-    {"id": "variable-comment", "description": "Variables declare type, initialValue, and comment fields."},
-    {"id": "image-reuse", "description": "Object/layout payloads reuse shared imageData indexes instead of duplicating blobs."},
-    {"id": "resource-manifest", "description": "Response includes variables/assets/mapping manifests covering every referenced symbol."},
-    {"id": "validation-script", "description": "scripts/validate_output.py executed; include status + warnings in the reply."},
-    {"id": "instructions", "description": "Final reply states paste location + manual verification step + assumptions/clarifications."}
-  ]
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Construct 3 Clipboard JSON Validation Rules",
+  "version": "1.1.0",
+  "description": "Structured validation rules for C3 clipboard JSON output",
+
+  "rules": [
+    {
+      "id": "clipboard-root",
+      "name": "Clipboard Root Structure",
+      "severity": "error",
+      "required_fields": ["is-c3-clipboard-data", "type", "items"],
+      "field_values": {
+        "is-c3-clipboard-data": true,
+        "type": ["events", "object-types", "layouts", "world-instances", "event-sheets", "conditions", "actions"]
+      }
+    },
+    {
+      "id": "variable-definition",
+      "name": "Variable Definition",
+      "severity": "error",
+      "condition": "eventType == 'variable'",
+      "required_fields": ["name", "type", "initialValue", "comment"],
+      "field_values": {
+        "type": ["number", "string", "boolean"]
+      },
+      "notes": "comment field is REQUIRED even if empty string"
+    },
+    {
+      "id": "behavior-action",
+      "name": "Behavior Action",
+      "severity": "error",
+      "condition": "action references behavior",
+      "required_fields": ["behaviorType"],
+      "notes": "Use display name (8Direction, Platform) not behaviorId (EightDir)"
+    },
+    {
+      "id": "string-quotes",
+      "name": "String Parameter Quotes",
+      "severity": "error",
+      "applies_to": ["animation", "text", "layer", "layout", "tag"],
+      "pattern": "\"\\\"value\\\"\"",
+      "examples": {
+        "correct": "\"animation\": \"\\\"Walk\\\"\"",
+        "incorrect": "\"animation\": \"Walk\""
+      }
+    },
+    {
+      "id": "comparison-operators",
+      "name": "Comparison Operators",
+      "severity": "error",
+      "applies_to": ["comparison"],
+      "values": {
+        "0": "equal (=)",
+        "1": "not equal (≠)",
+        "2": "less than (<)",
+        "3": "less than or equal (≤)",
+        "4": "greater than (>)",
+        "5": "greater than or equal (≥)"
+      }
+    },
+    {
+      "id": "key-codes",
+      "name": "Keyboard Key Codes",
+      "severity": "error",
+      "applies_to": ["key"],
+      "common_codes": {
+        "W": 87, "A": 65, "S": 83, "D": 68,
+        "ArrowUp": 38, "ArrowDown": 40, "ArrowLeft": 37, "ArrowRight": 39,
+        "Space": 32, "Enter": 13, "Escape": 27, "Shift": 16, "Control": 17
+      }
+    },
+    {
+      "id": "ace-exists",
+      "name": "ACE ID Validation",
+      "severity": "error",
+      "check": "schema_lookup",
+      "command": "python3 scripts/query_schema.py search {ace_id}",
+      "notes": "All ACE IDs must exist in the schema"
+    },
+    {
+      "id": "function-block",
+      "name": "Function Block Structure",
+      "severity": "error",
+      "condition": "eventType == 'function-block'",
+      "required_fields": ["functionName", "functionReturnType", "functionParameters", "conditions", "actions"],
+      "optional_fields": ["functionDescription", "functionCategory", "functionCopyPicked", "functionIsAsync"]
+    },
+    {
+      "id": "group-structure",
+      "name": "Event Group Structure",
+      "severity": "error",
+      "condition": "eventType == 'group'",
+      "required_fields": ["title", "children"],
+      "optional_fields": ["disabled", "description", "isActiveOnStart"]
+    },
+    {
+      "id": "event-block",
+      "name": "Event Block Structure",
+      "severity": "error",
+      "condition": "eventType == 'block'",
+      "required_fields": ["conditions", "actions"],
+      "notes": "conditions and actions must be arrays (can be empty)"
+    },
+    {
+      "id": "script-action",
+      "name": "Script Action Format",
+      "severity": "error",
+      "condition": "action.type == 'script'",
+      "required_fields": ["type", "language", "script"],
+      "field_values": {
+        "language": ["javascript", "typescript"]
+      },
+      "notes": "script must be array of strings"
+    },
+    {
+      "id": "world-instance",
+      "name": "World Instance Structure",
+      "severity": "error",
+      "condition": "type == 'world-instances'",
+      "required_in_items": ["type", "world"],
+      "world_required": ["x", "y", "width", "height"]
+    },
+    {
+      "id": "behavior-names",
+      "name": "Behavior Name Mapping",
+      "severity": "error",
+      "mapping": {
+        "EightDir": "8Direction",
+        "Platform": "Platform",
+        "Bullet": "Bullet",
+        "Tween": "Tween",
+        "solid": "Solid",
+        "Sin": "Sine",
+        "Physics": "Physics",
+        "LOS": "Line of sight",
+        "DragnDrop": "Drag & Drop",
+        "destroy": "DestroyOutsideLayout"
+      },
+      "notes": "Always use display name (right column) in behaviorType"
+    }
+  ],
+
+  "hallucination_traps": [
+    {
+      "wrong": "set-angle-toward-position",
+      "correct": "set-angle with angle(x1,y1,x2,y2) expression",
+      "reason": "ACE does not exist"
+    },
+    {
+      "wrong": "move-toward",
+      "correct": "MoveTo behavior or manual position calculation",
+      "reason": "ACE does not exist"
+    },
+    {
+      "wrong": "toggle-boolean",
+      "correct": "toggle-boolean-eventvar",
+      "reason": "Wrong ACE ID"
+    },
+    {
+      "wrong": "compare-boolean",
+      "correct": "compare-boolean-eventvar",
+      "reason": "Wrong ACE ID"
+    },
+    {
+      "wrong": "add-to",
+      "correct": "add-to-eventvar",
+      "reason": "Wrong ACE ID"
+    },
+    {
+      "wrong": "behaviorType: 'EightDir'",
+      "correct": "behaviorType: '8Direction'",
+      "reason": "Use display name not behaviorId"
+    }
+  ],
+
+  "validation_command": "python3 scripts/validate_output.py '<json>'"
 }

@@ -453,3 +453,282 @@ JSON before sharing with users.
   - `set-time-scale: 0` freezes gameplay while keeping UI responsive
   - Button text objects double as clickable buttons
   - Hover effect uses opacity change for visual feedback
+
+## Example 10 – Particle Effect Trigger
+
+在碰撞或销毁时触发粒子效果。
+
+- **Intent IR**
+  ```json
+  {
+    "gameplay": [
+      "enemy destroyed triggers explosion particles",
+      "particles spawn at enemy position",
+      "particles fade out over time"
+    ],
+    "ui": [],
+    "assets": ["Enemy", "ExplosionParticles (Particles)"],
+    "open_questions": []
+  }
+  ```
+
+- **Events JSON (Complete Particle System)**
+  ```json
+  {"is-c3-clipboard-data": true, "type": "events", "items": [
+    {"eventType": "comment", "text": "=== Particle Effect System ==="},
+
+    {"eventType": "group", "disabled": false, "title": "Enemy Death Effects", "description": "Spawn particles when enemies are destroyed", "isActiveOnStart": true, "children": [
+      {"eventType": "block",
+       "conditions": [{"id": "on-destroyed", "objectClass": "Enemy", "parameters": {}}],
+       "actions": [
+         {"id": "create-object", "objectClass": "System", "parameters": {"object-to-create": "ExplosionParticles", "layer": "\"Game\"", "x": "Enemy.X", "y": "Enemy.Y"}}
+       ]},
+
+      {"eventType": "comment", "text": "Auto-destroy particles after burst"},
+      {"eventType": "block",
+       "conditions": [{"id": "on-created", "objectClass": "ExplosionParticles", "parameters": {}}],
+       "actions": [
+         {"id": "set-rate", "objectClass": "ExplosionParticles", "parameters": {"rate": "100"}},
+         {"id": "wait", "objectClass": "System", "parameters": {"seconds": "0.5"}},
+         {"id": "set-rate", "objectClass": "ExplosionParticles", "parameters": {"rate": "0"}},
+         {"id": "wait", "objectClass": "System", "parameters": {"seconds": "2"}},
+         {"id": "destroy", "objectClass": "ExplosionParticles", "parameters": {}}
+       ]}
+    ]}
+  ]}
+  ```
+
+- **Required Setup**:
+  1. Particles object with burst-style settings
+  2. Set particle lifetime to ~1-2 seconds
+  3. Configure size/speed/gravity in properties
+
+## Example 11 – Audio Playback Control
+
+完整的音频播放系统，包含背景音乐和音效。
+
+- **Intent IR**
+  ```json
+  {
+    "gameplay": [
+      "play background music on layout start, loop continuously",
+      "play sound effect on collision",
+      "mute/unmute audio on button press"
+    ],
+    "ui": ["MuteButton"],
+    "assets": ["Audio", "Keyboard"],
+    "open_questions": []
+  }
+  ```
+
+- **Events JSON (Complete Audio System)**
+  ```json
+  {"is-c3-clipboard-data": true, "type": "events", "items": [
+    {"eventType": "variable", "name": "IsMuted", "type": "boolean", "initialValue": "false", "comment": "Audio mute state"},
+
+    {"eventType": "group", "disabled": false, "title": "Audio System", "description": "Background music and sound effects", "isActiveOnStart": true, "children": [
+      {"eventType": "comment", "text": "Start background music on layout"},
+      {"eventType": "block",
+       "conditions": [{"id": "on-start-of-layout", "objectClass": "System", "parameters": {}}],
+       "actions": [
+         {"id": "play", "objectClass": "Audio", "parameters": {"audio-file": "bgm", "loop": "looping", "volume": "-10", "tag-optional": "\"bgm\""}}
+       ]},
+
+      {"eventType": "comment", "text": "Play sound effect on collision"},
+      {"eventType": "block",
+       "conditions": [{"id": "on-collision-with-another-object", "objectClass": "Player", "parameters": {"object": "Coin"}}],
+       "actions": [
+         {"id": "play", "objectClass": "Audio", "parameters": {"audio-file": "coin-pickup", "loop": "not-looping", "volume": "0", "tag-optional": "\"\""}}
+       ]},
+
+      {"eventType": "comment", "text": "Toggle mute on M key"},
+      {"eventType": "block",
+       "conditions": [{"id": "on-key-pressed", "objectClass": "Keyboard", "parameters": {"key": 77}}],
+       "actions": [{"id": "toggle-boolean-eventvar", "objectClass": "System", "parameters": {"variable": "IsMuted"}}]},
+
+      {"eventType": "block",
+       "conditions": [{"id": "compare-boolean-eventvar", "objectClass": "System", "parameters": {"variable": "IsMuted", "comparison": 0, "value": "true"}}],
+       "actions": [{"id": "set-master-volume", "objectClass": "Audio", "parameters": {"volume": "-60"}}]},
+
+      {"eventType": "block",
+       "conditions": [{"id": "compare-boolean-eventvar", "objectClass": "System", "parameters": {"variable": "IsMuted", "comparison": 0, "value": "false"}}],
+       "actions": [{"id": "set-master-volume", "objectClass": "Audio", "parameters": {"volume": "0"}}]}
+    ]},
+
+    {"eventType": "group", "disabled": false, "title": "Audio Transitions", "description": "Fade effects for audio", "isActiveOnStart": true, "children": [
+      {"eventType": "comment", "text": "Fade out BGM on game over"},
+      {"eventType": "block",
+       "conditions": [{"id": "compare-eventvar", "objectClass": "System", "parameters": {"variable": "GameState", "comparison": 0, "value": "2"}}],
+       "actions": [
+         {"id": "fade-volume", "objectClass": "Audio", "parameters": {"tag": "\"bgm\"", "volume": "-60", "duration": "2", "stopping-mode": "stop"}}
+       ]}
+    ]}
+  ]}
+  ```
+
+- **Key Points**:
+  - Use tags to control specific audio tracks
+  - Volume in dB: 0 = full, -60 = nearly silent
+  - `looping` for BGM, `not-looping` for SFX
+  - Key code 77 = M
+
+## Example 12 – Array/Dictionary Data-Driven Level
+
+使用 Array 或 Dictionary 数据驱动的关卡生成。
+
+- **Intent IR**
+  ```json
+  {
+    "gameplay": [
+      "level data stored in Array",
+      "loop through array to spawn objects",
+      "different values create different object types"
+    ],
+    "ui": [],
+    "assets": ["Array", "Brick", "Enemy"],
+    "open_questions": []
+  }
+  ```
+
+- **Events JSON (Data-Driven Spawning)**
+  ```json
+  {"is-c3-clipboard-data": true, "type": "events", "items": [
+    {"eventType": "comment", "text": "=== Data-Driven Level Generation ==="},
+    {"eventType": "comment", "text": "LevelData array: 0=empty, 1=brick, 2=enemy"},
+
+    {"eventType": "variable", "name": "GridWidth", "type": "number", "initialValue": "10", "comment": "Number of columns"},
+    {"eventType": "variable", "name": "GridHeight", "type": "number", "initialValue": "5", "comment": "Number of rows"},
+    {"eventType": "variable", "name": "CellSize", "type": "number", "initialValue": "40", "comment": "Size of each cell"},
+
+    {"eventType": "group", "disabled": false, "title": "Level Generation", "description": "Generate level from array data", "isActiveOnStart": true, "children": [
+      {"eventType": "block",
+       "conditions": [{"id": "on-start-of-layout", "objectClass": "System", "parameters": {}}],
+       "actions": [
+         {"id": "set-size", "objectClass": "LevelData", "parameters": {"width": "GridWidth", "height": "GridHeight"}}
+       ],
+       "children": [
+         {"eventType": "comment", "text": "Initialize level data (example pattern)"},
+         {"eventType": "block",
+          "conditions": [{"id": "for", "objectClass": "System", "parameters": {"name": "\"row\"", "start-index": "0", "end-index": "GridHeight-1"}}],
+          "actions": [],
+          "children": [
+            {"eventType": "block",
+             "conditions": [{"id": "for", "objectClass": "System", "parameters": {"name": "\"col\"", "start-index": "0", "end-index": "GridWidth-1"}}],
+             "actions": [
+               {"id": "set-at-xy", "objectClass": "LevelData", "parameters": {"x": "loopindex(\"col\")", "y": "loopindex(\"row\")", "value": "choose(0,0,1,1,1,2)"}}
+             ]}
+          ]}
+       ]},
+
+      {"eventType": "comment", "text": "Spawn objects from level data"},
+      {"eventType": "block",
+       "conditions": [{"id": "on-function", "objectClass": "System", "parameters": {"name": "\"GenerateLevel\""}}],
+       "actions": [],
+       "children": [
+         {"eventType": "block",
+          "conditions": [{"id": "for", "objectClass": "System", "parameters": {"name": "\"y\"", "start-index": "0", "end-index": "GridHeight-1"}}],
+          "actions": [],
+          "children": [
+            {"eventType": "block",
+             "conditions": [{"id": "for", "objectClass": "System", "parameters": {"name": "\"x\"", "start-index": "0", "end-index": "GridWidth-1"}}],
+             "actions": [],
+             "children": [
+               {"eventType": "block",
+                "conditions": [{"id": "compare-value", "objectClass": "System", "parameters": {"first": "LevelData.At(loopindex(\"x\"),loopindex(\"y\"))", "comparison": 0, "second": "1"}}],
+                "actions": [
+                  {"id": "create-object", "objectClass": "System", "parameters": {"object-to-create": "Brick", "layer": "\"Game\"", "x": "100 + loopindex(\"x\") * CellSize", "y": "100 + loopindex(\"y\") * CellSize"}}
+                ]},
+               {"eventType": "block",
+                "conditions": [{"id": "compare-value", "objectClass": "System", "parameters": {"first": "LevelData.At(loopindex(\"x\"),loopindex(\"y\"))", "comparison": 0, "second": "2"}}],
+                "actions": [
+                  {"id": "create-object", "objectClass": "System", "parameters": {"object-to-create": "Enemy", "layer": "\"Game\"", "x": "100 + loopindex(\"x\") * CellSize", "y": "100 + loopindex(\"y\") * CellSize"}}
+                ]}
+             ]}
+          ]}
+       ]}
+    ]}
+  ]}
+  ```
+
+- **Required Setup**:
+  1. Create Array object named `LevelData`
+  2. Set array dimensions in properties or via events
+  3. Create Brick and Enemy sprite objects
+
+- **Key Points**:
+  - Use 2D Array for grid-based levels
+  - `loopindex("name")` gets current loop iteration
+  - `LevelData.At(x,y)` reads array value at position
+  - `choose()` returns random value from list
+
+## Example 13 – Dictionary-Based Item System
+
+使用 Dictionary 实现物品数据系统。
+
+- **Intent IR**
+  ```json
+  {
+    "gameplay": [
+      "item properties stored in Dictionary",
+      "lookup item stats by ID",
+      "apply item effects on pickup"
+    ],
+    "ui": [],
+    "assets": ["Dictionary", "Item"],
+    "open_questions": []
+  }
+  ```
+
+- **Events JSON (Dictionary Item System)**
+  ```json
+  {"is-c3-clipboard-data": true, "type": "events", "items": [
+    {"eventType": "comment", "text": "=== Dictionary-Based Item System ==="},
+
+    {"eventType": "group", "disabled": false, "title": "Item Data Setup", "description": "Initialize item definitions", "isActiveOnStart": true, "children": [
+      {"eventType": "block",
+       "conditions": [{"id": "on-start-of-layout", "objectClass": "System", "parameters": {}}],
+       "actions": [
+         {"id": "add-key", "objectClass": "ItemData", "parameters": {"key": "\"health_potion_heal\"", "value": "50"}},
+         {"id": "add-key", "objectClass": "ItemData", "parameters": {"key": "\"health_potion_name\"", "value": "\"Health Potion\""}},
+         {"id": "add-key", "objectClass": "ItemData", "parameters": {"key": "\"speed_boost_multiplier\"", "value": "1.5"}},
+         {"id": "add-key", "objectClass": "ItemData", "parameters": {"key": "\"speed_boost_duration\"", "value": "5"}},
+         {"id": "add-key", "objectClass": "ItemData", "parameters": {"key": "\"speed_boost_name\"", "value": "\"Speed Boost\""}}
+       ]}
+    ]},
+
+    {"eventType": "group", "disabled": false, "title": "Item Pickup", "description": "Apply item effects on collision", "isActiveOnStart": true, "children": [
+      {"eventType": "block",
+       "conditions": [
+         {"id": "on-collision-with-another-object", "objectClass": "Player", "parameters": {"object": "Item"}},
+         {"id": "compare-instvar", "objectClass": "Item", "parameters": {"instance-variable": "ItemType", "comparison": 0, "value": "\"health_potion\""}}
+       ],
+       "actions": [
+         {"id": "add-to-eventvar", "objectClass": "System", "parameters": {"variable": "PlayerHealth", "value": "ItemData.Get(\"health_potion_heal\")"}},
+         {"id": "destroy", "objectClass": "Item", "parameters": {}}
+       ]},
+
+      {"eventType": "block",
+       "conditions": [
+         {"id": "on-collision-with-another-object", "objectClass": "Player", "parameters": {"object": "Item"}},
+         {"id": "compare-instvar", "objectClass": "Item", "parameters": {"instance-variable": "ItemType", "comparison": 0, "value": "\"speed_boost\""}}
+       ],
+       "actions": [
+         {"id": "set-max-speed", "objectClass": "Player", "behaviorType": "Platform", "parameters": {"max-speed": "330 * ItemData.Get(\"speed_boost_multiplier\")"}},
+         {"id": "wait", "objectClass": "System", "parameters": {"seconds": "ItemData.Get(\"speed_boost_duration\")"}},
+         {"id": "set-max-speed", "objectClass": "Player", "behaviorType": "Platform", "parameters": {"max-speed": "330"}},
+         {"id": "destroy", "objectClass": "Item", "parameters": {}}
+       ]}
+    ]}
+  ]}
+  ```
+
+- **Required Setup**:
+  1. Create Dictionary object named `ItemData`
+  2. Item sprite needs instance variable `ItemType` (string)
+  3. Set ItemType to "health_potion" or "speed_boost" for each instance
+
+- **Key Points**:
+  - Dictionary stores key-value pairs
+  - `ItemData.Get("key")` retrieves value
+  - Use naming convention: `{item_id}_{property}`
+  - Combine with instance variables for flexible item system
