@@ -27,12 +27,12 @@ qdrant_storage/
 .local/
 .history/
 
-# Claude Code
-# .claude
-
 # Gradio / MCP
 .gradio/
 .mcp.json
 
+# Claude Code
+# .claude
+
 # Claude Code local settings
-.claude/settings.local.json
+# .claude/settings.local.json
