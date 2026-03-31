@@ -2,9 +2,19 @@
 
 **中文** | [English](README.md)
 
-用自然语言生成 Construct 3 事件表 JSON，直接粘贴到编辑器。
+用自然语言生成 Construct 3 剪贴板 JSON，直接粘贴到编辑器。
 
 ## 快速开始
+
+### OpenAI Codex Skills（推荐）
+
+1. 克隆仓库并在 Codex 中打开。
+2. 保持技能目录为 `.agents/skills/construct3-copilot/`。
+3. 直接提出 Construct 3 需求（事件表、对象、布局、ACE 检索）。
+
+Codex 会从 `.agents/skills` 自动发现技能，并加载 `SKILL.md` 与配套资源。
+
+### Claude Code（兼容）
 
 ```bash
 git clone https://github.com/XHXIAIEIN/Construct3-Copilot.git
@@ -64,18 +74,27 @@ python scripts/preflight.py output.json
 | `events` | 事件表边缘 |
 | `world-instances` | 布局视图 |
 
+## 限制
+
+- 不生成 `.c3p` 项目文件
+- 不生成可用于生产的美术资源（仅占位图）
+- 仅支持 Construct 3
 
 ## 项目结构
 
 ```
 Construct3-Copilot/
+├── .agents/
+│   └── skills/
+│       └── construct3-copilot/    # OpenAI Codex Skill（主入口）
+│           ├── SKILL.md
+│           ├── CLAUDE.md
+│           ├── agents/openai.yaml
+│           ├── references/
+│           └── scripts/
 ├── .claude/
 │   └── skills/
-│       └── construct3-copilot/    # Claude Code Skill
-│           ├── SKILL.md           # 执行指令
-│           ├── CLAUDE.md          # 行为约束
-│           ├── references/        # 参考文档
-│           └── scripts/           # 辅助脚本
+│       └── construct3-copilot/    # Claude 兼容镜像
 ├── data/
 │   └── schemas/                   # ACE Schema (72 插件 + 31 行为)
 └── tests/

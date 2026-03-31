@@ -1,0 +1,71 @@
+name: Validate Agents Skill
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - ".agents/**"
+      - "scripts/**"
+      - "data/schemas/**"
+      - ".github/workflows/validate-agents-skill.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - ".agents/**"
+      - "scripts/**"
+      - "data/schemas/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate skill frontmatter
+        run: |
+          python - << 'PY'
+          from pathlib import Path
+          import re
+          p = Path(".agents/skills/construct3-copilot/SKILL.md")
+          text = p.read_text(encoding="utf-8")
+          m = re.match(r"^---\n(.*?)\n---\n", text, flags=re.S)
+          if not m:
+              raise SystemExit("Missing YAML frontmatter in SKILL.md")
+          fm = m.group(1)
+          if "name:" not in fm or "description:" not in fm:
+              raise SystemExit("Frontmatter must contain name and description")
+          print("SKILL.md frontmatter OK")
+          PY
+
+      - name: Validate ACE schema index
+        run: |
+          python -c "import json; json.load(open('data/schemas/index.json', encoding='utf-8')); print('ACE schema index OK')"
+
+      - name: Validate docs and canonical examples
+        run: |
+          python scripts/validate_skill_docs.py
+
+      - name: Smoke test skill scripts
+        run: |
+          python .agents/skills/construct3-copilot/scripts/query_schema.py search collision
+          python .agents/skills/construct3-copilot/scripts/query_examples.py top actions 5
+          python .agents/skills/construct3-copilot/scripts/validate_output.py tests/fixtures/events_basic.json
+          python scripts/preflight.py tests/fixtures/events_basic.json
+
+      - name: Run fixture and example regressions
+        run: |
+          python -m unittest tests.test_fixtures tests.test_quality_tools
+
+      - name: Smoke test failure retrieval
+        run: |
+          python scripts/find_similar_failures.py "unknown action id toggle-boolean" --top 1
+
+      - name: Smoke test failure logging helper
+        run: |
+          python scripts/log_failure_case.py --case-id ci-dry-run --query "ci smoke" --signature "none" --root-cause "none" --fix "none" --tags ci --dry-run

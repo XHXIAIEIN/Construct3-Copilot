@@ -1,0 +1,4 @@
+interface:
+  display_name: "Construct 3 Copilot"
+  short_description: "Generate validated Construct 3 clipboard JSON."
+  default_prompt: "Use $construct3-copilot to generate Construct 3 clipboard JSON for my event sheet, validate ACE IDs, and include paste steps."

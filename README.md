@@ -2,9 +2,19 @@
 
 [中文](README_CN.md) | **English**
 
-Generate Construct 3 event sheet JSON with natural language, paste directly into editor.
+Generate Construct 3 clipboard JSON from natural language and paste directly into the editor.
 
 ## Quick Start
+
+### OpenAI Codex Skills (Recommended)
+
+1. Clone this repository and open it in Codex.
+2. Keep the skill at `.agents/skills/construct3-copilot/`.
+3. Ask for Construct 3 tasks directly (events, objects, layouts, ACE lookup).
+
+Codex discovers skills from `.agents/skills` and uses `SKILL.md` + bundled resources.
+
+### Claude Code (Compatible)
 
 ```bash
 git clone https://github.com/XHXIAIEIN/Construct3-Copilot.git
@@ -66,21 +76,25 @@ python scripts/preflight.py output.json
 
 ## Limitations
 
-- ❌ Does NOT generate .c3p project files
-- ❌ Does NOT generate production art (placeholder shapes only)
-- ❌ Construct 3 only (no other engines)
+- Does not generate `.c3p` project files
+- Does not generate production art (placeholder shapes only)
+- Construct 3 only (no other engines)
 
 ## Project Structure
 
 ```
 Construct3-Copilot/
+├── .agents/
+│   └── skills/
+│       └── construct3-copilot/    # OpenAI Codex Skill (primary)
+│           ├── SKILL.md
+│           ├── CLAUDE.md
+│           ├── agents/openai.yaml
+│           ├── references/
+│           └── scripts/
 ├── .claude/
 │   └── skills/
-│       └── construct3-copilot/    # Claude Code Skill
-│           ├── SKILL.md           # Execution instructions
-│           ├── CLAUDE.md          # Behavior constraints
-│           ├── references/        # Reference docs
-│           └── scripts/           # Helper scripts
+│       └── construct3-copilot/    # Claude-compatible skill mirror
 ├── data/
 │   └── schemas/                   # ACE Schema (72 plugins + 31 behaviors)
 └── tests/

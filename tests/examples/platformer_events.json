@@ -1,0 +1,60 @@
+{
+  "is-c3-clipboard-data": true,
+  "type": "events",
+  "items": [
+    {
+      "eventType": "variable",
+      "name": "Score",
+      "type": "number",
+      "initialValue": "0",
+      "comment": ""
+    },
+    {
+      "eventType": "variable",
+      "name": "HP",
+      "type": "number",
+      "initialValue": "3",
+      "comment": ""
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "key-is-down",
+          "objectClass": "Keyboard",
+          "parameters": {"key": 37}
+        }
+      ],
+      "actions": [
+        {
+          "id": "simulate-control",
+          "objectClass": "Player",
+          "behaviorType": "Platform",
+          "parameters": {"control": "left"}
+        }
+      ]
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "on-collision-with-another-object",
+          "objectClass": "Player",
+          "parameters": {"object": "Coin"}
+        }
+      ],
+      "actions": [
+        {
+          "id": "destroy",
+          "objectClass": "Coin",
+          "parameters": {}
+        },
+        {
+          "id": "add-to-eventvar",
+          "objectClass": "System",
+          "parameters": {"variable": "Score", "value": "1"}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,585 @@
+#!/usr/bin/env python3
+"""
+Construct 3 Event Sheet JSON Validator
+
+Validates generated event sheet JSON against C3 clipboard format specification.
+Use this script to verify format before pasting into the Construct 3 editor.
+
+Usage:
+    python validate_output.py '{"is-c3-clipboard-data":true,...}'
+    python validate_output.py input.json
+    echo '{"is-c3-clipboard-data":true,...}' | python validate_output.py
+"""
+
+import json
+import sys
+import re
+from pathlib import Path
+from typing import Any
+
+class ValidationError(Exception):
+    pass
+
+class C3ClipboardValidator:
+    """Validates Construct 3 clipboard JSON format"""
+
+    VALID_TYPES = {"events", "conditions", "actions", "object-types", "world-instances", "layouts", "event-sheets"}
+    VALID_EVENT_TYPES = {"block", "variable", "comment", "group", "function-block"}
+    COMPARISON_OPERATORS = {0, 1, 2, 3, 4, 5}  # =, ≠, <, ≤, >, ≥
+
+    def __init__(self):
+        self.errors = []
+        self.warnings = []
+        self.schema_index = SchemaIndex()
+
+    def validate(self, data: dict) -> bool:
+        """Main validation entry point"""
+        self.errors = []
+        self.warnings = []
+
+        # 1. Basic structure check
+        if not isinstance(data, dict):
+            self.errors.append("Root element must be an object")
+            return False
+
+        if not data.get("is-c3-clipboard-data"):
+            self.errors.append("Missing 'is-c3-clipboard-data': true")
+            return False
+
+        if "type" not in data:
+            self.errors.append("Missing 'type' field")
+            return False
+
+        if data["type"] not in self.VALID_TYPES:
+            self.errors.append(f"Invalid type: {data['type']}, valid values: {self.VALID_TYPES}")
+            return False
+
+        if "items" not in data:
+            self.errors.append("Missing 'items' field")
+            return False
+
+        if not isinstance(data["items"], list):
+            self.errors.append("'items' must be an array")
+            return False
+
+        # 2. Validate items by type
+        if data["type"] == "events":
+            self._validate_events(data["items"])
+        elif data["type"] == "conditions":
+            self._validate_conditions(data["items"])
+        elif data["type"] == "actions":
+            self._validate_actions(data["items"])
+        elif data["type"] == "object-types":
+            self._validate_object_types(data)
+        elif data["type"] == "world-instances":
+            self._validate_world_instances(data)
+        elif data["type"] == "layouts":
+            self._validate_layouts(data)
+        elif data["type"] == "event-sheets":
+            self._validate_event_sheets(data)
+
+        return len(self.errors) == 0
+
+    def _validate_events(self, items: list):
+        """Validate events array"""
+        for i, item in enumerate(items):
+            prefix = f"events[{i}]"
+
+            if not isinstance(item, dict):
+                self.errors.append(f"{prefix}: must be an object")
+                continue
+
+            event_type = item.get("eventType")
+            if not event_type:
+                self.errors.append(f"{prefix}: missing 'eventType'")
+                continue
+
+            if event_type not in self.VALID_EVENT_TYPES:
+                self.errors.append(f"{prefix}: invalid eventType: {event_type}")
+                continue
+
+            if event_type == "block":
+                self._validate_block(item, prefix)
+            elif event_type == "variable":
+                self._validate_variable(item, prefix)
+            elif event_type == "function-block":
+                self._validate_function_block(item, prefix)
+
+    def _validate_block(self, block: dict, prefix: str):
+        """Validate event block"""
+        if "conditions" not in block:
+            self.errors.append(f"{prefix}: missing 'conditions' array")
+        elif isinstance(block["conditions"], list):
+            self._validate_conditions(block["conditions"], f"{prefix}.conditions")
+
+        if "actions" not in block:
+            self.errors.append(f"{prefix}: missing 'actions' array")
+        elif isinstance(block["actions"], list):
+            self._validate_actions(block["actions"], f"{prefix}.actions")
+
+        # Validate sub-events
+        if "children" in block and isinstance(block["children"], list):
+            for i, child in enumerate(block["children"]):
+                self._validate_events([child])
+
+    def _validate_variable(self, var: dict, prefix: str):
+        """Validate variable definition"""
+        if "name" not in var:
+            self.errors.append(f"{prefix}: variable missing 'name'")
+
+        if "comment" not in var:
+            self.errors.append(f"{prefix}: variable missing 'comment' field (can be empty string)")
+
+    def _validate_function_block(self, func: dict, prefix: str):
+        """Validate function definition"""
+        if "functionName" not in func:
+            self.errors.append(f"{prefix}: function missing 'functionName'")
+
+    def _validate_conditions(self, conditions: list, prefix: str = "conditions"):
+        """Validate conditions array"""
+        for i, cond in enumerate(conditions):
+            cond_prefix = f"{prefix}[{i}]"
+
+            if not isinstance(cond, dict):
+                self.errors.append(f"{cond_prefix}: must be an object")
+                continue
+
+            if "id" not in cond:
+                self.errors.append(f"{cond_prefix}: missing 'id'")
+
+            if "objectClass" not in cond:
+                self.errors.append(f"{cond_prefix}: missing 'objectClass'")
+
+            if "parameters" not in cond:
+                self.errors.append(f"{cond_prefix}: missing 'parameters'")
+
+            # Check ID format
+            if "id" in cond:
+                self._validate_ace_id(cond["id"], cond_prefix)
+                self._validate_schema_ace(cond, "conditions", cond_prefix)
+
+            # Check parameters
+            if "parameters" in cond and isinstance(cond["parameters"], dict):
+                self._validate_parameters(cond["parameters"], cond_prefix)
+
+    def _validate_actions(self, actions: list, prefix: str = "actions"):
+        """Validate actions array"""
+        for i, action in enumerate(actions):
+            action_prefix = f"{prefix}[{i}]"
+
+            if not isinstance(action, dict):
+                self.errors.append(f"{action_prefix}: must be an object")
+                continue
+
+            if action.get("type") == "script":
+                self._validate_script_action(action, action_prefix)
+                continue
+
+            # Special handling for function calls
+            if "callFunction" in action:
+                if "parameters" not in action:
+                    self.warnings.append(f"{action_prefix}: callFunction should include 'parameters' array")
+                continue
+
+            if "id" not in action:
+                self.errors.append(f"{action_prefix}: missing 'id'")
+
+            if "objectClass" not in action:
+                self.errors.append(f"{action_prefix}: missing 'objectClass'")
+
+            if "parameters" not in action:
+                self.errors.append(f"{action_prefix}: missing 'parameters'")
+
+            # Check ID format
+            if "id" in action:
+                self._validate_ace_id(action["id"], action_prefix)
+                self._validate_schema_ace(action, "actions", action_prefix)
+
+            # Check parameters
+            if "parameters" in action and isinstance(action["parameters"], dict):
+                self._validate_parameters(action["parameters"], action_prefix)
+
+    def _validate_object_types(self, data: dict):
+        """Validate object-types format"""
+        items = data.get("items", [])
+        image_indices = []
+        for i, item in enumerate(items):
+            prefix = f"object-types[{i}]"
+            if "name" not in item:
+                self.errors.append(f"{prefix}: missing 'name'")
+            if "plugin-id" not in item:
+                self.errors.append(f"{prefix}: missing 'plugin-id'")
+            image_indices.extend(self._collect_object_type_image_indices(item, prefix))
+
+        # Check imageData for sprites
+        if "imageData" in data:
+            if not isinstance(data["imageData"], list):
+                self.errors.append("'imageData' must be an array")
+            else:
+                self._validate_imagedata_entries(data["imageData"], "imageData")
+                self._validate_image_index_bounds(image_indices, len(data["imageData"]), "object-types")
+        elif image_indices:
+            self.errors.append("object-types with images must include 'imageData'")
+
+    def _validate_world_instances(self, data: dict):
+        """Validate world-instances format"""
+        items = data.get("items", [])
+        for i, item in enumerate(items):
+            prefix = f"world-instances[{i}]"
+            if "type" not in item:
+                self.errors.append(f"{prefix}: missing 'type'")
+            if "world" not in item:
+                self.errors.append(f"{prefix}: missing 'world' (position data)")
+            elif isinstance(item.get("world"), dict):
+                world = item["world"]
+                if "x" not in world or "y" not in world:
+                    self.errors.append(f"{prefix}: world missing 'x' or 'y'")
+
+        if "object-types" not in data:
+            self.warnings.append("world-instances should include 'object-types' array")
+
+    def _validate_layouts(self, data: dict):
+        """Validate layouts format"""
+        image_indices = []
+        # Build map of object type names to their behavior names
+        obj_behaviors = {}
+        obj_behavior_schemas = {}
+        if "object-types" in data:
+            for idx, ot in enumerate(data["object-types"]):
+                name = ot.get("name")
+                behaviors = set()
+                behavior_schema_map = {}
+                if "behaviorTypes" in ot:
+                    for b in ot["behaviorTypes"]:
+                        bname = b.get("name")
+                        bid = b.get("behaviorId")
+                        if bname:
+                            behaviors.add(bname)
+                        schema = self.schema_index.get_behavior_schema(bname or bid)
+                        if bname and schema:
+                            behavior_schema_map[bname] = schema
+                if name:
+                    obj_behaviors[name] = behaviors
+                    obj_behavior_schemas[name] = behavior_schema_map
+                image_indices.extend(self._collect_object_type_image_indices(ot, f"object-types[{idx}]"))
+
+        items = data.get("items", [])
+        for i, layout in enumerate(items):
+            prefix = f"layouts[{i}]"
+            if "name" not in layout:
+                self.errors.append(f"{prefix}: missing 'name'")
+            if "layers" not in layout:
+                self.errors.append(f"{prefix}: missing 'layers' array")
+            elif isinstance(layout.get("layers"), list):
+                for j, layer in enumerate(layout["layers"]):
+                    layer_prefix = f"{prefix}.layers[{j}]"
+                    if "name" not in layer:
+                        self.errors.append(f"{layer_prefix}: missing 'name'")
+                    
+                    # Validate instances
+                    if "instances" in layer and isinstance(layer["instances"], list):
+                        for k, inst in enumerate(layer["instances"]):
+                            inst_prefix = f"{layer_prefix}.instances[{k}]"
+                            obj_type = inst.get("type")
+                            
+                            # Check if object type exists
+                            if obj_type and obj_type not in obj_behaviors:
+                                self.warnings.append(f"{inst_prefix}: unknown object type '{obj_type}'")
+                            
+                            # Check behavior properties keys match behavior names
+                            if "behaviors" in inst and obj_type in obj_behaviors:
+                                defined_behaviors = obj_behaviors[obj_type]
+                                for bh_key in inst["behaviors"]:
+                                    if bh_key not in defined_behaviors:
+                                        self.errors.append(f"{inst_prefix}: behavior key '{bh_key}' not found in object '{obj_type}' behaviors {defined_behaviors}")
+                                for bh_key, bh_data in inst["behaviors"].items():
+                                    if not isinstance(bh_data, dict):
+                                        continue
+                                    bh_props = bh_data.get("properties")
+                                    if not isinstance(bh_props, dict):
+                                        continue
+                                    schema = obj_behavior_schemas.get(obj_type, {}).get(bh_key)
+                                    if schema:
+                                        self.errors.extend(
+                                            self.schema_index.validate_behavior_instance_properties(
+                                                schema, bh_props, f"{inst_prefix}.behaviors.{bh_key}.properties"
+                                            )
+                                        )
+
+        if "object-types" not in data:
+            self.warnings.append("layouts should include 'object-types' array")
+        if "imageData" not in data:
+            self.warnings.append("layouts may need 'imageData' array for sprites")
+        elif isinstance(data["imageData"], list):
+            self._validate_imagedata_entries(data["imageData"], "imageData")
+            self._validate_image_index_bounds(image_indices, len(data["imageData"]), "layouts.object-types")
+        else:
+            self.errors.append("'imageData' must be an array")
+
+    def _validate_event_sheets(self, data: dict):
+        """Validate event-sheets format"""
+        items = data.get("items", [])
+        for i, sheet in enumerate(items):
+            prefix = f"event-sheets[{i}]"
+            if "name" not in sheet:
+                self.errors.append(f"{prefix}: missing 'name'")
+            if "events" not in sheet:
+                self.errors.append(f"{prefix}: missing 'events' array")
+            elif isinstance(sheet.get("events"), list):
+                self._validate_events(sheet["events"])
+
+    def _validate_ace_id(self, ace_id: str, prefix: str):
+        """Validate ACE ID format"""
+        # Should be kebab-case
+        if not re.match(r'^[a-z][a-z0-9-]*$', ace_id):
+            self.warnings.append(f"{prefix}: ID '{ace_id}' may be incorrectly formatted, use kebab-case")
+
+    def _validate_parameters(self, params: dict, prefix: str):
+        """Validate parameters"""
+        for key, value in params.items():
+            param_prefix = f"{prefix}.parameters.{key}"
+
+            # Check comparison parameter
+            if key == "comparison":
+                if isinstance(value, int):
+                    if value not in self.COMPARISON_OPERATORS:
+                        self.errors.append(f"{param_prefix}: invalid comparison operator {value}, valid: 0-5")
+                elif isinstance(value, str):
+                    self.warnings.append(f"{param_prefix}: comparison should be a number, not string")
+
+            # Check string parameters for nested quotes
+            if key in ("animation", "text", "tag", "audio-file-name", "folder"):
+                if isinstance(value, str) and value and not value.startswith('"'):
+                    if not any(c in value for c in ['+', '&', '(', '.']):  # Not an expression
+                        self.warnings.append(f"{param_prefix}: string parameter may be missing nested quotes, got: {value}")
+
+    def _validate_script_action(self, action: dict, prefix: str):
+        """Validate script action block"""
+        language = action.get("language")
+        script = action.get("script")
+        if language not in ("javascript", "typescript"):
+            self.errors.append(f"{prefix}: script action missing or invalid 'language'")
+        if not isinstance(script, list) or not all(isinstance(line, str) for line in script):
+            self.errors.append(f"{prefix}: script action 'script' must be an array of strings")
+
+    def _validate_schema_ace(self, item: dict, ace_type: str, prefix: str):
+        ace_id = item.get("id")
+        if not ace_id:
+            return
+        schema = self.schema_index.find_schema(item)
+        if not schema:
+            return
+        ace = schema.get_ace(ace_type, ace_id)
+        if not ace:
+            self.errors.append(f"{prefix}: unknown {ace_type[:-1]} id '{ace_id}' for schema '{schema.name}'")
+            return
+        params = item.get("parameters")
+        if isinstance(params, dict):
+            warnings = self.schema_index.validate_params(ace, params, f"{prefix}.parameters")
+            self.warnings.extend(warnings)
+
+    def _collect_object_type_image_indices(self, item: dict, prefix: str):
+        indices = []
+
+        image = item.get("image")
+        if isinstance(image, dict) and "imageDataIndex" in image:
+            idx = image.get("imageDataIndex")
+            if isinstance(idx, int):
+                indices.append(idx)
+            else:
+                self.errors.append(f"{prefix}.image.imageDataIndex must be an integer")
+
+        animations = item.get("animations")
+        if isinstance(animations, dict):
+            for ai, anim in enumerate(animations.get("items", []) or []):
+                frames = anim.get("frames", []) if isinstance(anim, dict) else []
+                for fi, frame in enumerate(frames):
+                    if not isinstance(frame, dict):
+                        continue
+                    if "imageDataIndex" not in frame:
+                        continue
+                    idx = frame.get("imageDataIndex")
+                    if isinstance(idx, int):
+                        indices.append(idx)
+                    else:
+                        self.errors.append(
+                            f"{prefix}.animations.items[{ai}].frames[{fi}].imageDataIndex must be an integer"
+                        )
+
+        return indices
+
+    def _validate_imagedata_entries(self, image_data: list, prefix: str):
+        for i, entry in enumerate(image_data):
+            item_prefix = f"{prefix}[{i}]"
+            if not isinstance(entry, str):
+                self.errors.append(f"{item_prefix}: imageData entry must be a string")
+                continue
+            if not entry:
+                self.errors.append(f"{item_prefix}: imageData entry must not be empty")
+                continue
+            if not entry.startswith("data:image/png;base64,"):
+                self.errors.append(f"{item_prefix}: imageData entry must be a PNG data URI")
+
+    def _validate_image_index_bounds(self, indices: list, image_count: int, prefix: str):
+        for idx in indices:
+            if idx < 0 or idx >= image_count:
+                self.errors.append(
+                    f"{prefix}: imageDataIndex {idx} is out of range for imageData length {image_count}"
+                )
+
+
+class SchemaInfo:
+    def __init__(self, name: str, schema: dict):
+        self.name = name
+        self.schema = schema
+        self._ace_index = {
+            "conditions": {a.get("id"): a for a in schema.get("conditions", [])},
+            "actions": {a.get("id"): a for a in schema.get("actions", [])},
+        }
+
+    def get_ace(self, ace_type: str, ace_id: str):
+        return self._ace_index.get(ace_type, {}).get(ace_id)
+
+
+class SchemaIndex:
+    def __init__(self):
+        script_dir = Path(__file__).resolve().parent
+        project_root = script_dir.parent.parent.parent.parent
+        self.schemas_dir = project_root / "data" / "schemas"
+        self.plugin_map = {}
+        self.behavior_map = {}
+        self._load_schemas()
+
+    def _normalize(self, name: str) -> str:
+        return re.sub(r"[^a-z0-9]", "", name.lower())
+
+    def _load_schemas(self):
+        plugins_dir = self.schemas_dir / "plugins"
+        behaviors_dir = self.schemas_dir / "behaviors"
+        if plugins_dir.exists():
+            for path in plugins_dir.glob("*.json"):
+                with open(path, "r", encoding="utf-8") as f:
+                    schema = json.load(f)
+                info = SchemaInfo(schema.get("name_en", path.stem), schema)
+                for key in self._schema_keys(schema, path.stem):
+                    self.plugin_map[key] = info
+        if behaviors_dir.exists():
+            for path in behaviors_dir.glob("*.json"):
+                with open(path, "r", encoding="utf-8") as f:
+                    schema = json.load(f)
+                info = SchemaInfo(schema.get("name_en", path.stem), schema)
+                for key in self._schema_keys(schema, path.stem):
+                    self.behavior_map[key] = info
+
+    def _schema_keys(self, schema: dict, stem: str):
+        keys = {stem}
+        for key in [schema.get("id"), schema.get("name_en"), schema.get("name_zh")]:
+            if key:
+                keys.add(key)
+        return {self._normalize(k) for k in keys if k}
+
+    def find_schema(self, item: dict):
+        behavior_type = item.get("behaviorType")
+        if behavior_type:
+            return self.behavior_map.get(self._normalize(behavior_type))
+        obj_class = item.get("objectClass")
+        if not obj_class:
+            return None
+        return self.plugin_map.get(self._normalize(obj_class))
+
+    def get_behavior_schema(self, behavior_name: str):
+        if not behavior_name:
+            return None
+        return self.behavior_map.get(self._normalize(behavior_name))
+
+    def validate_params(self, ace: dict, params: dict, prefix: str):
+        warnings = []
+        schema_params = ace.get("params", [])
+        schema_ids = {p.get("id") for p in schema_params if p.get("id")}
+        for pid in schema_ids:
+            if pid not in params:
+                warnings.append(f"{prefix}: missing parameter '{pid}'")
+        for pid in params.keys():
+            if pid not in schema_ids:
+                warnings.append(f"{prefix}: unknown parameter '{pid}'")
+        for p in schema_params:
+            pid = p.get("id")
+            items = p.get("items")
+            if not pid or not items or pid not in params:
+                continue
+            value = params.get(pid)
+            if isinstance(value, str):
+                normalized = value.strip('"')
+                if normalized in items:
+                    continue
+                if not re.search(r"[()+\\-*/&.]", value):
+                    warnings.append(f"{prefix}.{pid}: value '{value}' not in {items}")
+        return warnings
+
+    def validate_behavior_instance_properties(self, behavior_schema, params: dict, prefix: str):
+        errors = []
+        if not behavior_schema or not isinstance(params, dict):
+            return errors
+        prop_defs = behavior_schema.schema.get("properties", [])
+        prop_index = {p.get("id"): p for p in prop_defs if p.get("id")}
+        for key, value in params.items():
+            if key not in prop_index:
+                continue
+            items = prop_index[key].get("items")
+            if not isinstance(items, dict):
+                continue
+            if not isinstance(value, str):
+                errors.append(f"{prefix}.{key}: invalid combo item value")
+                continue
+            if value not in items:
+                errors.append(f"{prefix}.{key}: invalid combo item value '{value}'")
+        return errors
+
+
+def main():
+    # Read input
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+        if arg.endswith('.json'):
+            with open(arg, 'r', encoding='utf-8') as f:
+                content = f.read()
+        else:
+            content = arg
+    else:
+        content = sys.stdin.read()
+
+    # Parse JSON
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError as e:
+        print(f"ERROR: JSON parse error: {e}")
+        sys.exit(1)
+
+    # Validate
+    validator = C3ClipboardValidator()
+    is_valid = validator.validate(data)
+
+    # Output results
+    if is_valid:
+        print("PASS: Validation passed. JSON format conforms to C3 clipboard spec")
+    else:
+        print("FAIL: Validation failed. Found the following errors:")
+        for error in validator.errors:
+            print(f"  - {error}")
+
+    if validator.warnings:
+        print("\nWARNINGS:")
+        for warning in validator.warnings:
+            print(f"  - {warning}")
+
+    # Statistics
+    if is_valid and "items" in data:
+        items = data["items"]
+        blocks = sum(1 for i in items if i.get("eventType") == "block")
+        variables = sum(1 for i in items if i.get("eventType") == "variable")
+        print(f"\nSTATS: {len(items)} items ({blocks} event blocks, {variables} variables)")
+
+    sys.exit(0 if is_valid else 1)
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,341 @@
+{
+  "skill": "construct3-copilot",
+  "version": "1.1.0",
+  "evaluations": [
+    {
+      "id": "basic-trigger",
+      "name": "基础触发测试",
+      "query": "生成一个 Construct 3 事件表 JSON，实现每2秒在屏幕中央创建一个 Sprite",
+      "expected_behavior": [
+        "生成包含 is-c3-clipboard-data: true 的 JSON",
+        "使用 System.every-x-seconds 条件，interval-seconds 为 2",
+        "使用 System.create-object 动作",
+        "JSON 格式正确可直接粘贴到 C3 编辑器"
+      ],
+      "expected_output_contains": [
+        "\"is-c3-clipboard-data\":true",
+        "\"every-x-seconds\"",
+        "\"create-object\"",
+        "\"interval-seconds\":\"2\""
+      ]
+    },
+    {
+      "id": "keyboard-control",
+      "name": "键盘控制测试",
+      "query": "生成 WASD 键盘控制 Player 对象 8Direction 移动的事件表",
+      "expected_behavior": [
+        "使用正确的键码: W=87, A=65, S=83, D=68",
+        "使用 Keyboard.key-is-down 条件",
+        "使用 simulate-control 动作",
+        "behaviorType 使用 '8Direction' 而非 'EightDir'"
+      ],
+      "expected_output_contains": [
+        "\"key\":87",
+        "\"key\":65",
+        "\"key\":83",
+        "\"key\":68",
+        "\"behaviorType\":\"8Direction\"",
+        "\"simulate-control\""
+      ]
+    },
+    {
+      "id": "platform-game",
+      "name": "平台跳跃游戏测试",
+      "query": "生成平台跳跃游戏的事件表：空格键跳跃、与 Enemy 碰撞时销毁 Enemy 并加分",
+      "expected_behavior": [
+        "使用 Platform 行为的 simulate-control jump",
+        "使用 on-collision-with-another-object 条件",
+        "使用 destroy 动作销毁 Enemy",
+        "使用 add-to-eventvar 增加分数"
+      ],
+      "expected_output_contains": [
+        "\"behaviorType\":\"Platform\"",
+        "\"control\":\"jump\"",
+        "\"on-collision-with-another-object\"",
+        "\"destroy\"",
+        "\"add-to-eventvar\""
+      ]
+    },
+    {
+      "id": "deprecated-warning",
+      "name": "废弃功能警告测试",
+      "query": "生成使用 Function 插件的调用函数事件",
+      "expected_behavior": [
+        "警告 Function 插件已废弃",
+        "推荐使用内置 Functions 系统",
+        "提供正确的 callFunction 语法或 Functions.FuncName() 表达式"
+      ],
+      "should_warn_about": ["Function 插件", "废弃", "Functions"]
+    },
+    {
+      "id": "string-parameter",
+      "name": "字符串参数格式测试",
+      "query": "生成设置 Player 动画为 'Walk' 的事件",
+      "expected_behavior": [
+        "animation 参数使用内嵌引号格式",
+        "正确格式: \"animation\": \"\\\"Walk\\\"\""
+      ],
+      "expected_output_contains": [
+        "\"set-animation\"",
+        "\"\\\"Walk\\\"\""
+      ]
+    },
+    {
+      "id": "tween-animation",
+      "name": "Tween 动画测试",
+      "query": "生成让 Sprite 在1秒内淡出 (opacity 变为0) 的 Tween 动画事件",
+      "expected_behavior": [
+        "使用 Tween.tween-one-property 动作",
+        "property 为 opacity",
+        "end-value 为 0",
+        "time 为 1"
+      ],
+      "expected_output_contains": [
+        "\"tween-one-property\"",
+        "\"property\":\"opacity\"",
+        "\"end-value\":\"0\"",
+        "\"time\":\"1\""
+      ]
+    },
+    {
+      "id": "variable-definition",
+      "name": "变量定义测试",
+      "query": "生成定义一个名为 Score 的数字变量，初始值为 0",
+      "expected_behavior": [
+        "使用 eventType: variable",
+        "包含必需的 comment 字段",
+        "type 为 number"
+      ],
+      "expected_output_contains": [
+        "\"eventType\":\"variable\"",
+        "\"name\":\"Score\"",
+        "\"comment\":\"\""
+      ]
+    },
+    {
+      "id": "comparison-operator",
+      "name": "比较运算符测试",
+      "query": "生成当 Score 大于 100 时显示 'You Win' 文本的事件",
+      "expected_behavior": [
+        "使用 System.compare-eventvar 条件",
+        "comparison 值为 4 (大于)",
+        "使用 Text.set-text 动作"
+      ],
+      "expected_output_contains": [
+        "\"compare-eventvar\"",
+        "\"comparison\":4",
+        "\"set-text\""
+      ]
+    },
+    {
+      "id": "mouse-click",
+      "name": "鼠标点击对象测试",
+      "priority": "P0",
+      "query": "生成点击 Button 对象时触发的事件，点击后切换到 GameLayout 布局",
+      "expected_behavior": [
+        "使用 Mouse.on-object-clicked 条件",
+        "指定正确的 mouse-button 和 click-type 参数",
+        "使用 System.go-to-layout 动作",
+        "layout 参数使用内嵌引号格式"
+      ],
+      "expected_output_contains": [
+        "\"on-object-clicked\"",
+        "\"object-clicked\":\"Button\"",
+        "\"go-to-layout\"",
+        "\"\\\"GameLayout\\\"\""
+      ]
+    },
+    {
+      "id": "collision-detection",
+      "name": "碰撞检测响应测试",
+      "priority": "P0",
+      "query": "生成 Player 与 Spike 碰撞时减少生命值并闪烁的事件",
+      "expected_behavior": [
+        "使用 on-collision-with-another-object 条件",
+        "使用 subtract-from-eventvar 或 add-to-eventvar 负值减少生命",
+        "使用 Flash 行为的 flash 动作",
+        "behaviorType 使用 'Flash'"
+      ],
+      "expected_output_contains": [
+        "\"on-collision-with-another-object\"",
+        "\"object\":\"Spike\"",
+        "\"flash\"",
+        "\"behaviorType\":\"Flash\""
+      ]
+    },
+    {
+      "id": "function-definition",
+      "name": "函数定义与调用测试",
+      "priority": "P0",
+      "query": "生成一个名为 SpawnEnemy 的函数，接受 x, y 坐标参数，在指定位置创建 Enemy 对象",
+      "expected_behavior": [
+        "使用 eventType: function-block",
+        "包含 functionName, functionParameters 字段",
+        "参数类型正确定义",
+        "函数体使用 create-object 动作"
+      ],
+      "expected_output_contains": [
+        "\"eventType\":\"function-block\"",
+        "\"functionName\":\"SpawnEnemy\"",
+        "\"functionParameters\"",
+        "\"create-object\""
+      ]
+    },
+    {
+      "id": "error-handling",
+      "name": "无效 ACE ID 警告测试",
+      "priority": "P0",
+      "query": "生成让 Player 朝向目标位置移动的事件 (使用 move-toward 动作)",
+      "expected_behavior": [
+        "警告 move-toward 动作不存在",
+        "推荐使用 MoveTo 行为或手动计算角度+位移",
+        "提供正确的替代方案代码"
+      ],
+      "should_warn_about": ["move-toward", "不存在", "MoveTo"]
+    },
+    {
+      "id": "for-loop",
+      "name": "循环结构测试",
+      "priority": "P1",
+      "query": "生成循环创建 5 行 10 列砖块网格的事件，每个砖块间距 40 像素",
+      "expected_behavior": [
+        "使用 System.for 或 System.repeat 条件",
+        "嵌套循环处理行列",
+        "位置计算使用 loopindex 表达式",
+        "使用 create-object 动作"
+      ],
+      "expected_output_contains": [
+        "\"for\"",
+        "\"loopindex\"",
+        "\"create-object\""
+      ]
+    },
+    {
+      "id": "script-action",
+      "name": "JavaScript 脚本嵌入测试",
+      "priority": "P1",
+      "query": "生成一个事件，使用 JavaScript 脚本计算两点之间的距离并存储到变量中",
+      "expected_behavior": [
+        "使用 type: script 的动作格式",
+        "language 指定为 javascript",
+        "script 为字符串数组格式",
+        "使用 localVars 访问变量"
+      ],
+      "expected_output_contains": [
+        "\"type\":\"script\"",
+        "\"language\":\"javascript\"",
+        "\"script\":[",
+        "localVars"
+      ]
+    },
+    {
+      "id": "layout-generation",
+      "name": "布局实例生成测试",
+      "priority": "P1",
+      "query": "生成一个包含 Player 和 Ground 实例的 world-instances JSON，Player 在 (100, 200) 位置",
+      "expected_behavior": [
+        "type 为 world-instances",
+        "包含 items 和 object-types 数组",
+        "实例有正确的 world 坐标",
+        "包含必要的 properties 字段"
+      ],
+      "expected_output_contains": [
+        "\"type\":\"world-instances\"",
+        "\"items\":[",
+        "\"object-types\":[",
+        "\"x\":100",
+        "\"y\":200"
+      ]
+    },
+    {
+      "id": "group-organization",
+      "name": "事件分组组织测试",
+      "priority": "P2",
+      "query": "生成一个带有 'Player Controls' 分组的事件表，包含移动和跳跃事件",
+      "expected_behavior": [
+        "使用 eventType: group",
+        "包含 title 和 children 字段",
+        "children 包含实际事件块",
+        "分组默认启用"
+      ],
+      "expected_output_contains": [
+        "\"eventType\":\"group\"",
+        "\"title\":\"Player Controls\"",
+        "\"children\":[",
+        "\"isActiveOnStart\":true"
+      ]
+    },
+    {
+      "id": "audio-playback",
+      "name": "音频播放控制测试",
+      "priority": "P2",
+      "query": "生成播放背景音乐并循环、点击时播放音效的事件",
+      "expected_behavior": [
+        "使用 Audio.play 动作",
+        "背景音乐使用 loop: looping",
+        "音效使用 loop: not-looping",
+        "使用 tag 参数标识音频"
+      ],
+      "expected_output_contains": [
+        "\"objectClass\":\"Audio\"",
+        "\"play\"",
+        "\"loop\":\"looping\"",
+        "\"tag"
+      ]
+    },
+    {
+      "id": "touch-input",
+      "name": "触摸输入事件测试",
+      "priority": "P2",
+      "query": "生成触摸 Button 对象时触发的事件",
+      "expected_behavior": [
+        "使用 Touch.on-touched-object 条件",
+        "指定正确的 object 参数",
+        "type 参数为 touch"
+      ],
+      "expected_output_contains": [
+        "\"on-touched-object\"",
+        "\"object\":\"Button\"",
+        "\"objectClass\":\"Touch\""
+      ]
+    },
+    {
+      "id": "behavior-mapping",
+      "name": "行为名称映射测试",
+      "priority": "P1",
+      "query": "生成使用 EightDir 行为设置速度为 300 的事件",
+      "expected_behavior": [
+        "警告或自动纠正 EightDir 为 8Direction",
+        "使用正确的 behaviorType: 8Direction",
+        "使用 set-max-speed 动作"
+      ],
+      "expected_output_contains": [
+        "\"behaviorType\":\"8Direction\"",
+        "\"set-max-speed\""
+      ],
+      "should_not_contain": [
+        "\"behaviorType\":\"EightDir\""
+      ]
+    },
+    {
+      "id": "angle-rotation",
+      "name": "角度旋转测试",
+      "priority": "P1",
+      "query": "生成让 Player 面向鼠标位置旋转的事件",
+      "expected_behavior": [
+        "不使用不存在的 set-angle-toward-position",
+        "使用 set-angle 配合 angle() 表达式",
+        "使用 Mouse.X 和 Mouse.Y 表达式"
+      ],
+      "expected_output_contains": [
+        "\"set-angle\"",
+        "\"angle("
+      ],
+      "should_not_contain": [
+        "\"set-angle-toward-position\""
+      ]
+    }
+  ],
+  "validation_script": ".agents/skills/construct3-copilot/scripts/validate_output.py"
+}
+

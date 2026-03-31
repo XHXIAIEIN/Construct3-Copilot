@@ -1,0 +1,392 @@
+{
+  "is-c3-clipboard-data": true,
+  "type": "events",
+  "items": [
+    {
+      "eventType": "variable",
+      "name": "Score",
+      "type": "number",
+      "initialValue": "0",
+      "comment": ""
+    },
+    {
+      "eventType": "variable",
+      "name": "Lives",
+      "type": "number",
+      "initialValue": "3",
+      "comment": ""
+    },
+    {
+      "eventType": "comment",
+      "text": "Init"
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "on-start-of-layout",
+          "objectClass": "System",
+          "parameters": {}
+        }
+      ],
+      "actions": [
+        {
+          "id": "set-eventvar-value",
+          "objectClass": "System",
+          "parameters": {
+            "variable": "Score",
+            "value": "0"
+          }
+        },
+        {
+          "id": "set-eventvar-value",
+          "objectClass": "System",
+          "parameters": {
+            "variable": "Lives",
+            "value": "3"
+          }
+        },
+        {
+          "id": "set-speed",
+          "objectClass": "Ball",
+          "behaviorType": "Bullet",
+          "parameters": {
+            "speed": "0"
+          }
+        },
+        {
+          "id": "set-bounce-off-solids",
+          "objectClass": "Ball",
+          "behaviorType": "Bullet",
+          "parameters": {
+            "state": true
+          }
+        },
+        {
+          "id": "set-text",
+          "objectClass": "ScoreText",
+          "parameters": {
+            "text": "\"Score: \" & Score & \"   Lives: \" & Lives"
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "comment",
+      "text": "Paddle control"
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "key-is-down",
+          "objectClass": "Keyboard",
+          "parameters": {
+            "key": 65
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "simulate-control",
+          "objectClass": "Paddle",
+          "behaviorType": "8Direction",
+          "parameters": {
+            "control": "left"
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "key-is-down",
+          "objectClass": "Keyboard",
+          "parameters": {
+            "key": 68
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "simulate-control",
+          "objectClass": "Paddle",
+          "behaviorType": "8Direction",
+          "parameters": {
+            "control": "right"
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "comment",
+      "text": "Launch ball"
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "on-click",
+          "objectClass": "Mouse",
+          "parameters": {
+            "mouse-button": "left",
+            "click-type": "clicked"
+          }
+        },
+        {
+          "id": "compare-speed",
+          "objectClass": "Ball",
+          "behaviorType": "Bullet",
+          "parameters": {
+            "comparison": 0,
+            "speed": "0"
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "set-angle-of-motion",
+          "objectClass": "Ball",
+          "behaviorType": "Bullet",
+          "parameters": {
+            "angle": "angle(Ball.X, Ball.Y, Ball.X, 0)"
+          }
+        },
+        {
+          "id": "set-speed",
+          "objectClass": "Ball",
+          "behaviorType": "Bullet",
+          "parameters": {
+            "speed": "420"
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "comment",
+      "text": "Gameplay"
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "on-collision-with-another-object",
+          "objectClass": "Ball",
+          "parameters": {
+            "object": "Paddle"
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "set-angle-of-motion",
+          "objectClass": "Ball",
+          "behaviorType": "Bullet",
+          "parameters": {
+            "angle": "angle(Paddle.X, Paddle.Y, Paddle.X, 0) + (Ball.X - Paddle.X) * 1.2"
+          }
+        },
+        {
+          "id": "set-speed",
+          "objectClass": "Ball",
+          "behaviorType": "Bullet",
+          "parameters": {
+            "speed": "420"
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "on-collision-with-another-object",
+          "objectClass": "Ball",
+          "parameters": {
+            "object": "Brick"
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "destroy",
+          "objectClass": "Brick",
+          "parameters": {}
+        },
+        {
+          "id": "add-to-eventvar",
+          "objectClass": "System",
+          "parameters": {
+            "variable": "Score",
+            "value": "1"
+          }
+        },
+        {
+          "id": "set-text",
+          "objectClass": "ScoreText",
+          "parameters": {
+            "text": "\"Score: \" & Score & \"   Lives: \" & Lives"
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "comment",
+      "text": "Life loss and relaunch"
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "compare-two-values",
+          "objectClass": "System",
+          "parameters": {
+            "first-value": "Ball.Y",
+            "comparison": 4,
+            "second-value": "760"
+          }
+        },
+        {
+          "id": "trigger-once-while-true",
+          "objectClass": "System",
+          "parameters": {}
+        }
+      ],
+      "actions": [
+        {
+          "id": "subtract-from-eventvar",
+          "objectClass": "System",
+          "parameters": {
+            "variable": "Lives",
+            "value": "1"
+          }
+        },
+        {
+          "id": "destroy",
+          "objectClass": "Ball",
+          "parameters": {}
+        },
+        {
+          "id": "spawn-another-object",
+          "objectClass": "Paddle",
+          "parameters": {
+            "object": "Ball",
+            "layer": "\"Game\"",
+            "image-point": "0"
+          }
+        },
+        {
+          "id": "set-speed",
+          "objectClass": "Ball",
+          "behaviorType": "Bullet",
+          "parameters": {
+            "speed": "0"
+          }
+        },
+        {
+          "id": "set-angle-of-motion",
+          "objectClass": "Ball",
+          "behaviorType": "Bullet",
+          "parameters": {
+            "angle": "angle(Ball.X, Ball.Y, Ball.X, 0)"
+          }
+        },
+        {
+          "id": "set-text",
+          "objectClass": "ScoreText",
+          "parameters": {
+            "text": "\"Score: \" & Score & \"   Lives: \" & Lives"
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "comment",
+      "text": "Win/Lose"
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "compare-two-values",
+          "objectClass": "System",
+          "parameters": {
+            "first-value": "Brick.Count",
+            "comparison": 0,
+            "second-value": "0"
+          }
+        },
+        {
+          "id": "trigger-once-while-true",
+          "objectClass": "System",
+          "parameters": {}
+        }
+      ],
+      "actions": [
+        {
+          "id": "set-text",
+          "objectClass": "ScoreText",
+          "parameters": {
+            "text": "\"YOU WIN! Score: \" & Score & \"  (R to restart)\""
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "compare-two-values",
+          "objectClass": "System",
+          "parameters": {
+            "first-value": "Lives",
+            "comparison": 3,
+            "second-value": "0"
+          }
+        },
+        {
+          "id": "trigger-once-while-true",
+          "objectClass": "System",
+          "parameters": {}
+        }
+      ],
+      "actions": [
+        {
+          "id": "set-text",
+          "objectClass": "ScoreText",
+          "parameters": {
+            "text": "\"GAME OVER  (R to restart)\""
+          }
+        },
+        {
+          "id": "set-speed",
+          "objectClass": "Ball",
+          "behaviorType": "Bullet",
+          "parameters": {
+            "speed": "0"
+          }
+        }
+      ]
+    },
+    {
+      "eventType": "block",
+      "conditions": [
+        {
+          "id": "on-key-pressed",
+          "objectClass": "Keyboard",
+          "parameters": {
+            "key": 82
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "restart-layout",
+          "objectClass": "System",
+          "parameters": {}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Construct 3 Intent IR",
+  "type": "object",
+  "properties": {
+    "gameplay": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Gameplay mechanics or behaviors requested (e.g., player movement, enemy spawn)."
+    },
+    "ui": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "UI or HUD requirements (score text, pause menu, etc.)."
+    },
+    "assets": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Objects, sprites, audio, or layout assets that must exist."
+    },
+    "visual_style": {
+      "type": "object",
+      "description": "Visual style specification for placeholder assets (optional, defaults to flat colored shapes).",
+      "properties": {
+        "palette": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Color names or hex codes for the visual theme (e.g., ['red', 'blue', '#FFD700'])."
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Target sprite resolution (e.g., '32x32', '64x64')."
+        },
+        "shape_language": {
+          "type": "string",
+          "enum": ["geometric", "rounded", "pixel"],
+          "description": "Shape style: geometric (sharp), rounded (soft edges), pixel (retro)."
+        }
+      }
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Ambiguities or missing info that block generation."
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Documented assumptions when clarification is unavailable."
+    }
+  },
+  "required": ["gameplay", "assets"],
+  "additionalProperties": false
+}
