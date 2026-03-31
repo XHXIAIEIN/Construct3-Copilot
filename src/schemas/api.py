@@ -21,6 +21,7 @@ class GenerationData(BaseModel):
     delivery: Literal["clipboard", "mcp"]
     clipboard_json: Optional[dict] = None
     validation: Optional[dict] = None
+    input_validation: Optional[dict] = None
     metadata: Optional[dict] = None
 
 
