@@ -2,13 +2,14 @@
 
 Workflow: Intent → Clarify → Refine → Route → Execute → Deliver
 
-This is the Phase 1 skeleton — each stage has a working interface but
-minimal implementation. Full pipeline logic comes in Phase 2.
+Phase 1.1: RAG-augmented LLM chat. RAG results are injected into the
+system prompt so the LLM has real C3 plugin/behavior data to work with.
 """
 import logging
 
 from src.llm.client import LLMClient
 from src.llm.prompts.system import COPILOT_SYSTEM
+from src.modules.rag_client import RAGClient
 from src.orchestrator.session import SessionManager
 from src.orchestrator.router import decide_delivery
 from src.schemas.api import ChatRequest, ChatResponse, GenerationData
@@ -20,16 +21,46 @@ logger = logging.getLogger(__name__)
 class Pipeline:
     """Main orchestration pipeline."""
 
-    def __init__(self, llm: LLMClient, sessions: SessionManager):
+    def __init__(self, llm: LLMClient, sessions: SessionManager, rag: RAGClient = None):
         self.llm = llm
         self.sessions = sessions
+        self.rag = rag
+
+    async def _fetch_rag_context(self, query: str) -> tuple[str, bool]:
+        """Search RAG for relevant C3 knowledge. Returns (context_str, used)."""
+        if not self.rag:
+            return "", False
+        try:
+            if not await self.rag.is_available():
+                return "", False
+            resp = await self.rag.search(query, top_k=5)
+            if not resp.results:
+                return "", False
+            chunks = []
+            for r in resp.results:
+                chunks.append(f"[{r.collection}] (score: {r.score:.2f})\n{r.text}")
+            context = "\n\n---\n\n".join(chunks)
+            logger.info(f"RAG returned {len(resp.results)} results (route: {resp.route})")
+            return context, True
+        except Exception as e:
+            logger.warning(f"RAG search failed: {e}")
+            return "", False
+
+    def _build_system_prompt(self, rag_context: str) -> str:
+        """Build system prompt, optionally augmented with RAG results."""
+        if not rag_context:
+            return COPILOT_SYSTEM
+        return (
+            COPILOT_SYSTEM
+            + "\n\n## Reference Knowledge (from RAG)\n\n"
+            "The following are relevant Construct 3 documentation and examples "
+            "retrieved for this conversation. Use them to give accurate, specific answers. "
+            "If the retrieved content conflicts with your training data, prefer the retrieved content.\n\n"
+            + rag_context
+        )
 
     async def process(self, request: ChatRequest) -> ChatResponse:
-        """Process a chat request through the full pipeline.
-
-        Phase 1 implementation: direct LLM chat (no RAG/Clipboard integration).
-        The pipeline stages are stubbed for Phase 2 expansion.
-        """
+        """Process a chat request through the pipeline."""
         # [1] Session
         session = self.sessions.get_or_create(
             request.session_id,
@@ -41,10 +72,18 @@ class Pipeline:
         session.messages.append({"role": "user", "content": request.message})
         session.touch()
 
-        # [2-4] Intent → Clarify → Refine (Phase 1: direct LLM pass-through)
+        modules_used = []
+
+        # [2] RAG retrieval
+        rag_context, rag_used = await self._fetch_rag_context(request.message)
+        if rag_used:
+            modules_used.append("rag")
+
+        # [3] LLM call with RAG-augmented context
         try:
+            system_prompt = self._build_system_prompt(rag_context)
             messages = [
-                {"role": "system", "content": COPILOT_SYSTEM},
+                {"role": "system", "content": system_prompt},
                 *session.messages,
             ]
             reply = await self.llm.chat(messages)
@@ -68,13 +107,11 @@ class Pipeline:
             session_id=session.session_id,
             type="direct_answer",
             message=reply,
+            modules_used=modules_used,
         )
 
     async def process_stream(self, request: ChatRequest):
-        """Streaming version — yields SSE-formatted chunks.
-
-        Phase 1 implementation: streams LLM tokens directly.
-        """
+        """Streaming version — yields SSE-formatted chunks."""
         session = self.sessions.get_or_create(
             request.session_id,
             has_local_project=request.context.has_local_project,
@@ -84,8 +121,12 @@ class Pipeline:
         session.messages.append({"role": "user", "content": request.message})
         session.touch()
 
+        # RAG retrieval for stream too
+        rag_context, _ = await self._fetch_rag_context(request.message)
+        system_prompt = self._build_system_prompt(rag_context)
+
         messages = [
-            {"role": "system", "content": COPILOT_SYSTEM},
+            {"role": "system", "content": system_prompt},
             *session.messages,
         ]
 
@@ -94,7 +135,6 @@ class Pipeline:
             full_reply.append(token)
             yield f"data: {token}\n\n"
 
-        # Save complete reply to session
         complete = "".join(full_reply)
         session.messages.append({"role": "assistant", "content": complete})
         session.touch()

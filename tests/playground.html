@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copilot Core Playground</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#4d4e5190;border-radius:3px}
+:root{
+  --bg:#1e1f22;--second:#2b2d30;--fg:#d0d0d9;--dim:#96969d;
+  --border:#3f3f3f;--accent:#5378c8;--deepBg:#1a1b1e;
+  --blue:#70b0ff;--green:#7af8ca;--red:#ff757f;--yellow:#ffbd76;--purple:#baacff;
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+header{height:48px;background:var(--second);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.logo{font-weight:bold;font-size:14px;color:var(--accent);letter-spacing:.3px}
+.logo span{color:var(--green)}
+.sep{width:1px;height:22px;background:var(--border)}
+.status{font-size:11px;display:flex;gap:8px}
+.status .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;vertical-align:middle}
+.dot.on{background:var(--green)}.dot.off{background:var(--red)}.dot.warn{background:var(--yellow)}
+.url-input{padding:5px 10px;background:var(--deepBg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font:12px inherit;outline:none;width:260px}
+.url-input:focus{border-color:var(--accent)}
+
+/* Layout */
+.main{flex:1;display:flex;overflow:hidden}
+.sidebar{width:260px;background:var(--second);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-header{padding:12px 16px;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.session-list{flex:1;overflow-y:auto;padding:8px}
+.session-item{padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--dim);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center}
+.session-item:hover{background:var(--deepBg);color:var(--fg)}
+.session-item.active{background:var(--accent)20;color:var(--fg);border:1px solid var(--accent)40}
+.session-item .sid{font-family:monospace;font-size:10px;color:var(--dim)}
+.new-session{padding:12px 16px;border-top:1px solid var(--border)}
+.new-btn{width:100%;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font:12px inherit;font-weight:600}
+.new-btn:hover{background:#6488d8}
+
+/* Chat */
+.chat-area{flex:1;display:flex;flex-direction:column;min-width:0}
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:85%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;word-break:break-word}
+.msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px;white-space:pre-wrap}
+.msg.assistant{align-self:flex-start;background:var(--second);border:1px solid var(--border);border-bottom-left-radius:4px}
+.msg.error{align-self:center;background:#6a1a2a40;color:var(--red);border:1px solid var(--red)30;font-size:11px;white-space:pre-wrap}
+.msg.system{align-self:center;color:var(--dim);font-size:11px;background:none;padding:4px}
+.msg-meta{font-size:9px;color:var(--dim);margin-top:4px}
+
+/* Markdown in assistant messages */
+.msg.assistant p{margin:0 0 8px}
+.msg.assistant p:last-child{margin-bottom:0}
+.msg.assistant h1,.msg.assistant h2,.msg.assistant h3,.msg.assistant h4{margin:12px 0 6px;color:var(--blue);font-size:14px}
+.msg.assistant h1{font-size:16px}.msg.assistant h2{font-size:15px}
+.msg.assistant ul,.msg.assistant ol{margin:4px 0 8px 20px}
+.msg.assistant li{margin:2px 0}
+.msg.assistant code{background:var(--deepBg);padding:1px 5px;border-radius:3px;font:12px Consolas,monospace;color:var(--green)}
+.msg.assistant pre{background:var(--deepBg);border:1px solid var(--border);border-radius:6px;padding:10px;margin:8px 0;overflow-x:auto}
+.msg.assistant pre code{background:none;padding:0;font-size:11px;line-height:1.5}
+.msg.assistant table{border-collapse:collapse;margin:8px 0;font-size:12px;width:100%}
+.msg.assistant th,.msg.assistant td{border:1px solid var(--border);padding:4px 8px;text-align:left}
+.msg.assistant th{background:var(--deepBg);color:var(--blue);font-size:11px}
+.msg.assistant blockquote{border-left:3px solid var(--accent);padding:4px 12px;margin:8px 0;color:var(--dim)}
+.msg.assistant strong{color:var(--fg)}
+.msg.assistant a{color:var(--blue);text-decoration:none}
+.msg.assistant a:hover{text-decoration:underline}
+.msg.assistant hr{border:none;border-top:1px solid var(--border);margin:10px 0}
+
+/* Input */
+.input-area{padding:16px 20px;border-top:1px solid var(--border);background:var(--second);display:flex;gap:8px;align-items:flex-end}
+.input-area textarea{flex:1;padding:10px 14px;background:var(--deepBg);border:1px solid var(--border);border-radius:8px;color:var(--fg);font:13px inherit;outline:none;resize:none;min-height:42px;max-height:160px;field-sizing:content}
+.input-area textarea:focus{border-color:var(--accent)}
+.input-area textarea::placeholder{color:var(--dim)}
+.send{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font:13px inherit;font-weight:600;white-space:nowrap}
+.send:hover{background:#6488d8}
+.send:disabled{opacity:.4;cursor:not-allowed}
+
+/* Info panel */
+.info-panel{width:280px;background:var(--second);border-left:1px solid var(--border);flex-shrink:0;overflow-y:auto;padding:16px;font-size:11px}
+.info-panel h3{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.info-block{margin-bottom:16px}
+.info-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)20}
+.info-key{color:var(--dim)}.info-val{color:var(--fg);font-family:monospace;font-size:10px}
+.json-view{background:var(--deepBg);border-radius:4px;padding:8px;font:10px/1.5 Consolas,monospace;color:var(--green);max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+
+/* Empty state */
+.empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:13px;flex-direction:column;gap:8px}
+.empty .hint{font-size:11px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Copilot <span>Core</span> Playground</div>
+  <div class="sep"></div>
+  <input class="url-input" id="baseUrl" value="" placeholder="Base URL (empty = same origin)" />
+  <button class="new-btn" style="width:auto;padding:5px 12px;font-size:11px" onclick="checkHealth()">Check</button>
+  <div class="sep"></div>
+  <div class="status" id="status"></div>
+</header>
+
+<div class="main">
+  <!-- Sidebar: sessions -->
+  <div class="sidebar">
+    <div class="sidebar-header">Sessions</div>
+    <div class="session-list" id="sessionList"></div>
+    <div class="new-session">
+      <button class="new-btn" onclick="newSession()">+ New Session</button>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-area" id="chatArea">
+    <div class="messages" id="messages">
+      <div class="empty">
+        <div>Construct 3 Copilot Core</div>
+        <div class="hint">Click "Check" to connect, then start chatting</div>
+      </div>
+    </div>
+    <div class="input-area">
+      <textarea id="input" placeholder="Type a message... (Enter to send, Shift+Enter for newline)" rows="1"></textarea>
+      <button class="send" id="sendBtn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Info panel -->
+  <div class="info-panel">
+    <div class="info-block">
+      <h3>Health</h3>
+      <div id="healthInfo" class="json-view" style="color:var(--dim)">Click "Check" to connect</div>
+    </div>
+    <div class="info-block">
+      <h3>Current Session</h3>
+      <div id="sessionInfo">
+        <div class="info-row"><span class="info-key">ID</span><span class="info-val" id="infoSid">—</span></div>
+        <div class="info-row"><span class="info-key">Messages</span><span class="info-val" id="infoMsgCount">0</span></div>
+        <div class="info-row"><span class="info-key">Type</span><span class="info-val" id="infoLastType">—</span></div>
+      </div>
+    </div>
+    <div class="info-block">
+      <h3>Last Response</h3>
+      <div id="lastResp" class="json-view" style="color:var(--dim)">No response yet</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.getElementById(s);
+let sessions = [];  // [{id, messages:[]}]
+let activeIdx = -1;
+let sending = false;
+
+function base() { return $('baseUrl').value.replace(/\/+$/, ''); }
+
+// ── Health ──
+async function checkHealth() {
+  const el = $('status');
+  const hi = $('healthInfo');
+  try {
+    const r = await fetch(base() + '/health');
+    const d = await r.json();
+    el.innerHTML = d.modules.map(m =>
+      `<span><span class="dot ${m.available ? 'on' : 'off'}"></span>${m.name}</span>`
+    ).join('');
+    hi.style.color = 'var(--green)';
+    hi.textContent = JSON.stringify(d, null, 2);
+  } catch (e) {
+    el.innerHTML = '<span><span class="dot off"></span>offline</span>';
+    hi.style.color = 'var(--red)';
+    hi.textContent = 'Connection failed: ' + e.message;
+  }
+}
+
+// ── Sessions ──
+function newSession() {
+  const s = { id: null, messages: [] };
+  sessions.push(s);
+  activeIdx = sessions.length - 1;
+  renderSessions();
+  renderMessages();
+}
+
+function switchSession(idx) {
+  activeIdx = idx;
+  renderSessions();
+  renderMessages();
+  updateInfo();
+}
+
+function renderSessions() {
+  const el = $('sessionList');
+  el.innerHTML = sessions.map((s, i) => `
+    <div class="session-item ${i === activeIdx ? 'active' : ''}" onclick="switchSession(${i})">
+      <span>${s.id ? 'Session' : 'New'}</span>
+      <span class="sid">${s.id || '(unsent)'}</span>
+    </div>
+  `).join('');
+}
+
+// ── Messages ──
+function renderMessages() {
+  const el = $('messages');
+  if (activeIdx < 0 || !sessions[activeIdx]) {
+    el.innerHTML = '<div class="empty"><div>Construct 3 Copilot Core</div><div class="hint">Click "+ New Session" to start</div></div>';
+    return;
+  }
+  const msgs = sessions[activeIdx].messages;
+  if (!msgs.length) {
+    el.innerHTML = '<div class="empty"><div>New conversation</div><div class="hint">Send a message to begin</div></div>';
+    return;
+  }
+  el.innerHTML = msgs.map(m => {
+    const cls = m.role === 'user' ? 'user' : m.role === 'error' ? 'error' : 'assistant';
+    const meta = m.meta ? `<div class="msg-meta">${m.meta}</div>` : '';
+    const body = cls === 'assistant' ? renderMd(m.content) : escHtml(m.content);
+    return `<div class="msg ${cls}">${body}${meta}</div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderMd(s) {
+  if (typeof marked !== 'undefined') {
+    try { return marked.parse(s); } catch {}
+  }
+  return escHtml(s);
+}
+
+// ── Send ──
+async function sendMessage() {
+  const input = $('input');
+  const text = input.value.trim();
+  if (!text || sending) return;
+  if (activeIdx < 0) newSession();
+
+  const session = sessions[activeIdx];
+  session.messages.push({ role: 'user', content: text });
+  input.value = '';
+  renderMessages();
+
+  sending = true;
+  $('sendBtn').disabled = true;
+
+  const payload = { message: text };
+  if (session.id) payload.session_id = session.id;
+
+  try {
+    const t0 = performance.now();
+    const r = await fetch(base() + '/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const ms = Math.round(performance.now() - t0);
+    const d = await r.json();
+
+    session.id = d.session_id;
+    const meta = `${d.type} · ${ms}ms` + (d.modules_used?.length ? ` · ${d.modules_used.join(', ')}` : '');
+
+    if (d.type === 'error') {
+      session.messages.push({ role: 'error', content: d.message, meta });
+    } else {
+      session.messages.push({ role: 'assistant', content: d.message, meta });
+    }
+
+    $('lastResp').style.color = 'var(--green)';
+    $('lastResp').textContent = JSON.stringify(d, null, 2);
+  } catch (e) {
+    session.messages.push({ role: 'error', content: 'Request failed: ' + e.message });
+    $('lastResp').style.color = 'var(--red)';
+    $('lastResp').textContent = e.message;
+  }
+
+  sending = false;
+  $('sendBtn').disabled = false;
+  renderSessions();
+  renderMessages();
+  updateInfo();
+}
+
+function updateInfo() {
+  if (activeIdx < 0) return;
+  const s = sessions[activeIdx];
+  $('infoSid').textContent = s.id || '—';
+  $('infoMsgCount').textContent = s.messages.length;
+  const last = [...s.messages].reverse().find(m => m.meta);
+  $('infoLastType').textContent = last?.meta?.split(' · ')[0] || '—';
+}
+
+// ── Keyboard ──
+$('input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+// ── Init ──
+checkHealth();
+newSession();
+</script>
+</body>
+</html>

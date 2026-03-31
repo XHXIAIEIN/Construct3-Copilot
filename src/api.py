@@ -5,11 +5,13 @@ Unified orchestration API serving all frontends (CLI, Skill, Web, Bridge).
 """
 import logging
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
-from src.config import COPILOT_PORT
+from src.config import BASE_DIR, COPILOT_PORT
 from src.llm.client import LLMClient
 from src.modules.rag_client import RAGClient
 from src.modules.clipboard_client import ClipboardClient
@@ -29,7 +31,7 @@ rag = RAGClient()
 clipboard = ClipboardClient()
 mcp = MCPBridge()
 sessions = SessionManager()
-pipeline = Pipeline(llm=llm, sessions=sessions)
+pipeline = Pipeline(llm=llm, sessions=sessions, rag=rag)
 health_checker = HealthChecker(llm=llm, rag=rag, clipboard=clipboard, mcp=mcp)
 
 # ── FastAPI app ──────────────────────────────────────────────────────────
@@ -58,6 +60,12 @@ async def shutdown():
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────
+
+@app.get("/playground")
+async def playground():
+    """Serve the test playground UI."""
+    return FileResponse(BASE_DIR / "tests" / "playground.html")
+
 
 @app.get("/health", response_model=HealthResponse)
 async def get_health():
