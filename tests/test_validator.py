@@ -1,4 +1,7 @@
 """Tests for clipboard JSON validation."""
+import json
+from pathlib import Path
+
 import pytest
 from src.orchestrator.validator import (
     validate_local,
@@ -241,3 +244,38 @@ class TestKnownPitfalls:
         }
         report = validate_local(data)
         assert any(i.code == "DEPRECATED_BEHAVIOR_V1" for i in report.issues)
+
+
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
+EXAMPLES_DIR = Path(__file__).parent / "examples"
+
+
+class TestRealFixtures:
+    """Validate real C3 clipboard JSON fixtures."""
+
+    def test_events_basic_fixture(self):
+        data = json.loads((FIXTURES_DIR / "events_basic.json").read_text())
+        report = validate_local(data)
+        # Known issue: events_basic.json has empty parameters {} on on-start-of-layout
+        assert any(i.code == "EMPTY_PARAMS" for i in report.issues)
+
+    def test_breakout_events(self):
+        data = json.loads((EXAMPLES_DIR / "breakout_events.json").read_text())
+        report = validate_local(data)
+        assert isinstance(report.passed, bool)
+        assert isinstance(report.issues, list)
+
+    def test_platformer_events(self):
+        data = json.loads((EXAMPLES_DIR / "platformer_events.json").read_text())
+        report = validate_local(data)
+        assert isinstance(report.passed, bool)
+
+    def test_breakout_layout(self):
+        data = json.loads((EXAMPLES_DIR / "breakout_layout.json").read_text())
+        report = validate_local(data)
+        assert isinstance(report.passed, bool)
+
+    def test_platformer_layout(self):
+        data = json.loads((EXAMPLES_DIR / "platformer_layout.json").read_text())
+        report = validate_local(data)
+        assert isinstance(report.passed, bool)
