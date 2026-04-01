@@ -24,5 +24,5 @@ def copy_json(data: dict, fallback_dir: Optional[Path] = None) -> bool:
         return True
     except Exception:
         path = save_json(data, output_dir=fallback_dir)
-        print(f"  剪贴板不可用，已保存到 {path}")
+        # Caller (repl._render_response) handles user notification
         return False

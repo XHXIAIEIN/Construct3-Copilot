@@ -43,21 +43,11 @@ async def _handle_sync(app: CopilotApp, message: str, context: dict, console: Co
 
 async def _handle_streaming(app: CopilotApp, message: str, context: dict, console: Console) -> None:
     try:
-        stream = app.client.chat_stream(
+        async for chunk in app.client.chat_stream(
             message=message,
             session_id=app.session_id,
             context=context,
-        )
-    except Exception as e:
-        display.print_status(
-            f"无法连接 Core ({app.client.base_url})",
-            style="error",
-            console=console,
-        )
-        return
-
-    try:
-        async for chunk in stream:
+        ):
             if isinstance(chunk, dict):
                 app.update_from_response(chunk)
                 _render_response(chunk, console)
@@ -71,7 +61,11 @@ async def _handle_streaming(app: CopilotApp, message: str, context: dict, consol
         display.print_status("输出已中断", style="warning", console=console)
     except Exception as e:
         display.end_stream(console=console)
-        display.print_status(f"流式传输中断: {e}", style="error", console=console)
+        display.print_status(
+            f"无法连接 Core ({app.client.base_url})\n  请确认 Core 已启动: python -m src.api",
+            style="error",
+            console=console,
+        )
 
 
 def _render_response(response: dict, console: Console) -> None:
@@ -88,6 +82,8 @@ def _render_response(response: dict, console: Console) -> None:
             copied = copy_json(clipboard_json)
             if copied:
                 display.print_status("已复制到剪贴板", style="success", console=console)
+            else:
+                display.print_status("剪贴板不可用，已保存到 tmp/", style="warning", console=console)
     else:
         display.render_markdown(message, console=console)
 
@@ -97,7 +93,7 @@ async def run_repl(app: CopilotApp, console: Console = None) -> None:
 
     while True:
         try:
-            user_input = await asyncio.get_event_loop().run_in_executor(
+            user_input = await asyncio.get_running_loop().run_in_executor(
                 None, lambda: input("> "),
             )
         except (EOFError, KeyboardInterrupt):

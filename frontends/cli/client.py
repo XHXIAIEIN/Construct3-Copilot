@@ -3,9 +3,12 @@
 Follows the same lazy-init pattern as ClipboardClient in src/modules/.
 """
 import json
+import logging
 from typing import AsyncIterator, Optional
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 class CopilotClient:
@@ -62,7 +65,7 @@ class CopilotClient:
     ) -> AsyncIterator:
         """POST /chat/stream — yields str tokens or dict (JSON track fallback).
 
-        SSE format from Core:
+        Uses httpx streaming to read SSE lines as they arrive:
         - Regular token: "data: <text>\\n\\n" → yield str
         - JSON fallback:  "data: {\\"session_id\\": ...}\\n\\n" → yield dict
         - End marker:     "data: [DONE]\\n\\n" → stop
@@ -72,25 +75,25 @@ class CopilotClient:
             "session_id": session_id,
             "context": context or {},
         }
-        resp = await self.client.post("/chat/stream", json=payload)
-        resp.raise_for_status()
-        for line in resp.text.split("\n"):
-            line = line.strip()
-            if not line.startswith("data: "):
-                continue
-            data = line[6:]  # strip "data: "
-            if data == "[DONE]":
-                return
-            # Try JSON parse — if it looks like a full ChatResponse dict
-            if data.startswith("{"):
-                try:
-                    parsed = json.loads(data)
-                    if "session_id" in parsed:
-                        yield parsed
-                        continue
-                except json.JSONDecodeError:
-                    pass
-            yield data
+        async with self.client.stream("POST", "/chat/stream", json=payload) as resp:
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                line = line.strip()
+                if not line.startswith("data: "):
+                    continue
+                data = line[6:]  # strip "data: "
+                if data == "[DONE]":
+                    return
+                # Try JSON parse — if it looks like a full ChatResponse dict
+                if data.startswith("{"):
+                    try:
+                        parsed = json.loads(data)
+                        if "session_id" in parsed:
+                            yield parsed
+                            continue
+                    except json.JSONDecodeError:
+                        pass
+                yield data
 
     async def get_session(self, session_id: str) -> dict:
         """GET /session/{id} — returns session state dict."""
