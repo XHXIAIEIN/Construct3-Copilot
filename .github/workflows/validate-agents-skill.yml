@@ -7,6 +7,7 @@ on:
       - ".claude/skills/**"
       - "scripts/**"
       - "data/schemas/**"
+      - "tests/**"
       - ".github/workflows/validate-agents-skill.yml"
   pull_request:
     branches: [main, develop]
@@ -14,6 +15,7 @@ on:
       - ".claude/skills/**"
       - "scripts/**"
       - "data/schemas/**"
+      - "tests/**"
 
 jobs:
   validate:
@@ -52,3 +54,11 @@ jobs:
         run: |
           python .claude/skills/construct3-copilot/scripts/query/schema.py search collision
           python .claude/skills/construct3-copilot/scripts/validate/output.py tests/fixtures/events_basic.json
+          python .claude/skills/construct3-copilot/scripts/infra/health.py --brief
+          # Service bridges exit 1 when offline — expected in CI
+          python .claude/skills/construct3-copilot/scripts/query/rag.py search collision || true
+          python .claude/skills/construct3-copilot/scripts/generate/clipboard_service.py health || true
+
+      - name: Run integration tests
+        run: |
+          python -m pytest tests/test_service_integration.py -v
