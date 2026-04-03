@@ -258,3 +258,46 @@ class TestRagBridge:
         assert code != 0
         data = json.loads(stdout)
         assert "error" in data
+
+
+# ---------------------------------------------------------------------------
+# Task 3 — Clipboard HTTP bridge (clipboard_service.py)
+# ---------------------------------------------------------------------------
+
+CLIPBOARD_SCRIPT = (
+    Path(__file__).resolve().parent.parent
+    / ".claude/skills/construct3-copilot/scripts/generate/clipboard_service.py"
+)
+
+
+def run_clipboard(extra_args=None, timeout=30):
+    """Run clipboard_service.py and return (returncode, stdout, stderr). Results are cached."""
+    cmd = tuple([sys.executable, str(CLIPBOARD_SCRIPT)] + (extra_args or []))
+    return _run_cached(cmd, timeout=timeout)
+
+
+class TestClipboardBridge:
+    def test_clipboard_validate_offline_exits_nonzero(self):
+        """When Clipboard service is offline, exits 1 with error JSON."""
+        code, stdout, _ = run_clipboard(
+            ["validate", '{"is-c3-clipboard-data":true,"type":"events","items":[]}']
+        )
+        assert code != 0, f"Expected non-zero exit when Clipboard is offline, got {code}"
+
+    def test_clipboard_missing_args_exits_nonzero(self):
+        """clipboard_service.py with no arguments exits 1."""
+        code, stdout, _ = run_clipboard([])
+        assert code != 0, f"Expected non-zero exit with no arguments, got {code}"
+
+    def test_clipboard_output_is_valid_json(self):
+        """Even on failure, clipboard_service.py outputs valid JSON."""
+        _, stdout, _ = run_clipboard(
+            ["validate", '{"is-c3-clipboard-data":true,"type":"events","items":[]}']
+        )
+        try:
+            data = json.loads(stdout)
+        except json.JSONDecodeError as e:
+            raise AssertionError(
+                f"stdout is not valid JSON on failure: {e}\nstdout={stdout!r}"
+            )
+        assert isinstance(data, dict), f"Expected dict, got {type(data)}"
