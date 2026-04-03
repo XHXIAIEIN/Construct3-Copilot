@@ -1,13 +1,20 @@
 """
-Integration tests for health.py service discovery script.
+Integration tests for health.py service discovery script and rag.py RAG bridge.
 
 Tests run without live services — all service probes are expected to fail/timeout,
-and the script must still exit 0 with valid JSON output.
+and the scripts must still produce valid JSON output with appropriate exit codes.
+
+Note on Windows subprocess handle limits: subprocess.run opens three pipe handles
+(stdin, stdout, stderr) per call.  Running many tests that each spawn a new child
+process can exhaust the available inheritable handles before pytest finishes.
+We therefore cache script results at module level so that each unique
+(script, args) combination only spawns one subprocess across the whole suite.
 """
 
 import json
 import subprocess
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 HEALTH_SCRIPT = (
@@ -16,17 +23,33 @@ HEALTH_SCRIPT = (
 )
 
 
-def run_health(extra_args=None):
-    """Run health.py and return (returncode, stdout, stderr)."""
-    cmd = [sys.executable, str(HEALTH_SCRIPT)] + (extra_args or [])
+_RESULT_CACHE: dict = {}
+
+
+def _run_cached(cmd_tuple: tuple, timeout: int = 30):
+    """Run a command once and cache the result. cmd_tuple must be hashable.
+
+    Uses subprocess.DEVNULL for stdin to avoid inheriting invalid handle 0
+    from the pytest process on Windows (Python 3.14 subprocess handle bug).
+    """
+    if cmd_tuple in _RESULT_CACHE:
+        return _RESULT_CACHE[cmd_tuple]
     result = subprocess.run(
-        cmd,
+        list(cmd_tuple),
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
-        timeout=15,
+        timeout=timeout,
     )
-    return result.returncode, result.stdout, result.stderr
+    _RESULT_CACHE[cmd_tuple] = (result.returncode, result.stdout, result.stderr)
+    return _RESULT_CACHE[cmd_tuple]
+
+
+def run_health(extra_args=None):
+    """Run health.py and return (returncode, stdout, stderr). Results are cached."""
+    cmd = tuple([sys.executable, str(HEALTH_SCRIPT)] + (extra_args or []))
+    return _run_cached(cmd, timeout=30)
 
 
 class TestHealthExitCode:
@@ -160,3 +183,78 @@ class TestHealthBriefOutput:
         assert len(matches) == 3, (
             f"Expected 3 'Label:[+-]' tokens, found {matches} in: {line!r}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Task 2 — RAG HTTP bridge (rag.py)
+# ---------------------------------------------------------------------------
+
+RAG_SCRIPT = (
+    Path(__file__).resolve().parent.parent
+    / ".claude/skills/construct3-copilot/scripts/query/rag.py"
+)
+
+
+def run_rag(extra_args=None, timeout=30):
+    """Run rag.py and return (returncode, stdout, stderr). Results are cached."""
+    cmd = tuple([sys.executable, str(RAG_SCRIPT)] + (extra_args or []))
+    return _run_cached(cmd, timeout=timeout)
+
+
+class TestRagBridge:
+    def test_rag_offline_exits_nonzero(self):
+        """When RAG is offline, rag.py exits 1 with error JSON."""
+        # RAG is not running in test environment — connection should be refused
+        code, stdout, _ = run_rag(["search", "collision detection"])
+        assert code != 0, f"Expected non-zero exit when RAG is offline, got {code}"
+
+    def test_rag_missing_query_exits_nonzero(self):
+        """rag.py with no arguments exits 1."""
+        code, stdout, _ = run_rag([])
+        assert code != 0, f"Expected non-zero exit with no arguments, got {code}"
+
+    def test_rag_output_is_valid_json(self):
+        """Even on failure, rag.py outputs valid JSON."""
+        # Test with offline service
+        _, stdout, _ = run_rag(["search", "collision detection"])
+        try:
+            data = json.loads(stdout)
+        except json.JSONDecodeError as e:
+            raise AssertionError(
+                f"stdout is not valid JSON on failure: {e}\nstdout={stdout!r}"
+            )
+        assert isinstance(data, dict), f"Expected dict, got {type(data)}"
+
+    def test_rag_offline_error_has_suggestion(self):
+        """Offline error JSON must include a 'suggestion' field."""
+        _, stdout, _ = run_rag(["search", "collision detection"])
+        data = json.loads(stdout)
+        assert "error" in data, f"Missing 'error' key in: {data}"
+        assert "suggestion" in data, f"Missing 'suggestion' key in: {data}"
+
+    def test_rag_no_args_error_json(self):
+        """No-argument error must be valid JSON with an 'error' key."""
+        _, stdout, _ = run_rag([])
+        data = json.loads(stdout)
+        assert "error" in data, f"Missing 'error' key in: {data}"
+
+    def test_rag_lookup_subcommand_offline(self):
+        """lookup subcommand must also exit non-zero when RAG offline."""
+        code, stdout, _ = run_rag(["lookup", "Sprite", "--plugin", "sprite"])
+        assert code != 0
+        data = json.loads(stdout)
+        assert "error" in data
+
+    def test_rag_verify_subcommand_offline(self):
+        """verify subcommand (maps to lookup mode) must exit non-zero when RAG offline."""
+        code, stdout, _ = run_rag(["verify", "set-animation", "--plugin", "sprite"])
+        assert code != 0
+        data = json.loads(stdout)
+        assert "error" in data
+
+    def test_rag_default_mode_auto(self):
+        """Positional-only query (no subcommand) defaults to mode=auto, exits nonzero offline."""
+        code, stdout, _ = run_rag(["fuzzy query here"])
+        assert code != 0
+        data = json.loads(stdout)
+        assert "error" in data
