@@ -19,7 +19,7 @@ from pathlib import Path
 
 HEALTH_SCRIPT = (
     Path(__file__).resolve().parent.parent
-    / ".claude/skills/construct3-copilot/scripts/infra/health.py"
+    / ".claude/plugins/construct3-copilot/scripts/infra/health.py"
 )
 
 
@@ -191,7 +191,7 @@ class TestHealthBriefOutput:
 
 RAG_SCRIPT = (
     Path(__file__).resolve().parent.parent
-    / ".claude/skills/construct3-copilot/scripts/query/rag.py"
+    / ".claude/plugins/construct3-copilot/scripts/query/rag.py"
 )
 
 
@@ -266,7 +266,7 @@ class TestRagBridge:
 
 CLIPBOARD_SCRIPT = (
     Path(__file__).resolve().parent.parent
-    / ".claude/skills/construct3-copilot/scripts/generate/clipboard_service.py"
+    / ".claude/plugins/construct3-copilot/scripts/generate/clipboard_service.py"
 )
 
 

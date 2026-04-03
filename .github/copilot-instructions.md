@@ -8,8 +8,8 @@ Outputs are Construct 3 clipboard JSON (events, object-types, layouts). Paste in
 
 ## Read First
 
-- `.claude/skills/construct3-copilot/SKILL.md` — execution workflow, helper scripts, hard boundaries
-- `.claude/skills/construct3-copilot/CLAUDE.md` — strict generation constraints and hallucination traps
+- `.claude/plugins/construct3-copilot/skills/create/SKILL.md` — execution workflow, helper scripts, hard boundaries
+- `.claude/plugins/construct3-copilot/CLAUDE.md` — strict generation constraints and hallucination traps
 - `data/schemas/index.json` — canonical ACE schema index (plugins, behaviors, effects)
 
 ## Mandatory Workflow
@@ -27,14 +27,14 @@ QUERY → GENERATE → VALIDATE → FIX
 
 ```bash
 # ACE schema lookup (MANDATORY)
-python .claude/skills/construct3-copilot/scripts/query/schema.py search {keyword}
-python .claude/skills/construct3-copilot/scripts/query/schema.py plugin {name} {ace}
+python .claude/plugins/construct3-copilot/scripts/query/schema.py search {keyword}
+python .claude/plugins/construct3-copilot/scripts/query/schema.py plugin {name} {ace}
 
 # Validate generated JSON
-python .claude/skills/construct3-copilot/scripts/validate/output.py '<json>'
+python .claude/plugins/construct3-copilot/scripts/validate/output.py '<json>'
 
 # Generate placeholder art
-python .claude/skills/construct3-copilot/scripts/generate/imagedata.py --color red --width 64 --height 64
+python .claude/plugins/construct3-copilot/scripts/generate/imagedata.py --color red --width 64 --height 64
 
 # Regenerate ACE schema after CSV updates
 node scripts/generate-schema.js source/zh-CN_R466.csv data/schemas/
@@ -50,6 +50,6 @@ node scripts/generate-schema.js source/zh-CN_R466.csv data/schemas/
 ## Where to Look
 
 - ACE schema: `data/schemas/`
-- Skill references: `.claude/skills/construct3-copilot/references/`
+- Skill references: `.claude/plugins/construct3-copilot/references/`
 - TypeScript definitions: `source/scripts/ts-defs/`
 - Test fixtures: `tests/examples/`

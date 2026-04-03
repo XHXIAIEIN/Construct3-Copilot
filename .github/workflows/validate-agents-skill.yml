@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - ".claude/skills/**"
+      - ".claude/plugins/**"
       - "scripts/**"
       - "data/schemas/**"
       - "tests/**"
@@ -12,7 +12,7 @@ on:
   pull_request:
     branches: [main, develop]
     paths:
-      - ".claude/skills/**"
+      - ".claude/plugins/**"
       - "scripts/**"
       - "data/schemas/**"
       - "tests/**"
@@ -34,7 +34,7 @@ jobs:
           python - << 'PY'
           from pathlib import Path
           import re
-          p = Path(".claude/skills/construct3-copilot/SKILL.md")
+          p = Path(".claude/plugins/construct3-copilot/skills/create/SKILL.md")
           text = p.read_text(encoding="utf-8")
           m = re.match(r"^(.*?)\n---\n", text, flags=re.S)
           if not m:
@@ -52,12 +52,12 @@ jobs:
 
       - name: Smoke test skill scripts
         run: |
-          python .claude/skills/construct3-copilot/scripts/query/schema.py search collision
-          python .claude/skills/construct3-copilot/scripts/validate/output.py tests/fixtures/events_basic.json
-          python .claude/skills/construct3-copilot/scripts/infra/health.py --brief
+          python .claude/plugins/construct3-copilot/scripts/query/schema.py search collision
+          python .claude/plugins/construct3-copilot/scripts/validate/output.py tests/fixtures/events_basic.json
+          python .claude/plugins/construct3-copilot/scripts/infra/health.py --brief
           # Service bridges exit 1 when offline — expected in CI
-          python .claude/skills/construct3-copilot/scripts/query/rag.py search collision || true
-          python .claude/skills/construct3-copilot/scripts/generate/clipboard_service.py health || true
+          python .claude/plugins/construct3-copilot/scripts/query/rag.py search collision || true
+          python .claude/plugins/construct3-copilot/scripts/generate/clipboard_service.py health || true
 
       - name: Run integration tests
         run: |
