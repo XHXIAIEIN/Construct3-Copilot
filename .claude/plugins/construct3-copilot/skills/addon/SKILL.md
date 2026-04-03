@@ -50,6 +50,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}
 | Behavior | Attachable behavior | behavior.js, type.js, instance.js |
 | Effect | WebGL/WebGPU shader | effect.fx, effect.wgsl |
 
+## Memory Context
+
+On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{project_root}/.claude/memory/memory.md` exists, read it for project context.
+
 ## Boundaries
 
 - Addon SDK v2 only (not v1)

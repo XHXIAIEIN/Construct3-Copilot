@@ -61,6 +61,10 @@ Fixed JSON: [if repairable, the corrected clipboard JSON]
 Fix summary: [what was changed and why]
 ```
 
+## Memory Context
+
+On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{project_root}/.claude/memory/memory.md` exists, read it for project context.
+
 ## Boundaries
 
 - Does NOT generate new content from scratch (use c3-create for that)
