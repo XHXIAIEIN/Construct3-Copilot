@@ -78,26 +78,55 @@ Read @CLAUDE.md — it contains hallucination traps, mandatory workflow, and the
 
 All scripts: stdout = structured data, stderr = logs, exit 0 = success. `query/` scripts are read-only and safe to run in parallel.
 
+### Service Discovery (run first on each session)
+
 ```bash
-# ACE schema lookup — MANDATORY before using any ACE ID
+python3 scripts/infra/health.py --brief
+# Output: RAG:+ Clipboard:+ Local:+  (+ = available, - = offline)
+```
+
+### ACE Schema Lookup
+
+```bash
+# Local lookup — MANDATORY, always available
 python3 scripts/query/schema.py plugin {name} {ace-id}
 python3 scripts/query/schema.py behavior {name} {ace-id}
 python3 scripts/query/schema.py search {keyword}
 
-# Real-world usage patterns (403 official projects)
+# RAG semantic search — use when RAG is online, especially for fuzzy/Chinese queries
+python3 scripts/query/rag.py search "how to detect collision"
+python3 scripts/query/rag.py lookup "Sprite" --plugin sprite
+python3 scripts/query/rag.py list "Platform"
+python3 scripts/query/rag.py verify {ace-id} --plugin {plugin}
+```
+
+### Real-world Usage Patterns
+
+```bash
 python3 scripts/query/examples.py action {ace_id}
 python3 scripts/query/examples.py condition {ace_id}
 python3 scripts/query/examples.py top actions 20
+```
 
-# ImageData generation (placeholder art only)
+### JSON Generation
+
+```bash
+# Local generation (placeholder art, layout presets)
 python3 scripts/generate/imagedata.py --color {color} --width {W} --height {H}
-python3 scripts/generate/imagedata.py --kenney {preset} --color {color}
-
-# Layout presets
 python3 scripts/generate/layout.py --preset {platformer|breakout} -W {W} -H {H}
 
-# Validate before output — MANDATORY
+# Clipboard service — when online, use for IR → validated JSON
+python3 scripts/generate/clipboard_service.py generate '<intent-ir-json>'
+```
+
+### Validation
+
+```bash
+# Local validation — MANDATORY, always run before delivery
 python3 scripts/validate/output.py '<json>'
+
+# Clipboard service validation — when online, use as second opinion
+python3 scripts/generate/clipboard_service.py validate '<clipboard-json>'
 ```
 
 ## 3. Reference Routing
