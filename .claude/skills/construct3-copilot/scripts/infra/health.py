@@ -1,89 +1,114 @@
 #!/usr/bin/env python3
 """
-Environment Health Check for Construct 3 Copilot
+Service health check for Construct 3 Copilot.
 
-Verifies that all required data files and dependencies are available.
+Probes RAG service, Clipboard service, and local schema data.
+Always exits 0 — degraded state is not an error.
 
 Usage:
-    python health.py
+    python health.py          # full JSON report
+    python health.py --brief  # one-line summary: RAG:+ Clipboard:- Local:+
 """
 
+import argparse
 import json
 import sys
 from pathlib import Path
+from urllib.error import URLError
+from urllib.request import urlopen
+
+RAG_URL = "http://localhost:8765"
+CLIPBOARD_URL = "http://localhost:8766"
+PROBE_TIMEOUT = 3  # seconds
 
 
-def check_health() -> dict:
-    """Run all health checks and return a status report."""
+def probe_service(base_url: str) -> dict:
+    """Probe a service's /health endpoint. Returns dict with available + status."""
+    health_url = base_url.rstrip("/") + "/health"
+    try:
+        with urlopen(health_url, timeout=PROBE_TIMEOUT) as resp:
+            body = resp.read().decode("utf-8", errors="replace")
+            try:
+                data = json.loads(body)
+                status = data.get("status", "ok")
+            except (json.JSONDecodeError, AttributeError):
+                status = "ok"
+            return {"url": base_url, "available": True, "status": str(status)}
+    except (URLError, OSError, TimeoutError) as exc:
+        return {"url": base_url, "available": False, "status": str(exc)}
+
+
+def check_local_data() -> dict:
+    """Check local schema data directory."""
+    # Resolve project root relative to this script:
+    # scripts/infra/health.py -> scripts -> .claude/skills/construct3-copilot -> skill_root
+    # skill_root -> .claude/skills -> .claude -> project_root
     script_dir = Path(__file__).resolve().parent
     skill_root = script_dir.parent.parent  # .claude/skills/construct3-copilot/
     project_root = skill_root.parent.parent.parent  # project root
 
-    checks = {}
+    plugins_dir = project_root / "data" / "schemas" / "plugins"
+    if plugins_dir.exists():
+        plugin_count = len(list(plugins_dir.glob("*.json")))
+        available = plugin_count > 0
+    else:
+        plugin_count = 0
+        available = False
 
-    # 1. Schema data
-    schemas_dir = project_root / "data" / "schemas"
-    plugins_dir = schemas_dir / "plugins"
-    behaviors_dir = schemas_dir / "behaviors"
-    checks["schemas_dir"] = {
-        "path": str(schemas_dir),
-        "exists": schemas_dir.exists(),
-        "plugins": len(list(plugins_dir.glob("*.json"))) if plugins_dir.exists() else 0,
-        "behaviors": len(list(behaviors_dir.glob("*.json"))) if behaviors_dir.exists() else 0,
+    return {
+        "schemas_dir": str(plugins_dir),
+        "available": available,
+        "plugins": plugin_count,
     }
 
-    # 2. Project analysis data (for examples.py)
-    analysis_dir = project_root / "data" / "project_analysis"
-    checks["project_analysis"] = {
-        "path": str(analysis_dir),
-        "exists": analysis_dir.exists(),
-        "files": len(list(analysis_dir.glob("*.json"))) if analysis_dir.exists() else 0,
+
+def build_report() -> dict:
+    rag = probe_service(RAG_URL)
+    clipboard = probe_service(CLIPBOARD_URL)
+    local = check_local_data()
+
+    all_ok = rag["available"] and clipboard["available"] and local["available"]
+
+    return {
+        "status": "ok" if all_ok else "degraded",
+        "services": {
+            "rag": rag,
+            "clipboard": clipboard,
+        },
+        "local_data": local,
     }
 
-    # 3. References
-    refs_dir = skill_root / "references"
-    checks["references"] = {
-        "path": str(refs_dir),
-        "exists": refs_dir.exists(),
-        "files": len(list(refs_dir.glob("*.md"))) + len(list(refs_dir.glob("*.json"))) if refs_dir.exists() else 0,
-    }
 
-    # 4. Scripts integrity
-    scripts_dir = skill_root / "scripts"
-    required_scripts = [
-        "query/schema.py",
-        "query/examples.py",
-        "generate/imagedata.py",
-        "generate/layout.py",
-        "validate/output.py",
-    ]
-    missing = [s for s in required_scripts if not (scripts_dir / s).exists()]
-    checks["scripts"] = {
-        "required": len(required_scripts),
-        "missing": missing,
-        "ok": len(missing) == 0,
-    }
+def brief_line(report: dict) -> str:
+    """Format one-line summary like: RAG:+ Clipboard:- Local:+"""
 
-    # 5. Python version
-    checks["python"] = {
-        "version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
-        "ok": sys.version_info >= (3, 10),
-    }
+    def sym(val: bool) -> str:
+        return "+" if val else "-"
 
-    # Overall status
-    all_ok = (
-        checks["schemas_dir"]["exists"]
-        and checks["scripts"]["ok"]
-        and checks["python"]["ok"]
-    )
-
-    return {"status": "ok" if all_ok else "degraded", "checks": checks}
+    rag_sym = sym(report["services"]["rag"]["available"])
+    cb_sym = sym(report["services"]["clipboard"]["available"])
+    local_sym = sym(report["local_data"]["available"])
+    return f"RAG:{rag_sym} Clipboard:{cb_sym} Local:{local_sym}"
 
 
 def main():
-    report = check_health()
-    print(json.dumps(report, ensure_ascii=False, indent=2))
-    sys.exit(0 if report["status"] == "ok" else 1)
+    parser = argparse.ArgumentParser(description="Construct 3 Copilot service health check")
+    parser.add_argument(
+        "--brief",
+        action="store_true",
+        help="Output one-line summary instead of JSON",
+    )
+    args = parser.parse_args()
+
+    report = build_report()
+
+    if args.brief:
+        print(brief_line(report))
+    else:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+
+    # Always exit 0 — degraded is informational, not an error
+    sys.exit(0)
 
 
 if __name__ == "__main__":
