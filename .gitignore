@@ -31,6 +31,9 @@ qdrant_storage/
 .gradio/
 .mcp.json
 
+# Playwright MCP scraping artifacts
+.playwright-mcp/
+
 # Claude Code
 # .claude
 
