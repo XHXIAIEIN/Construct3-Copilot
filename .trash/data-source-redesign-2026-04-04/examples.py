@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
-PROJECT_ROOT = SCRIPT_DIR.parent.parent.parent.parent
+PROJECT_ROOT = SCRIPT_DIR.parent.parent.parent.parent.parent
 ANALYSIS_DIR = PROJECT_ROOT / "data" / "project_analysis"
 
 def load_json(filename: str) -> dict:

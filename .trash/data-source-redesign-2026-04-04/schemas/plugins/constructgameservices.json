@@ -1,0 +1,932 @@
+{
+  "id": "constructgameservices",
+  "originalId": "ConstructGameServices",
+  "name_zh": "游戏服务",
+  "name_en": "Construct Game Services",
+  "description_zh": "访问由 Construct 托管的游戏服务，如排行榜，账号系统，云存档。",
+  "description_en": "Access Construct-hosted game services such as leaderboards.",
+  "path": "web/constructgameservices",
+  "categories": [
+    "construct-game-services",
+    "authentication",
+    "leaderboards",
+    "cloud-save"
+  ],
+  "conditions": [
+    {
+      "id": "on-success",
+      "name_zh": "成功事件",
+      "name_en": "On success",
+      "description_zh": "包含各个事件的成功回调。",
+      "description_en": "Triggered after various actions upon completing successfully.",
+      "scriptName": "OnSuccess",
+      "isTrigger": true,
+      "category": "construct-game-services",
+      "params": [
+        {
+          "id": "type",
+          "type": "combo",
+          "name_zh": "事件",
+          "name_en": "Type",
+          "items": [
+            "sign-in-with-provider",
+            "sign-in-persistent",
+            "submit-score",
+            "get-scores",
+            "set-player-name",
+            "any-create-cloud-save",
+            "any-get-cloud-save"
+          ],
+          "items_i18n": {
+            "sign-in-with-provider": {
+              "zh": "第三方登录",
+              "en": "sign in with provider"
+            },
+            "sign-in-persistent": {
+              "zh": "保持登录",
+              "en": "sign in persistent"
+            },
+            "submit-score": {
+              "zh": "提交分数",
+              "en": "submit score"
+            },
+            "get-scores": {
+              "zh": "获取分数",
+              "en": "get scores"
+            },
+            "set-player-name": {
+              "zh": "设置玩家名称",
+              "en": "set player name"
+            },
+            "any-create-cloud-save": {
+              "zh": "任意创建完成",
+              "en": "any create cloud save"
+            },
+            "any-get-cloud-save": {
+              "zh": "任意读取完成",
+              "en": "any get cloud save"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-error",
+      "name_zh": "失败事件",
+      "name_en": "On error",
+      "description_zh": "包含各个事件的失败回调。",
+      "description_en": "Triggered after various actions upon failing to complete.",
+      "scriptName": "OnError",
+      "isTrigger": true,
+      "category": "construct-game-services",
+      "params": [
+        {
+          "id": "type",
+          "type": "combo",
+          "name_zh": "事件",
+          "name_en": "Type",
+          "items": [
+            "sign-in-with-provider",
+            "sign-in-persistent",
+            "submit-score",
+            "get-scores",
+            "set-player-name",
+            "any-create-cloud-save",
+            "any-get-cloud-save"
+          ],
+          "items_i18n": {
+            "sign-in-with-provider": {
+              "zh": "第三方登录",
+              "en": "sign in with provider"
+            },
+            "sign-in-persistent": {
+              "zh": "保持登录",
+              "en": "sign in persistent"
+            },
+            "submit-score": {
+              "zh": "提交分数",
+              "en": "submit score"
+            },
+            "get-scores": {
+              "zh": "获取分数",
+              "en": "get scores"
+            },
+            "set-player-name": {
+              "zh": "设置玩家名称",
+              "en": "set player name"
+            },
+            "any-create-cloud-save": {
+              "zh": "任意保存完成",
+              "en": "any create cloud save"
+            },
+            "any-get-cloud-save": {
+              "zh": "任意获取完成",
+              "en": "any get cloud save"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-sign-in-popup-blocked",
+      "name_zh": "登录弹窗被阻止",
+      "name_en": "On sign in popup blocked",
+      "description_zh": "当浏览器弹窗拦截器阻止登录弹窗显示时触发。",
+      "description_en": "Triggered when the browser popup blocker prevents the sign in popup window appearing.",
+      "scriptName": "OnSignInPopupBlocked",
+      "isTrigger": true,
+      "category": "authentication"
+    },
+    {
+      "id": "is-signed-in",
+      "name_zh": "已登录",
+      "name_en": "Is signed in",
+      "description_zh": "检查玩家当前是否已登录。",
+      "description_en": "True if the player is currently signed in.",
+      "scriptName": "IsSignedIn",
+      "category": "authentication"
+    },
+    {
+      "id": "can-sign-in-persistent",
+      "name_zh": "可保持登录状态",
+      "name_en": "Can sign in persistent",
+      "description_zh": "如果上次登录时勾选了保持登录且状态仍然有效，则触发此条件。",
+      "description_en": "True if a previous sign in which allowed persisting is available.",
+      "scriptName": "CanSignInPersistent",
+      "category": "authentication"
+    },
+    {
+      "id": "on-create-cloud-save-success",
+      "name_zh": "创建完成",
+      "name_en": "On create success",
+      "description_zh": "当云保存创建完成时触发。",
+      "description_en": "Triggered when creating a cloud save completes successfully.",
+      "scriptName": "OnCreateCloudSaveSuccess",
+      "isTrigger": true,
+      "category": "cloud-save",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "密钥",
+          "name_en": "Key"
+        },
+        {
+          "id": "bucket-id",
+          "type": "string",
+          "name_zh": "容器 (可选)",
+          "name_en": "Bucket ID"
+        }
+      ]
+    },
+    {
+      "id": "on-create-cloud-save-error",
+      "name_zh": "创建失败",
+      "name_en": "On create error",
+      "description_zh": "当云保存创建失败时触发。",
+      "description_en": "Triggered when creating a cloud save fails to complete.",
+      "scriptName": "OnCreateCloudSaveError",
+      "isTrigger": true,
+      "category": "cloud-save",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "密钥",
+          "name_en": "Key"
+        },
+        {
+          "id": "bucket-id",
+          "type": "string",
+          "name_zh": "容器 (可选)",
+          "name_en": "Bucket ID"
+        }
+      ]
+    },
+    {
+      "id": "on-get-cloud-save-success",
+      "name_zh": "获取成功",
+      "name_en": "On get success",
+      "description_zh": "当云保存的数据获取成功时触发。",
+      "description_en": "Triggered when retrieving a cloud save completes successfully.",
+      "scriptName": "OnGetCloudSaveSuccess",
+      "isTrigger": true,
+      "category": "cloud-save",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "密钥",
+          "name_en": "Key"
+        },
+        {
+          "id": "bucket-id",
+          "type": "string",
+          "name_zh": "容器 (可选)",
+          "name_en": "Bucket ID"
+        }
+      ]
+    },
+    {
+      "id": "on-get-cloud-save-binary-success",
+      "name_zh": "获取二进制完成",
+      "name_en": "On get binary success",
+      "description_zh": "获取二进制云存档数据成功时触发。",
+      "description_en": "Triggered when retrieving a binary cloud save completes successfully.",
+      "scriptName": "OnGetCloudSaveBinarySuccess",
+      "isTrigger": true,
+      "category": "cloud-save",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "密钥",
+          "name_en": "Key"
+        },
+        {
+          "id": "bucket-id",
+          "type": "string",
+          "name_zh": "容器 (可选)",
+          "name_en": "Bucket ID"
+        },
+        {
+          "id": "data",
+          "type": "object",
+          "name_zh": "二进制",
+          "name_en": "Binary Data"
+        }
+      ]
+    },
+    {
+      "id": "on-get-cloud-save-error",
+      "name_zh": "获取失败",
+      "name_en": "On get error",
+      "description_zh": "获取云存档数据失败时触发。",
+      "description_en": "Triggered when retrieving a cloud save fails to complete.",
+      "scriptName": "OnGetCloudSaveError",
+      "isTrigger": true,
+      "category": "cloud-save",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "密钥",
+          "name_en": "Key"
+        },
+        {
+          "id": "bucket-id",
+          "type": "string",
+          "name_zh": "容器 (可选)",
+          "name_en": "Bucket ID"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "sign-in-with-provider",
+      "name_zh": "使用第三方登录",
+      "name_en": "Sign in with provider",
+      "description_zh": "使用到第三方平台账号登录。",
+      "description_en": "Sign in with a third-party identity service.",
+      "scriptName": "SignInWithProvider",
+      "isAsync": true,
+      "category": "authentication",
+      "params": [
+        {
+          "id": "provider",
+          "type": "combo",
+          "name_zh": "平台",
+          "name_en": "Provider",
+          "items": [
+            "apple",
+            "battle-net",
+            "discord",
+            "facebook",
+            "github",
+            "google",
+            "itch-io",
+            "microsoft",
+            "reddit",
+            "steam",
+            "twitch",
+            "x",
+            "yandex"
+          ],
+          "items_i18n": {
+            "apple": {
+              "zh": "Apple",
+              "en": "Apple"
+            },
+            "battle-net": {
+              "zh": "Battle.net",
+              "en": "Battle.net"
+            },
+            "discord": {
+              "zh": "Discord",
+              "en": "Discord"
+            },
+            "facebook": {
+              "zh": "Facebook",
+              "en": "Facebook"
+            },
+            "google": {
+              "zh": "Google",
+              "en": "Google"
+            },
+            "microsoft": {
+              "zh": "Microsoft",
+              "en": "Microsoft"
+            },
+            "reddit": {
+              "zh": "Reddit",
+              "en": "Reddit"
+            },
+            "steam": {
+              "zh": "Steam",
+              "en": "Steam"
+            },
+            "x": {
+              "zh": "X",
+              "en": "X"
+            },
+            "yandex": {
+              "zh": "Yandex",
+              "en": "Yandex"
+            },
+            "github": {
+              "zh": "GitHub",
+              "en": "GitHub"
+            },
+            "itch-io": {
+              "zh": "itch.io",
+              "en": "itch.io"
+            },
+            "twitch": {
+              "zh": "Twitch",
+              "en": "Twitch"
+            }
+          }
+        },
+        {
+          "id": "game-id",
+          "type": "string",
+          "name_zh": "游戏ID",
+          "name_en": "Game ID"
+        },
+        {
+          "id": "allow-persisting",
+          "type": "boolean",
+          "name_zh": "保持登录",
+          "name_en": "Allow persisting",
+          "initialValue": "true"
+        },
+        {
+          "id": "expiry",
+          "type": "number",
+          "name_zh": "保持时长",
+          "name_en": "Expiry",
+          "initialValue": "1440"
+        },
+        {
+          "id": "popup-window-width",
+          "type": "number",
+          "name_zh": "弹窗宽度",
+          "name_en": "Popup window width",
+          "initialValue": "800"
+        },
+        {
+          "id": "popup-window-height",
+          "type": "number",
+          "name_zh": "弹窗高度",
+          "name_en": "Popup window height",
+          "initialValue": "800"
+        }
+      ]
+    },
+    {
+      "id": "sign-in-persistent",
+      "name_zh": "恢复登录状态",
+      "name_en": "Sign in persistent",
+      "description_zh": "如果上次登录时勾选了 '保持登录'，恢复登录状态。若登录状态失效，则触发 '恢复登录失败' 错误。",
+      "description_en": "Sign in using a previous session that allowed persisting.",
+      "scriptName": "SignInPersistent",
+      "isAsync": true,
+      "category": "authentication",
+      "params": [
+        {
+          "id": "game-id",
+          "type": "string",
+          "name_zh": "游戏ID",
+          "name_en": "Game ID"
+        }
+      ]
+    },
+    {
+      "id": "retry-open-sign-in-popup",
+      "name_zh": "重试登录弹窗",
+      "name_en": "Retry sign in popup",
+      "description_zh": "再尝试打开登录弹窗。此动作需要触发在用户主动交互事件，如鼠标点击或触摸。",
+      "description_en": "Make another attempt to open the sign in popup window. This should be used in a user input event like a mouse click or touch.",
+      "scriptName": "RetryOpenSignInPopup",
+      "category": "authentication"
+    },
+    {
+      "id": "sign-out",
+      "name_zh": "退出登录",
+      "name_en": "Sign out",
+      "description_zh": "退出当前已登录的任何账户。",
+      "description_en": "Sign out of any account currently signed in to.",
+      "scriptName": "SignOut",
+      "category": "authentication"
+    },
+    {
+      "id": "set-player-name",
+      "name_zh": "设置玩家名称",
+      "name_en": "Set player name",
+      "description_zh": "设置当前登录玩家的名称。",
+      "description_en": "Set the name of the currently signed in player.",
+      "scriptName": "SetPlayerName",
+      "isAsync": true,
+      "category": "authentication",
+      "params": [
+        {
+          "id": "name",
+          "type": "string",
+          "name_zh": "玩家名称",
+          "name_en": "Player name"
+        }
+      ]
+    },
+    {
+      "id": "submit-score",
+      "name_zh": "提交分数",
+      "name_en": "Submit score",
+      "description_zh": "提交分数到排行榜。",
+      "description_en": "Submit a score to a leaderboard.",
+      "scriptName": "SubmitScore",
+      "isAsync": true,
+      "category": "leaderboards",
+      "params": [
+        {
+          "id": "score",
+          "type": "number",
+          "name_zh": "分数",
+          "name_en": "Score"
+        },
+        {
+          "id": "leaderboard-id",
+          "type": "string",
+          "name_zh": "排行榜ID",
+          "name_en": "Leaderboard ID"
+        }
+      ]
+    },
+    {
+      "id": "get-leaderboard-scores",
+      "name_zh": "获取排行榜分数",
+      "name_en": "Get leaderboard scores",
+      "description_zh": "检索指定排行榜的分数列表。",
+      "description_en": "Retrieve a list of scores from a leaderboard.",
+      "scriptName": "GetLeaderboardScores",
+      "isAsync": true,
+      "category": "leaderboards",
+      "params": [
+        {
+          "id": "leaderboard-id",
+          "type": "string",
+          "name_zh": "排行榜ID",
+          "name_en": "Leaderboard ID"
+        },
+        {
+          "id": "results-per-page",
+          "type": "number",
+          "name_zh": "每页结果",
+          "name_en": "Results per page",
+          "initialValue": "20"
+        },
+        {
+          "id": "page",
+          "type": "number",
+          "name_zh": "分页",
+          "name_en": "Page"
+        },
+        {
+          "id": "country",
+          "type": "string",
+          "name_zh": "地区代码",
+          "name_en": "Country"
+        },
+        {
+          "id": "range",
+          "type": "combo",
+          "name_zh": "周期",
+          "name_en": "Range",
+          "items": [
+            "all",
+            "daily",
+            "weekly",
+            "monthly",
+            "yearly"
+          ],
+          "items_i18n": {
+            "all": {
+              "zh": "全部",
+              "en": "All"
+            },
+            "daily": {
+              "zh": "天",
+              "en": "Daily"
+            },
+            "weekly": {
+              "zh": "周",
+              "en": "Weekly"
+            },
+            "monthly": {
+              "zh": "月",
+              "en": "Monthly"
+            },
+            "yearly": {
+              "zh": "年",
+              "en": "Yearly"
+            }
+          }
+        },
+        {
+          "id": "range-offset",
+          "type": "number",
+          "name_zh": "时间偏移",
+          "name_en": "Range offset"
+        },
+        {
+          "id": "culture",
+          "type": "string",
+          "name_zh": "语言环境",
+          "name_en": "Culture"
+        }
+      ]
+    },
+    {
+      "id": "set-player-id",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetPlayerID",
+      "isDeprecated": true,
+      "category": "leaderboards",
+      "params": [
+        {
+          "id": "player-id",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "create-cloud-save-text",
+      "name_zh": "新建数据 (文本)",
+      "name_en": "Create (text)",
+      "description_zh": "在云服务中创建并存储文本数据。",
+      "description_en": "Create a cloud save storing text data.",
+      "scriptName": "CreateCloudSaveText",
+      "isAsync": true,
+      "category": "cloud-save",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "密钥",
+          "name_en": "Key"
+        },
+        {
+          "id": "bucket-id",
+          "type": "string",
+          "name_zh": "容器 (可选)",
+          "name_en": "Bucket ID"
+        },
+        {
+          "id": "name",
+          "type": "string",
+          "name_zh": "名称 (可选)",
+          "name_en": "Name (optional)"
+        },
+        {
+          "id": "data",
+          "type": "string",
+          "name_zh": "数据",
+          "name_en": "Data"
+        }
+      ]
+    },
+    {
+      "id": "create-cloud-save-binary",
+      "name_zh": "新建数据 (二进制)",
+      "name_en": "Create (binary)",
+      "description_zh": "在云存储中创建并存储二进制数据。",
+      "description_en": "Create a cloud save storing binary data.",
+      "scriptName": "CreateCloudSaveBinary",
+      "isAsync": true,
+      "category": "cloud-save",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "密钥",
+          "name_en": "Key"
+        },
+        {
+          "id": "bucket-id",
+          "type": "string",
+          "name_zh": "容器 (可选)",
+          "name_en": "Bucket ID"
+        },
+        {
+          "id": "name",
+          "type": "string",
+          "name_zh": "名称 (可选)",
+          "name_en": "Name (optional)"
+        },
+        {
+          "id": "data",
+          "type": "object",
+          "name_zh": "二进制",
+          "name_en": "Binary Data"
+        }
+      ]
+    },
+    {
+      "id": "get-cloud-save",
+      "name_zh": "获取数据",
+      "name_en": "Get",
+      "description_zh": "获取云储存的数据。",
+      "description_en": "Retrieve the data of a prior cloud save.",
+      "scriptName": "GetCloudSave",
+      "isAsync": true,
+      "category": "cloud-save",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "密钥",
+          "name_en": "Key"
+        },
+        {
+          "id": "bucket-id",
+          "type": "string",
+          "name_zh": "容器 (可选)",
+          "name_en": "Bucket ID"
+        },
+        {
+          "id": "type",
+          "type": "combo",
+          "name_zh": "类型",
+          "name_en": "Type",
+          "items": [
+            "text",
+            "binary"
+          ],
+          "items_i18n": {
+            "text": {
+              "zh": "文本",
+              "en": "text"
+            },
+            "binary": {
+              "zh": "二进制",
+              "en": "binary"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "player-id",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前登录玩家的唯一用户ID。",
+      "description_en": "A unique ID for the currently signed in player.",
+      "expressionName": "PlayerID",
+      "returnType": "string",
+      "category": "authentication"
+    },
+    {
+      "id": "player-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前登录玩家的昵称。",
+      "description_en": "The display name for the currently signed in player.",
+      "expressionName": "PlayerName",
+      "returnType": "string",
+      "category": "authentication"
+    },
+    {
+      "id": "game-id",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前登录的游戏ID。",
+      "description_en": "The ID of the game currently signed in to.",
+      "expressionName": "GameID",
+      "returnType": "string",
+      "category": "authentication"
+    },
+    {
+      "id": "total-page-count",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取分数列表的分页数量。",
+      "description_en": "The total number of pages when retrieving scores.",
+      "expressionName": "TotalPageCount",
+      "returnType": "number",
+      "category": "leaderboards"
+    },
+    {
+      "id": "score-count",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取分数列表的记录数量。",
+      "description_en": "The number of scores retrieved.",
+      "expressionName": "ScoreCount",
+      "returnType": "number",
+      "category": "leaderboards"
+    },
+    {
+      "id": "score-at",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取分数列表中，指定位置的分数，返回一个数字。",
+      "description_en": "The numerical score value at an index.",
+      "expressionName": "ScoreAt",
+      "returnType": "number",
+      "category": "leaderboards",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "score-formatted-at",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取分数列表中，指定位置的格式化分数，返回一个字符串。",
+      "description_en": "A string of the formatted score at an index.",
+      "expressionName": "ScoreFormattedAt",
+      "returnType": "string",
+      "category": "leaderboards",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "score-rank-at",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取分数列表中，指定位置的分数排名，返回一个数字。",
+      "description_en": "The numerical score rank at an index.",
+      "expressionName": "ScoreRankAt",
+      "returnType": "number",
+      "category": "leaderboards",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "score-formatted-rank-at",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取分数列表中，指定位置的格式化排名，返回一个字符串。",
+      "description_en": "A string of the formatted score rank at an index.",
+      "expressionName": "ScoreFormattedRankAt",
+      "returnType": "string",
+      "category": "leaderboards",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "score-country-at",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取分数列表中，玩家提交分数时的所在地区码 (由 2 个大写字母组成)。 如 US、CN、HK、TW...",
+      "description_en": "A string of the ISO 3166-1 alpha-2 country code the score at an index was submitted from.",
+      "expressionName": "ScoreCountryAt",
+      "returnType": "string",
+      "category": "leaderboards",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "score-player-id-at",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取分数列表中，指定位置的分数其提交者的用户ID。",
+      "description_en": "A string of the player ID that submitted the score at an index.",
+      "expressionName": "ScorePlayerIDAt",
+      "returnType": "string",
+      "category": "leaderboards",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "score-player-name-at",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取分数列表中，指定位置的分数其提交者的用户昵称。",
+      "description_en": "A string of the player display name that submitted the score at an index.",
+      "expressionName": "ScorePlayerNameAt",
+      "returnType": "string",
+      "category": "leaderboards",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "cloud-save-text",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在 '获取成功' 条件中，返回云端下载的文本数据。",
+      "description_en": "The text data retrieved for a cloud save.",
+      "expressionName": "CloudSaveText",
+      "returnType": "string",
+      "category": "cloud-save"
+    },
+    {
+      "id": "cloud-save-key",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "云储存的密钥。",
+      "description_en": "The key of the cloud save.",
+      "expressionName": "CloudSaveKey",
+      "returnType": "string",
+      "category": "cloud-save"
+    },
+    {
+      "id": "cloud-save-bucket-id",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "云保存的存储桶ID。",
+      "description_en": "The bucket ID of the cloud save.",
+      "expressionName": "CloudSaveBucketID",
+      "returnType": "string",
+      "category": "cloud-save"
+    },
+    {
+      "id": "cloud-save-name",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "可选，云储存的名称。",
+      "description_en": "The name of the cloud save (if specified).",
+      "expressionName": "CloudSaveName",
+      "returnType": "string",
+      "category": "cloud-save"
+    }
+  ],
+  "properties": [
+    {
+      "id": "simulate-popup-blocked",
+      "name_zh": "模拟弹出窗口被阻止",
+      "name_en": "Simulate popup blocked",
+      "description_zh": "作为测试功能，模拟首次尝试打开登录弹窗被阻止的情况。",
+      "description_en": "For testing purposes, act as if the first attempt to open a sign in popup window is blocked."
+    }
+  ],
+  "productTypes": "games"
+}

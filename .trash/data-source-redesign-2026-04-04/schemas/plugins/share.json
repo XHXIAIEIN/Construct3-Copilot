@@ -1,0 +1,171 @@
+{
+  "id": "share",
+  "originalId": "Share",
+  "name_zh": "分享",
+  "name_en": "Share",
+  "description_zh": "使用当前运行系统的分享功能，分享到另一个应用程序。",
+  "description_en": "Use the system's share functionality to share something via another app.",
+  "path": "other/share",
+  "categories": [
+    "share"
+  ],
+  "conditions": [
+    {
+      "id": "is-supported",
+      "name_zh": "设备支持分享",
+      "name_en": "Is supported",
+      "description_zh": "检测当前运行设备是否支持分享功能。",
+      "description_en": "Test if the sharing actions are supported on this platform.",
+      "scriptName": "IsSupported",
+      "category": "share"
+    },
+    {
+      "id": "is-sharing-files-supported",
+      "name_zh": "设备支持分享",
+      "name_en": "Is sharing files supported",
+      "description_zh": "检测当前运行的平台是否支持 '附加文件' 操作分享文件。",
+      "description_en": "Test if sharing files via the 'Add file' action is supported on this platform.",
+      "scriptName": "IsSharingFilesSupported",
+      "category": "share"
+    },
+    {
+      "id": "on-share-completed",
+      "name_zh": "分享完成",
+      "name_en": "On share completed",
+      "description_zh": "用户完成分享动作后触发。注意，这并不一定意味着用户实际分享了任何内容。",
+      "description_en": "Triggered after the user completes a share. Note this does not necessarily mean anything was shared.",
+      "scriptName": "OnShareCompleted",
+      "isTrigger": true,
+      "category": "share"
+    },
+    {
+      "id": "on-share-failed",
+      "name_zh": "分享失败",
+      "name_en": "On share failed",
+      "description_zh": "如果共享未成功或发生错误，则触发。",
+      "description_en": "Triggered if a share is not completed successfully or an error occurs.",
+      "scriptName": "OnShareFailed",
+      "isTrigger": true,
+      "category": "share"
+    }
+  ],
+  "actions": [
+    {
+      "id": "share-text",
+      "name_zh": "分享",
+      "name_en": "Share",
+      "description_zh": "调起系统的分享功能，可以带有标题、内容、网页信息，以及来自二进制数据的文件内容。",
+      "description_en": "Share some text with an optional title and URL, and any files that were previously added.",
+      "scriptName": "Share",
+      "category": "share",
+      "params": [
+        {
+          "id": "text",
+          "type": "string",
+          "name_zh": "文本",
+          "name_en": "Text"
+        },
+        {
+          "id": "title",
+          "type": "string",
+          "name_zh": "标题",
+          "name_en": "Title"
+        },
+        {
+          "id": "url",
+          "type": "string",
+          "name_zh": "链接",
+          "name_en": "URL"
+        }
+      ]
+    },
+    {
+      "id": "add-file",
+      "name_zh": "附加文件 (二进制)",
+      "name_en": "Add file",
+      "description_zh": "在 '分享' 动作前使用，允许将二进制数据附加到分享内容中。注意，这需要设备支持文件共享功能。",
+      "description_en": "Add the contents of a Binary Data object as a file to attach to the next share. Note only works if 'Is sharing files supported' is true.",
+      "scriptName": "AddFile",
+      "category": "share",
+      "params": [
+        {
+          "id": "filename",
+          "type": "string",
+          "name_zh": "文件名",
+          "name_en": "Filename",
+          "initialValue": "\"image.png\""
+        },
+        {
+          "id": "type",
+          "type": "string",
+          "name_zh": "文件类型",
+          "name_en": "Type",
+          "initialValue": "\"image/png\""
+        },
+        {
+          "id": "data",
+          "type": "object",
+          "name_zh": "数据来源",
+          "name_en": "Data"
+        }
+      ]
+    },
+    {
+      "id": "rate-app",
+      "name_zh": "请求应用评分页面",
+      "name_en": "Request app rating",
+      "description_zh": "弹出请求为你应用评分的窗口",
+      "description_en": "Display a dialog requesting the user to rate your application.",
+      "scriptName": "RequestRate",
+      "category": "share",
+      "params": [
+        {
+          "id": "dialogText",
+          "type": "string",
+          "name_zh": "正文内容",
+          "name_en": "Dialog Text",
+          "initialValue": "\"If you enjoy using MY_APP_NAME, please take a moment to rate it. Thanks for your support!\""
+        },
+        {
+          "id": "confirmButtonText",
+          "type": "string",
+          "name_zh": "确认按钮",
+          "name_en": "Confirm Button Text",
+          "initialValue": "\"Rate MY_APP_NAME\""
+        },
+        {
+          "id": "cancelButtonText",
+          "type": "string",
+          "name_zh": "取消按钮",
+          "name_en": "Cancel Button Text",
+          "initialValue": "\"No, thanks\""
+        },
+        {
+          "id": "appIdentifier",
+          "type": "string",
+          "name_zh": "App ID",
+          "name_en": "App ID",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "open-store",
+      "name_zh": "显示商店页面",
+      "name_en": "Display store page",
+      "description_zh": "打开App的评分页面",
+      "description_en": "Open the 'rate app' store page for an app.",
+      "scriptName": "RequestStore",
+      "category": "share",
+      "params": [
+        {
+          "id": "appIdentifier",
+          "type": "string",
+          "name_zh": "App ID",
+          "name_en": "App ID"
+        }
+      ]
+    }
+  ],
+  "expressions": []
+}

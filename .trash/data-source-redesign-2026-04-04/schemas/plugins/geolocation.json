@@ -1,0 +1,244 @@
+{
+  "id": "geolocation",
+  "originalId": "Geolocation",
+  "name_zh": "地理位置",
+  "name_en": "Geolocation",
+  "description_zh": "访问用户的位置信息，如纬度和经度。",
+  "description_en": "Access the user's location information such as latitude and longitude.",
+  "path": "media/geolocation",
+  "categories": [
+    "geolocation"
+  ],
+  "conditions": [
+    {
+      "id": "is-supported",
+      "name_zh": "设备支持功能",
+      "name_en": "Is supported",
+      "description_zh": "检测当前运行设备是否支持获取地理位置信息。",
+      "description_en": "True if the current platform supports geolocation.",
+      "scriptName": "IsSupported",
+      "category": "geolocation"
+    },
+    {
+      "id": "is-watching-location",
+      "name_zh": "正在跟踪位置",
+      "name_en": "Is watching location",
+      "description_zh": "检测当前是否正在跟踪用户的地理位置。",
+      "description_en": "True if the user's location is currently being tracked.",
+      "scriptName": "IsWatching",
+      "category": "geolocation"
+    },
+    {
+      "id": "on-location-update",
+      "name_zh": "位置更新时",
+      "name_en": "On location update",
+      "description_zh": "在更新位置时请求或观察用户位置时触发。",
+      "description_en": "Triggered when requesting or watching the user's position when the location is updated.",
+      "scriptName": "OnUpdate",
+      "isTrigger": true,
+      "category": "geolocation"
+    },
+    {
+      "id": "on-error",
+      "name_zh": "在出错时",
+      "name_en": "On error",
+      "description_zh": "发生地理位置错误时触发。",
+      "description_en": "Triggered when a geolocation error occurs.",
+      "scriptName": "OnError",
+      "isTrigger": true,
+      "category": "geolocation"
+    }
+  ],
+  "actions": [
+    {
+      "id": "request-location",
+      "name_zh": "请求位置",
+      "name_en": "Request location",
+      "description_zh": "获取一次性请求以获取用户的当前位置。",
+      "description_en": "Make a one-off request to get the user's current location.",
+      "scriptName": "RequestLocation",
+      "category": "geolocation",
+      "params": [
+        {
+          "id": "accuracy",
+          "type": "combo",
+          "name_zh": "准确性",
+          "name_en": "Accuracy",
+          "items": [
+            "normal",
+            "high"
+          ],
+          "items_i18n": {
+            "normal": {
+              "zh": "普通",
+              "en": "Normal"
+            },
+            "high": {
+              "zh": "高度",
+              "en": "High"
+            }
+          }
+        },
+        {
+          "id": "timeout",
+          "type": "number",
+          "name_zh": "超时",
+          "name_en": "Timeout",
+          "initialValue": "60"
+        },
+        {
+          "id": "maximum-age",
+          "type": "number",
+          "name_zh": "最长缓存时间",
+          "name_en": "Maximum age"
+        }
+      ]
+    },
+    {
+      "id": "watch-location",
+      "name_zh": "监测位置",
+      "name_en": "Watch location",
+      "description_zh": "开始接收用户位置的定期更新。",
+      "description_en": "Start receiving regular updates of the user's location.",
+      "scriptName": "WatchLocation",
+      "category": "geolocation",
+      "params": [
+        {
+          "id": "accuracy",
+          "type": "combo",
+          "name_zh": "准确性",
+          "name_en": "Accuracy",
+          "items": [
+            "normal",
+            "high"
+          ],
+          "items_i18n": {
+            "normal": {
+              "zh": "普通",
+              "en": "Normal"
+            },
+            "high": {
+              "zh": "高度",
+              "en": "High"
+            }
+          }
+        },
+        {
+          "id": "timeout",
+          "type": "number",
+          "name_zh": "超时",
+          "name_en": "Timeout",
+          "initialValue": "60"
+        },
+        {
+          "id": "maximum-age",
+          "type": "number",
+          "name_zh": "最长缓存时间",
+          "name_en": "Maximum age"
+        }
+      ]
+    },
+    {
+      "id": "stop-watching",
+      "name_zh": "停止监测",
+      "name_en": "Stop watching",
+      "description_zh": "停止监测之前的发起的定位",
+      "description_en": "Stop watching a previous 'Watch location' action.",
+      "scriptName": "StopWatching",
+      "category": "geolocation"
+    }
+  ],
+  "expressions": [
+    {
+      "id": "errormessage",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在出错时返回的相关的错误消息。",
+      "description_en": "In 'On error', the relevant error message.",
+      "expressionName": "ErrorMessage",
+      "returnType": "string",
+      "category": "geolocation"
+    },
+    {
+      "id": "timestamp",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "检索当前详细信息的时间戳。",
+      "description_en": "The timestamp at which the current details were retrieved.",
+      "expressionName": "Timestamp",
+      "returnType": "number",
+      "category": "geolocation"
+    },
+    {
+      "id": "latitude",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "纬度位置以十进制度表示。",
+      "description_en": "The latitude position in decimal degrees.",
+      "expressionName": "Latitude",
+      "returnType": "number",
+      "category": "geolocation"
+    },
+    {
+      "id": "longitude",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "十进制度的经度位置。",
+      "description_en": "The longitude position in decimal degrees.",
+      "expressionName": "Longitude",
+      "returnType": "number",
+      "category": "geolocation"
+    },
+    {
+      "id": "altitude",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "海拔高度以米为单位（如果有）。",
+      "description_en": "The altitude above sea-level in meters, if available.",
+      "expressionName": "Altitude",
+      "returnType": "number",
+      "category": "geolocation"
+    },
+    {
+      "id": "accuracy",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "纬度和经度的估计精度（米）。",
+      "description_en": "The estimated accuracy in meters of the latitude and longitude.",
+      "expressionName": "Accuracy",
+      "returnType": "number",
+      "category": "geolocation"
+    },
+    {
+      "id": "altitudeaccuracy",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "如果可用，获取预估的海拔精度，以米为单位。",
+      "description_en": "The estimated accuracy in meters of the altitude, if available.",
+      "expressionName": "AltitudeAccuracy",
+      "returnType": "number",
+      "category": "geolocation"
+    },
+    {
+      "id": "heading",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "相对于正北方向的行进方向（如果有）。",
+      "description_en": "The direction of travel in degrees relative to due north, if available.",
+      "expressionName": "Heading",
+      "returnType": "number",
+      "category": "geolocation"
+    },
+    {
+      "id": "speed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "以米为单位的行程速度（如果可用）。",
+      "description_en": "The speed of travel in meters per second, if available.",
+      "expressionName": "Speed",
+      "returnType": "number",
+      "category": "geolocation"
+    }
+  ],
+  "productTypes": "games"
+}

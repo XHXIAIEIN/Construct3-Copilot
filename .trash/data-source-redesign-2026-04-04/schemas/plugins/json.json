@@ -1,0 +1,756 @@
+{
+  "id": "json",
+  "originalId": "Json",
+  "name_zh": "JSON",
+  "name_en": "JSON",
+  "description_zh": "读写JSON格式的数据。",
+  "description_en": "Read and write data in JSON format.",
+  "path": "data-and-storage/json",
+  "categories": [
+    "json",
+    "keys-and-values",
+    "arrays"
+  ],
+  "conditions": [
+    {
+      "id": "on-parse-error",
+      "name_zh": "解析失败",
+      "name_en": "On parse error",
+      "description_zh": "解析JSON字符串失败时触发。",
+      "description_en": "Triggered when parsing a JSON string fails.",
+      "scriptName": "OnParseError",
+      "isTrigger": true,
+      "category": "json"
+    },
+    {
+      "id": "on-parse-success",
+      "name_zh": "解析成功",
+      "name_en": "On parse success",
+      "description_zh": "成功解析 JSON 字符串时触发。",
+      "description_en": "Triggered when parsing a JSON string completes successfully.",
+      "scriptName": "OnParseSuccess",
+      "isTrigger": true,
+      "category": "json"
+    },
+    {
+      "id": "has-key",
+      "name_zh": "字段已存在",
+      "name_en": "Has key",
+      "description_zh": "检测JSON数据中是否存在指定的字段。",
+      "description_en": "Test if a key exists in the JSON data.",
+      "scriptName": "HasKey",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "compare-type",
+      "name_zh": "比较类型",
+      "name_en": "Compare type",
+      "description_zh": "测试JSON数据中指定值的类型。",
+      "description_en": "Test the type of a value in the JSON data.",
+      "scriptName": "CompareType",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "type",
+          "type": "combo",
+          "name_zh": "类型",
+          "name_en": "Type",
+          "items": [
+            "null",
+            "boolean",
+            "number",
+            "string",
+            "object",
+            "array"
+          ],
+          "items_i18n": {
+            "null": {
+              "zh": "空",
+              "en": "null"
+            },
+            "boolean": {
+              "zh": "布尔值",
+              "en": "boolean"
+            },
+            "number": {
+              "zh": "数字",
+              "en": "number"
+            },
+            "string": {
+              "zh": "字符串",
+              "en": "string"
+            },
+            "object": {
+              "zh": "对象",
+              "en": "object"
+            },
+            "array": {
+              "zh": "数组",
+              "en": "array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "compare-value",
+      "name_zh": "比较值",
+      "name_en": "Compare value",
+      "description_zh": "比较JSON数据中字段的值。",
+      "description_en": "Compare the value at a key in the JSON data.",
+      "scriptName": "CompareValue",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "cmp",
+          "type": "cmp",
+          "name_zh": "比较",
+          "name_en": "Comparison"
+        },
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "is-boolean-set",
+      "name_zh": "判断布尔值",
+      "name_en": "Is boolean set",
+      "description_zh": "判断布尔值变量的状态，是打开还是关闭。",
+      "description_en": "Test if a given value is the boolean value true",
+      "scriptName": "IsBooleanSet",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "for-each",
+      "name_zh": "遍历路径",
+      "name_en": "For each",
+      "description_zh": "在 JSON 指定的路径位置，遍历其中的每项字段。",
+      "description_en": "Repeat the event for each key/value under a key in the JSON data.",
+      "scriptName": "ForEach",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "parse",
+      "name_zh": "解析JSON",
+      "name_en": "Parse",
+      "description_zh": "解析JSON字符串并将其内容加载到对象中。",
+      "description_en": "Parse a JSON string and load its contents in to the object.",
+      "scriptName": "Parse",
+      "category": "json",
+      "params": [
+        {
+          "id": "data",
+          "type": "string",
+          "name_zh": "JSON字符串",
+          "name_en": "JSON string"
+        }
+      ]
+    },
+    {
+      "id": "set-path",
+      "name_zh": "设置路径",
+      "name_en": "Set path",
+      "description_zh": "设置当前路径，允许从相对路径继续引用。",
+      "description_en": "Set the current path that relative paths refer to.",
+      "scriptName": "SetPath",
+      "category": "json",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "set-value",
+      "name_zh": "设置值",
+      "name_en": "Set value",
+      "description_zh": "在JSON数据中的指定的字段位置设置值。",
+      "description_en": "Set the value at a key in the JSON data.",
+      "scriptName": "SetValue",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "set-object",
+      "name_zh": "设置字典类型",
+      "name_en": "Set object",
+      "description_zh": "设置路径为字典类型。",
+      "description_en": "Set an empty object at a key.",
+      "scriptName": "SetObject",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "set-json",
+      "name_zh": "设置JSON",
+      "name_en": "Set JSON",
+      "description_zh": "设置字段的值为一段 JSON 数据。",
+      "description_en": "Set a value from a JSON string at a key.",
+      "scriptName": "SetJSON",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "json",
+          "type": "string",
+          "name_zh": "JSON字符串",
+          "name_en": "JSON string"
+        }
+      ]
+    },
+    {
+      "id": "set-null",
+      "name_zh": "设置空值",
+      "name_en": "Set null",
+      "description_zh": "设置字段的值为特殊值 'null' 。",
+      "description_en": "Set the special value 'null' at a key.",
+      "scriptName": "SetNull",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "set-boolean",
+      "name_zh": "设置布尔值",
+      "name_en": "Set boolean",
+      "description_zh": "设置字段的布尔值状态。",
+      "description_en": "Set a true or false value at a key.",
+      "scriptName": "SetBoolean",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "value",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "Value",
+          "items": [
+            "false",
+            "true"
+          ],
+          "items_i18n": {
+            "false": {
+              "zh": "否",
+              "en": "false"
+            },
+            "true": {
+              "zh": "是",
+              "en": "true"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete-key",
+      "name_zh": "删除字段",
+      "name_en": "Delete key",
+      "description_zh": "从JSON数据中删除一个字段。",
+      "description_en": "Delete a key from the JSON data.",
+      "scriptName": "DeleteKey",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "toggle-boolean",
+      "name_zh": "反转布尔值",
+      "name_en": "Toggle boolean",
+      "description_zh": "在指定的键值位置，反转该字段的布尔值。",
+      "description_en": "Invert the value of a boolean field at a given key.",
+      "scriptName": "ToggleBoolean",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "add-to",
+      "name_zh": "增加值",
+      "name_en": "Add to",
+      "description_zh": "添加数值到指定字段的数值。",
+      "description_en": "Add to the value of a numerical field at a given key.",
+      "scriptName": "AddTo",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "value",
+          "type": "number",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "subtract-from",
+      "name_zh": "减少值",
+      "name_en": "Subtract from",
+      "description_zh": "减掉一个数字值（从指定键中）",
+      "description_en": "Subtract from the value of a numerical field at a given key.",
+      "scriptName": "SubtractFrom",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "value",
+          "type": "number",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "push-value",
+      "name_zh": "推进值",
+      "name_en": "Push value",
+      "description_zh": "在JSON数据对应的字段位置，向数组的前面或后面添加一个值。",
+      "description_en": "Add a value to the front or back of an array located at the key in the JSON data.",
+      "scriptName": "PushValue",
+      "category": "arrays",
+      "params": [
+        {
+          "id": "where",
+          "type": "combo",
+          "name_zh": "方式",
+          "name_en": "Where",
+          "items": [
+            "back",
+            "front"
+          ],
+          "items_i18n": {
+            "back": {
+              "zh": "后面",
+              "en": "back"
+            },
+            "front": {
+              "zh": "前面",
+              "en": "front"
+            }
+          }
+        },
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "值",
+          "name_en": "Value"
+        }
+      ]
+    },
+    {
+      "id": "insert-value",
+      "name_zh": "插入值",
+      "name_en": "Insert value",
+      "description_zh": "在数组的指定位置插入元素",
+      "description_en": "Modifies an array by inserting a value between existing elements",
+      "scriptName": "InsertValue",
+      "category": "arrays",
+      "params": [
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "值",
+          "name_en": "Value"
+        },
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "remove-values",
+      "name_zh": "删除元素",
+      "name_en": "Remove values",
+      "description_zh": "从指定路径的数组中删除指定数量的元素。",
+      "description_en": "Modifies an array by removing elements from a given location",
+      "scriptName": "RemoveValues",
+      "category": "arrays",
+      "params": [
+        {
+          "id": "count",
+          "type": "number",
+          "name_zh": "数量",
+          "name_en": "Count"
+        },
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "pop-value",
+      "name_zh": "弹出值",
+      "name_en": "Pop value",
+      "description_zh": "从数组的前面或后面删除值，在JSON数据对应的Key的位置。",
+      "description_en": "Remove a value to the front or back of an array located at the key in the JSON data.",
+      "scriptName": "PopValue",
+      "category": "arrays",
+      "params": [
+        {
+          "id": "where",
+          "type": "combo",
+          "name_zh": "方式",
+          "name_en": "Where",
+          "items": [
+            "back",
+            "front"
+          ],
+          "items_i18n": {
+            "back": {
+              "zh": "后面",
+              "en": "back"
+            },
+            "front": {
+              "zh": "前面",
+              "en": "front"
+            }
+          }
+        },
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "set-array",
+      "name_zh": "设置数组类型",
+      "name_en": "Set array",
+      "description_zh": "设置路径为数组类型，如果已经存在数组，则调整现有数组的大小。",
+      "description_en": "Set an array at a key, or resize an existing array if already present.",
+      "scriptName": "SetArray",
+      "category": "arrays",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        },
+        {
+          "id": "size",
+          "type": "number",
+          "name_zh": "大小",
+          "name_en": "Size",
+          "initialValue": "0"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "path",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取当前 JSON 的路径。此路径内的元素，可以使用以 \"\".\"\" 开头来引用相对路径。",
+      "description_en": "Get the currently set path.",
+      "expressionName": "Path",
+      "returnType": "string",
+      "category": "json"
+    },
+    {
+      "id": "to-compact-string",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回当前 JSON 对象的精简字符串，没有额外的换行和缩进。",
+      "description_en": "Return the current JSON data as a minimal string with no additional whitespace.",
+      "expressionName": "ToCompactString",
+      "returnType": "string",
+      "category": "json"
+    },
+    {
+      "id": "to-beautified-string",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "返回当前 JSON 对象的格式化字符串，包含换行符和缩进。",
+      "description_en": "Return the current JSON data as a formatted string with line breaks and indentation.",
+      "expressionName": "ToBeautifiedString",
+      "returnType": "string",
+      "category": "json"
+    },
+    {
+      "id": "get-as-beautified-string",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取字段的 JSON 值，并导出格式化字符串，带有换行符和缩进。",
+      "description_en": "Get a value from a key in the JSON data and return it as a formatted string with line breaks and indentation.",
+      "expressionName": "GetAsBeautifiedString",
+      "returnType": "string",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "get-as-compact-string",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取字段的 JSON 值，并导出精简字符串，不包含额外的空格。",
+      "description_en": "Get a value from a key in the JSON data and return it as a minimal string with no additional whitespace.",
+      "expressionName": "GetAsCompactString",
+      "returnType": "string",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "get-value",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "根据JSON数据中的指定字段获取值。",
+      "description_en": "Get a value from a key in the JSON data.",
+      "expressionName": "Get",
+      "returnType": "any",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "get-type",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取字段的值的类型。",
+      "description_en": "Get the type of a value at a key.",
+      "expressionName": "Type",
+      "returnType": "string",
+      "category": "keys-and-values",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "current-key",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前循环遍历的字段",
+      "description_en": "The current key during a for each loop.",
+      "expressionName": "CurrentKey",
+      "returnType": "string",
+      "category": "keys-and-values"
+    },
+    {
+      "id": "current-value",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前循环遍历的值",
+      "description_en": "The current value during a for each loop.",
+      "expressionName": "CurrentValue",
+      "returnType": "any",
+      "category": "keys-and-values"
+    },
+    {
+      "id": "current-type",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "每次循环的当前值的类型。",
+      "description_en": "The type of the current value during a for each loop.",
+      "expressionName": "CurrentType",
+      "returnType": "string",
+      "category": "keys-and-values"
+    },
+    {
+      "id": "back",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在JSON数据对应的字段的位置，获取数组的最后一个值。",
+      "description_en": "Get the last value from an array located at the key in the JSON data.",
+      "expressionName": "Back",
+      "returnType": "any",
+      "category": "arrays",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "front",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在JSON数据对应的字段的位置，获取数组的第一个值。",
+      "description_en": "Get the first value from an array located at the key in the JSON data.",
+      "expressionName": "Front",
+      "returnType": "any",
+      "category": "arrays",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    },
+    {
+      "id": "array-size",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "在字段位置获取数组的大小。",
+      "description_en": "Get the size of an array at a key.",
+      "expressionName": "ArraySize",
+      "returnType": "number",
+      "category": "arrays",
+      "params": [
+        {
+          "id": "path",
+          "type": "string",
+          "name_zh": "路径",
+          "name_en": "Path"
+        }
+      ]
+    }
+  ]
+}

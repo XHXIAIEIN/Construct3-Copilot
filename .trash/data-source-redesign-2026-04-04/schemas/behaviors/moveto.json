@@ -1,0 +1,584 @@
+{
+  "id": "moveto",
+  "originalId": "MoveTo",
+  "name_zh": "移动到",
+  "name_en": "Move To",
+  "description_zh": "让对象移动到指定的位置，具有移动速度的属性。",
+  "description_en": "Move an object to a position with an acceleration and deceleration.",
+  "path": "movements/moveto",
+  "categories": [
+    "properties"
+  ],
+  "conditions": [
+    {
+      "id": "is-moving",
+      "name_zh": "正在移动",
+      "name_en": "Is moving",
+      "description_zh": "检测对象是否正在移动。",
+      "description_en": "True when the object is moving.",
+      "scriptName": "IsMoving"
+    },
+    {
+      "id": "compare-speed",
+      "name_zh": "比较移动速度",
+      "name_en": "Compare speed",
+      "description_zh": "比较对象的当前速度。",
+      "description_en": "Compare the current speed of the object.",
+      "scriptName": "CompareSpeed",
+      "params": [
+        {
+          "id": "comparison",
+          "type": "cmp",
+          "name_zh": "比较",
+          "name_en": "Comparison"
+        },
+        {
+          "id": "speed",
+          "type": "number",
+          "name_zh": "速度",
+          "name_en": "Speed"
+        }
+      ]
+    },
+    {
+      "id": "is-enabled",
+      "name_zh": "已启用",
+      "name_en": "Is enabled",
+      "description_zh": "测试行为是否已经启用。",
+      "description_en": "Test if the behavior is enabled.",
+      "scriptName": "IsEnabled"
+    },
+    {
+      "id": "on-arrived",
+      "name_zh": "到达",
+      "name_en": "On arrived",
+      "description_zh": "到达目标位置时触发。",
+      "description_en": "Triggered when arrived at target position.",
+      "scriptName": "OnArrived",
+      "isTrigger": true
+    },
+    {
+      "id": "on-hit-solid",
+      "name_zh": "撞击到实体对象",
+      "name_en": "On hit solid",
+      "description_zh": "在启用 '撞到实体对象时停下' 属性且碰撞到实体对象时触发。",
+      "description_en": "Triggered if 'Stop on solids' is enabled and the object hit a solid while moving.",
+      "scriptName": "OnHitSolid",
+      "isTrigger": true
+    }
+  ],
+  "actions": [
+    {
+      "id": "move-to-position",
+      "name_zh": "移动到位置",
+      "name_en": "Move to position",
+      "description_zh": "立即移动到场景中指定的位置，或将位置添加到下一个路径点。",
+      "description_en": "Start moving towards a position in the layout, or add a waypoint to move to next.",
+      "scriptName": "MoveToPosition",
+      "params": [
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        },
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        },
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "模式",
+          "name_en": "Mode",
+          "items": [
+            "direct",
+            "add-waypoint"
+          ],
+          "items_i18n": {
+            "direct": {
+              "zh": "直接移动",
+              "en": "Direct"
+            },
+            "add-waypoint": {
+              "zh": "添加路径点",
+              "en": "Add waypoint"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "move-to-object",
+      "name_zh": "移动到对象图层",
+      "name_en": "Move to object",
+      "description_zh": "立即移动到另一个对象的位置，或将对象位置添加到下一个路径点。",
+      "description_en": "Start moving towards an object, or add a waypoint to move to next.",
+      "scriptName": "MoveToObject",
+      "params": [
+        {
+          "id": "object",
+          "type": "object",
+          "name_zh": "目标",
+          "name_en": "Object"
+        },
+        {
+          "id": "image-point",
+          "type": "any",
+          "name_zh": "图像点 (可选)",
+          "name_en": "Image point (optional)"
+        },
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "模式",
+          "name_en": "Mode",
+          "items": [
+            "direct",
+            "add-waypoint"
+          ],
+          "items_i18n": {
+            "direct": {
+              "zh": "直接移动",
+              "en": "Direct"
+            },
+            "add-waypoint": {
+              "zh": "添加路径点",
+              "en": "Add waypoint"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "move-along-pathfinding-path",
+      "name_zh": "沿着寻路路径移动",
+      "name_en": "Move along Pathfinding path",
+      "description_zh": "立即沿着由相同对象的寻路行为计算出的路径点移动。",
+      "description_en": "Start moving along all the points of a path calculated by a Pathfinding behavior on the same object.",
+      "scriptName": "MoveAlongPathfindingPath",
+      "params": [
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "模式",
+          "name_en": "Mode",
+          "items": [
+            "direct",
+            "add-waypoints"
+          ],
+          "items_i18n": {
+            "direct": {
+              "zh": "直接移动",
+              "en": "Direct"
+            },
+            "add-waypoints": {
+              "zh": "添加路径点",
+              "en": "Add waypoints"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "move-along-timeline",
+      "name_zh": "沿着时间轴移动",
+      "name_en": "Move along timeline",
+      "description_zh": "开始沿着具有X和Y属性的时间轴轨道中的所有路径点移动。",
+      "description_en": "Start moving along all the points of a timeline track with X and Y properties.",
+      "scriptName": "MoveAlongTimeline",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "timeline",
+          "name_zh": "时间轴",
+          "name_en": "Timeline"
+        },
+        {
+          "id": "track",
+          "type": "string",
+          "name_zh": "轨道ID",
+          "name_en": "Track ID"
+        },
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "模式",
+          "name_en": "Mode",
+          "items": [
+            "direct",
+            "add-waypoints"
+          ],
+          "items_i18n": {
+            "direct": {
+              "zh": "直接移动",
+              "en": "Direct"
+            },
+            "add-waypoints": {
+              "zh": "添加路径点",
+              "en": "Add waypoints"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "move-along-timeline-by-name",
+      "name_zh": "沿着时间轴移动(根据名称)",
+      "name_en": "Move along timeline (by name)",
+      "description_zh": "使用时间轴名称的字符串，沿着带有X和Y属性的时间轴轨道的所有路径点移动。",
+      "description_en": "Start moving along all the points of a timeline track with X and Y properties, using a string for the timeline name.",
+      "scriptName": "MoveAlongTimelineByName",
+      "params": [
+        {
+          "id": "timeline",
+          "type": "string",
+          "name_zh": "时间轴名称",
+          "name_en": "Timeline name"
+        },
+        {
+          "id": "track",
+          "type": "string",
+          "name_zh": "轨道ID",
+          "name_en": "Track ID"
+        },
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "模式",
+          "name_en": "Mode",
+          "items": [
+            "direct",
+            "add-waypoints"
+          ],
+          "items_i18n": {
+            "direct": {
+              "zh": "直接移动",
+              "en": "Direct"
+            },
+            "add-waypoints": {
+              "zh": "添加路径点",
+              "en": "Add waypoints"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "stop",
+      "name_zh": "停下",
+      "name_en": "Stop",
+      "description_zh": "停止移动并删除所有路径点。",
+      "description_en": "Stop movement and remove all waypoints.",
+      "scriptName": "Stop"
+    },
+    {
+      "id": "set-moving-angle",
+      "name_zh": "设置移动角度",
+      "name_en": "Set angle of motion",
+      "description_zh": "设置对象移动时的角度",
+      "description_en": "Set the angle the object is moving at.",
+      "scriptName": "SetMovingAngle",
+      "params": [
+        {
+          "id": "angle",
+          "type": "number",
+          "name_zh": "角度",
+          "name_en": "Angle"
+        }
+      ]
+    },
+    {
+      "id": "set-speed",
+      "name_zh": "设置速度",
+      "name_en": "Set speed",
+      "description_zh": "设置对象当前运动速度",
+      "description_en": "Set the object's current speed.",
+      "scriptName": "SetSpeed",
+      "params": [
+        {
+          "id": "speed",
+          "type": "number",
+          "name_zh": "速度",
+          "name_en": "Speed"
+        }
+      ]
+    },
+    {
+      "id": "set-max-speed",
+      "name_zh": "设置最大移动速度",
+      "name_en": "Set max speed",
+      "description_zh": "设置对象的最大移动速度。",
+      "description_en": "Set the object's maximum speed.",
+      "scriptName": "SetMaxSpeed",
+      "category": "properties",
+      "params": [
+        {
+          "id": "max-speed",
+          "type": "number",
+          "name_zh": "最大移动速度",
+          "name_en": "Max Speed"
+        }
+      ]
+    },
+    {
+      "id": "set-acceleration",
+      "name_zh": "设置加速度",
+      "name_en": "Set acceleration",
+      "description_zh": "设置对象的加速度。",
+      "description_en": "Set the object's acceleration.",
+      "scriptName": "SetAcceleration",
+      "category": "properties",
+      "params": [
+        {
+          "id": "acceleration",
+          "type": "number",
+          "name_zh": "加速度",
+          "name_en": "Acceleration"
+        }
+      ]
+    },
+    {
+      "id": "set-deceleration",
+      "name_zh": "设置减速度",
+      "name_en": "Set deceleration",
+      "description_zh": "设置对象的减速度。",
+      "description_en": "Set the object's deceleration.",
+      "scriptName": "SetDeceleration",
+      "category": "properties",
+      "params": [
+        {
+          "id": "deceleration",
+          "type": "number",
+          "name_zh": "减速度",
+          "name_en": "Deceleration"
+        }
+      ]
+    },
+    {
+      "id": "set-rotate-speed",
+      "name_zh": "设置转向速度",
+      "name_en": "Set rotate speed",
+      "description_zh": "设置转向目标位置时的转向速度",
+      "description_en": "Set the turn speed for rotating towards the target position.",
+      "scriptName": "SetRotateSpeed",
+      "category": "properties",
+      "params": [
+        {
+          "id": "rotate-speed",
+          "type": "number",
+          "name_zh": "转向速度",
+          "name_en": "Rotate speed"
+        }
+      ]
+    },
+    {
+      "id": "set-stop-on-solids",
+      "name_zh": "设置是否被实体阻止",
+      "name_en": "Set stop on solids",
+      "description_zh": "设置是否在碰到实体时自动停止移动",
+      "description_en": "Set whether to automatically stop movement if hitting a solid object.",
+      "scriptName": "SetStopOnSolids",
+      "category": "properties",
+      "params": [
+        {
+          "id": "enabled",
+          "type": "boolean",
+          "name_zh": "启用",
+          "name_en": "Enabled"
+        }
+      ]
+    },
+    {
+      "id": "set-enabled",
+      "name_zh": "设置启用",
+      "name_en": "Set enabled",
+      "description_zh": "启用或禁用此行为。",
+      "description_en": "Set whether this behavior is enabled.",
+      "scriptName": "SetEnabled",
+      "category": "properties",
+      "params": [
+        {
+          "id": "enabled",
+          "type": "boolean",
+          "name_zh": "启用",
+          "name_en": "Enabled"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "speed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前对象的移动速度，以像素/秒为单位。",
+      "description_en": "The current object speed, in pixels per second.",
+      "expressionName": "Speed",
+      "returnType": "number"
+    },
+    {
+      "id": "movingangle",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前移动角度，以度数为单位。",
+      "description_en": "The current angle of motion, in degrees.",
+      "expressionName": "MovingAngle",
+      "returnType": "number"
+    },
+    {
+      "id": "targetx",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前目标位置移动的X坐标。",
+      "description_en": "The X co-ordinate of the current target position moving towards.",
+      "expressionName": "TargetX",
+      "returnType": "number"
+    },
+    {
+      "id": "targety",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前目标位置移动的Y坐标。",
+      "description_en": "The Y co-ordinate of the current target position moving towards.",
+      "expressionName": "TargetY",
+      "returnType": "number"
+    },
+    {
+      "id": "waypointcount",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "剩下要移动的路径点",
+      "description_en": "The number of remaining waypoints to move to.",
+      "expressionName": "WaypointCount",
+      "returnType": "number"
+    },
+    {
+      "id": "waypointxat",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "路径点在某一指标上的X坐标。",
+      "description_en": "The X co-ordinate of a waypoint at an index.",
+      "expressionName": "WaypointXAt",
+      "returnType": "number",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "waypointyat",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "路径点在某一指标上的Y坐标。",
+      "description_en": "The Y co-ordinate of a waypoint at an index.",
+      "expressionName": "WaypointYAt",
+      "returnType": "number",
+      "params": [
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "maxspeed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "设置最大移动速度，以像素/秒为单位。",
+      "description_en": "The maximum speed setting, in pixels per second.",
+      "expressionName": "MaxSpeed",
+      "returnType": "number",
+      "category": "properties"
+    },
+    {
+      "id": "acceleration",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "设置加速度，以像素/秒为单位。",
+      "description_en": "The acceleration setting, in pixels per second per second.",
+      "expressionName": "Acceleration",
+      "returnType": "number",
+      "category": "properties"
+    },
+    {
+      "id": "deceleration",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "从正常移动至完全停止的减速度，以像素/秒为单位。",
+      "description_en": "The deceleration setting, in pixels per second per second.",
+      "expressionName": "Deceleration",
+      "returnType": "number",
+      "category": "properties"
+    },
+    {
+      "id": "rotatespeed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前最大转速以度/秒为单位",
+      "description_en": "The current maximum turn speed in degrees per second.",
+      "expressionName": "RotateSpeed",
+      "returnType": "number",
+      "category": "properties"
+    }
+  ],
+  "properties": [
+    {
+      "id": "max-speed",
+      "name_zh": "最大移动速度",
+      "name_en": "Max speed",
+      "description_zh": "设置最大移动速度，以像素/秒为单位。",
+      "description_en": "The maximum speed, in pixels per second, the object can travel at."
+    },
+    {
+      "id": "acceleration",
+      "name_zh": "加速度",
+      "name_en": "Acceleration",
+      "description_zh": "从静止状态到正常移动速度的加速度，以像素/秒为单位。使用 0 表示瞬间加速。",
+      "description_en": "The rate of acceleration, in pixels per second per second. Use 0 for instant acceleration."
+    },
+    {
+      "id": "deceleration",
+      "name_zh": "减速度",
+      "name_en": "Deceleration",
+      "description_zh": "从正常移动至完全停止的减速度，以像素/秒为单位。使用 0 表示瞬间减速。",
+      "description_en": "The rate of deceleration, in pixels per second per second. Use 0 for instant deceleration."
+    },
+    {
+      "id": "rotate-speed",
+      "name_zh": "转向速度",
+      "name_en": "Rotate speed",
+      "description_zh": "转弯时，每秒最大的转向速度，以度数/秒为单位，使用 0 则禁用转向。",
+      "description_en": "When turning, the maximum turn speed in degrees per second. Use 0 to disable turning."
+    },
+    {
+      "id": "set-angle",
+      "name_zh": "设置角度",
+      "name_en": "Set angle",
+      "description_zh": "自动设置物体的角度到运动的角度。",
+      "description_en": "Automatically set the object's angle to the angle of motion."
+    },
+    {
+      "id": "stop-on-solids",
+      "name_zh": "撞击到实体时停下",
+      "name_en": "Stop on solids",
+      "description_zh": "此对象撞击到拥有 '实体' 行为对象时，自动停止移动。",
+      "description_en": "Automatically stop movement if hitting a solid object."
+    },
+    {
+      "id": "enabled",
+      "name_zh": "启用",
+      "name_en": "Enabled",
+      "description_zh": "游戏初始化时，是否默认启用该行为。",
+      "description_en": "Whether the behavior is initially enabled or disabled."
+    }
+  ]
+}

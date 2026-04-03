@@ -1,0 +1,492 @@
+{
+  "id": "tilemovement",
+  "originalId": "TileMovement",
+  "name_zh": "网格移动",
+  "name_en": "Tile movement",
+  "description_zh": "在2D网格中移动对象。",
+  "description_en": "Moves an object around a 2D grid.",
+  "path": "movements/tilemovement",
+  "categories": [],
+  "conditions": [
+    {
+      "id": "is-moving",
+      "name_zh": "正在移动",
+      "name_en": "Is moving",
+      "description_zh": "检测对象是否正在移动。",
+      "description_en": "True when the object is moving.",
+      "scriptName": "IsMoving"
+    },
+    {
+      "id": "is-moving-direction",
+      "name_zh": "正在朝方向移动",
+      "name_en": "Is moving in direction",
+      "description_zh": "检测对象当前是否沿着指定方向移动。",
+      "description_en": "True when the object is moving in the specified direction.",
+      "scriptName": "IsMovingDirection",
+      "params": [
+        {
+          "id": "direction",
+          "type": "combo",
+          "name_zh": "方向",
+          "name_en": "Direction",
+          "items": [
+            "right",
+            "left",
+            "down",
+            "up"
+          ],
+          "items_i18n": {
+            "right": {
+              "zh": "向右",
+              "en": "Right"
+            },
+            "left": {
+              "zh": "向左",
+              "en": "Left"
+            },
+            "down": {
+              "zh": "向下",
+              "en": "Down"
+            },
+            "up": {
+              "zh": "向上",
+              "en": "Up"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "is-enabled",
+      "name_zh": "已启用",
+      "name_en": "Is enabled",
+      "description_zh": "测试行为是否已经启用。",
+      "description_en": "Test if the behavior is enabled.",
+      "scriptName": "IsEnabled"
+    },
+    {
+      "id": "can-move-to",
+      "name_zh": "可以移动到位置",
+      "name_en": "Can move to",
+      "description_zh": "检测对象是否可以移动到网格位置。",
+      "description_en": "Test if the object can move into a cell.",
+      "scriptName": "CanMoveTo",
+      "params": [
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        },
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        }
+      ]
+    },
+    {
+      "id": "can-move-direction",
+      "name_zh": "可移动的方向",
+      "name_en": "Can move in direction",
+      "description_zh": "测试物体是否能沿着指定方向移动一段距离，并检查沿途是否存在障碍物。",
+      "description_en": "Test if the object can move a given distance in specified direction, checking for obstacles along the way.",
+      "scriptName": "CanMoveDirection",
+      "params": [
+        {
+          "id": "direction",
+          "type": "combo",
+          "name_zh": "方向",
+          "name_en": "Direction",
+          "items": [
+            "right",
+            "left",
+            "down",
+            "up"
+          ],
+          "items_i18n": {
+            "right": {
+              "zh": "向右",
+              "en": "Right"
+            },
+            "left": {
+              "zh": "向左",
+              "en": "Left"
+            },
+            "down": {
+              "zh": "向下",
+              "en": "Down"
+            },
+            "up": {
+              "zh": "向上",
+              "en": "Up"
+            }
+          }
+        },
+        {
+          "id": "distance",
+          "type": "number",
+          "name_zh": "距离",
+          "name_en": "Distance"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "set-speed",
+      "name_zh": "设置速度",
+      "name_en": "Set speed",
+      "description_zh": "设置移动速度",
+      "description_en": "Set the object's movement speed.",
+      "scriptName": "SetSpeed",
+      "params": [
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        },
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        }
+      ]
+    },
+    {
+      "id": "set-ignoring-input",
+      "name_zh": "屏蔽玩家控制",
+      "name_en": "Set ignoring input",
+      "description_zh": "是否屏蔽玩家对该对象移动的控制行为。",
+      "description_en": "Set whether to ignore the controls for this movement.",
+      "scriptName": "SetIgnoreInput",
+      "params": [
+        {
+          "id": "input",
+          "type": "combo",
+          "name_zh": "输入",
+          "name_en": "Input",
+          "items": [
+            "stop-ignoring",
+            "start-ignoring"
+          ],
+          "items_i18n": {
+            "stop-ignoring": {
+              "zh": "结束屏蔽",
+              "en": "Stop ignoring"
+            },
+            "start-ignoring": {
+              "zh": "开始忽略",
+              "en": "Start ignoring"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-enabled",
+      "name_zh": "设置启用",
+      "name_en": "Set enabled",
+      "description_zh": "启用或禁用此行为。",
+      "description_en": "Set whether this behavior is enabled.",
+      "scriptName": "SetEnabled",
+      "params": [
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "disabled",
+            "enabled"
+          ],
+          "items_i18n": {
+            "disabled": {
+              "zh": "禁用",
+              "en": "Disabled"
+            },
+            "enabled": {
+              "zh": "启用",
+              "en": "Enabled"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "simulate-control",
+      "name_zh": "模拟控制",
+      "name_en": "Simulate control",
+      "description_zh": "通过事件模拟玩家按下按键来控制角色的行动。",
+      "description_en": "Control the movement by events.",
+      "scriptName": "SimulateControl",
+      "params": [
+        {
+          "id": "control",
+          "type": "combo",
+          "name_zh": "控制",
+          "name_en": "Control",
+          "items": [
+            "left",
+            "right",
+            "up",
+            "down"
+          ],
+          "items_i18n": {
+            "left": {
+              "zh": "向左移动",
+              "en": "Left"
+            },
+            "right": {
+              "zh": "向右移动",
+              "en": "Right"
+            },
+            "up": {
+              "zh": "向上移动",
+              "en": "Up"
+            },
+            "down": {
+              "zh": "向下移动",
+              "en": "Down"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-grid-position",
+      "name_zh": "设置网格位置",
+      "name_en": "Set grid position",
+      "description_zh": "设置对象的网格位置",
+      "description_en": "Set the objects grid position",
+      "scriptName": "SetGridPosition",
+      "params": [
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        },
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        },
+        {
+          "id": "instant",
+          "type": "combo",
+          "name_zh": "方式",
+          "name_en": "Movement",
+          "items": [
+            "animate",
+            "instant"
+          ],
+          "items_i18n": {
+            "animate": {
+              "zh": "持续移动",
+              "en": "animate"
+            },
+            "instant": {
+              "zh": "瞬间到达",
+              "en": "instant"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-grid-dimensions",
+      "name_zh": "设置网格尺寸",
+      "name_en": "Set grid dimensions",
+      "description_zh": "设置对象的网格大小和偏移量。",
+      "description_en": "Set the object's grid size and offset",
+      "scriptName": "SetGridDimensions",
+      "params": [
+        {
+          "id": "width",
+          "type": "number",
+          "name_zh": "宽度",
+          "name_en": "Width"
+        },
+        {
+          "id": "height",
+          "type": "number",
+          "name_zh": "高度",
+          "name_en": "Height"
+        },
+        {
+          "id": "x-offset",
+          "type": "number",
+          "name_zh": "X 偏移",
+          "name_en": "X offset"
+        },
+        {
+          "id": "y-offset",
+          "type": "number",
+          "name_zh": "Y 偏移",
+          "name_en": "Y offset"
+        }
+      ]
+    },
+    {
+      "id": "set-default-controls",
+      "name_zh": "启用默认控制方式",
+      "name_en": "Set default controls",
+      "description_zh": "开启后，默认允许通过键盘方向键进行控制。",
+      "description_en": "Change the default controls setting.",
+      "scriptName": "SetDefaultControls",
+      "params": [
+        {
+          "id": "default-controls",
+          "type": "boolean",
+          "name_zh": "默认的控制方式",
+          "name_en": "Default controls"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "grid-x",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "对象当前所在的网格列。",
+      "description_en": "The grid column the object is currently in.",
+      "expressionName": "GridX",
+      "returnType": "number"
+    },
+    {
+      "id": "grid-y",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "对象当前所在的网格行。",
+      "description_en": "The grid row the object is currently in.",
+      "expressionName": "GridY",
+      "returnType": "number"
+    },
+    {
+      "id": "speed-x",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前水平方向的移动速度，以像素/秒为单位。",
+      "description_en": "The current object horizontal speed, in pixels per second.",
+      "expressionName": "SpeedX",
+      "returnType": "number"
+    },
+    {
+      "id": "speed-y",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前垂直方向的移动速度，以像素/秒为单位。",
+      "description_en": "The current object vertical speed, in pixels per second.",
+      "expressionName": "SpeedY",
+      "returnType": "number"
+    },
+    {
+      "id": "target-x",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "对象当前朝向的网格列的场景坐标。",
+      "description_en": "The layout co-ordinates of the grid column the object is currently heading towards.",
+      "expressionName": "TargetX",
+      "returnType": "number"
+    },
+    {
+      "id": "target-y",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "对象当前朝向的网格行的场景坐标。",
+      "description_en": "The layout co-ordinates of the grid row the object is currently heading towards.",
+      "expressionName": "TargetY",
+      "returnType": "number"
+    },
+    {
+      "id": "target-grid-x",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "对象当前朝向的网格列。",
+      "description_en": "The grid column the object is currently heading towards.",
+      "expressionName": "GridTargetX",
+      "returnType": "number"
+    },
+    {
+      "id": "target-grid-y",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "对象当前朝向的网格行。",
+      "description_en": "The grid row the object is currently heading towards.",
+      "expressionName": "GridTargetY",
+      "returnType": "number"
+    }
+  ],
+  "properties": [
+    {
+      "id": "grid-width",
+      "name_zh": "网格宽度",
+      "name_en": "Grid width",
+      "description_zh": "移动网格的宽度。",
+      "description_en": "The width of the movement grid."
+    },
+    {
+      "id": "grid-height",
+      "name_zh": "网格高度",
+      "name_en": "Grid height",
+      "description_zh": "移动网格的高度。",
+      "description_en": "The height of the movement grid."
+    },
+    {
+      "id": "speed-x",
+      "name_zh": "移动速度 X",
+      "name_en": "Speed X",
+      "description_zh": "在X轴的移动速度，以像素/秒为单位。",
+      "description_en": "The speed of movement in the X axis, in pixels per second."
+    },
+    {
+      "id": "speed-y",
+      "name_zh": "移动速度 Y",
+      "name_en": "Speed Y",
+      "description_zh": "在Y轴的移动速度，以像素/秒为单位。",
+      "description_en": "The speed of movement in the Y axis, in pixels per second."
+    },
+    {
+      "id": "enabled",
+      "name_zh": "启用",
+      "name_en": "Enabled",
+      "description_zh": "游戏初始化时，是否默认启用该行为。",
+      "description_en": "Whether the behavior is initially enabled or disabled."
+    },
+    {
+      "id": "default-controls",
+      "name_zh": "默认的控制方式",
+      "name_en": "Default controls",
+      "description_zh": "启用后，默认允许使用方向键控制移动。否则，只能通过 '模拟控制 '来操控。",
+      "description_en": "Whether the default controls will be bound to the behaviour."
+    },
+    {
+      "id": "isometric",
+      "name_zh": "等距移动",
+      "name_en": "Isometric",
+      "description_zh": "使用等距网格或是笛卡尔网格。",
+      "description_en": "Whether the behaviour uses an isometric or cartesian grid."
+    },
+    {
+      "id": "grid-offset-x",
+      "name_zh": "网格偏移 X",
+      "name_en": "Grid offset X",
+      "description_zh": "在X轴网格移动的偏移量。",
+      "description_en": "The offset of the movement grid on the X axis."
+    },
+    {
+      "id": "grid-offset-y",
+      "name_zh": "网格偏移 Y",
+      "name_en": "Grid offset Y",
+      "description_zh": "在Y轴网格移动的偏移量。",
+      "description_en": "The offset of the movement grid on the Y axis."
+    }
+  ],
+  "productTypes": "games"
+}

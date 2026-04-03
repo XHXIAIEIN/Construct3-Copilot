@@ -1,0 +1,452 @@
+{
+  "id": "facebook",
+  "originalId": "Facebook",
+  "name_zh": "Facebook",
+  "name_en": "Facebook",
+  "description_zh": "访问 Facebook API 功能。",
+  "description_en": "Access Facebook API features.",
+  "path": "platform-specific/facebook",
+  "categories": [
+    "facebook",
+    "prompt-no-permissions-required",
+    "publish-to-stream-when-logged-in-with-permission",
+    "scores-when-logged-in-with-permission",
+    "playable-ads"
+  ],
+  "conditions": [
+    {
+      "id": "is-ready",
+      "name_zh": "准备就绪",
+      "name_en": "Is ready",
+      "description_zh": "检测 Facebook API 是否已加载完成，并随时可以使用。",
+      "description_en": "True when the Facebook API has loaded and is ready to be used.",
+      "scriptName": "IsReady",
+      "category": "facebook"
+    },
+    {
+      "id": "is-user-logged-in",
+      "name_zh": "用户已登录",
+      "name_en": "Is user logged in",
+      "description_zh": "检测用户是否已登录 Facebook 账号。",
+      "description_en": "True if currently being viewed inside Facebook by a logged in user.",
+      "scriptName": "IsLoggedIn",
+      "category": "facebook"
+    },
+    {
+      "id": "on-user-logged-in",
+      "name_zh": "用户登录成功",
+      "name_en": "On user logged in",
+      "description_zh": "用户成功登录时触发。",
+      "description_en": "Triggered when the user successfully logs in.",
+      "scriptName": "OnLogIn",
+      "isTrigger": true,
+      "category": "facebook"
+    },
+    {
+      "id": "on-user-logged-out",
+      "name_zh": "用户注销完成",
+      "name_en": "On user logged out",
+      "description_zh": "用户注销完成时触发。",
+      "description_en": "Triggered when the user logs out.",
+      "scriptName": "OnLogOut",
+      "isTrigger": true,
+      "category": "facebook"
+    },
+    {
+      "id": "on-name-available",
+      "name_zh": "已获取到用户名",
+      "name_en": "On name available",
+      "description_zh": "登录后，用户名称可用时触发。",
+      "description_en": "Triggered after login when the user's name becomes available.",
+      "scriptName": "OnNameAvailable",
+      "isTrigger": true,
+      "category": "facebook"
+    },
+    {
+      "id": "on-ready",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnReady",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "facebook"
+    },
+    {
+      "id": "on-user-top-score-available",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnUserTopScoreAvailable",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission"
+    },
+    {
+      "id": "on-hi-score",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnHiscore",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission"
+    },
+    {
+      "id": "on-score-submitted",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnScoreSubmitted",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission"
+    }
+  ],
+  "actions": [
+    {
+      "id": "log-in-deprecated",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "LogIn",
+      "isDeprecated": true,
+      "category": "facebook",
+      "params": [
+        {
+          "id": "stream-permission",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "none",
+            "publish-to-stream"
+          ]
+        },
+        {
+          "id": "action-permission",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "none",
+            "publish-scores"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "log-out",
+      "name_zh": "注销",
+      "name_en": "Log out",
+      "description_zh": "用户注销登录。",
+      "description_en": "Log the user out.",
+      "scriptName": "LogOut",
+      "category": "facebook"
+    },
+    {
+      "id": "log-in",
+      "name_zh": "登录",
+      "name_en": "Log in",
+      "description_zh": "登录到应用程序，以便访问用户详细信息。",
+      "description_en": "Log the user in to the application so their details can be accessed.",
+      "scriptName": "LogIn2",
+      "category": "facebook",
+      "params": [
+        {
+          "id": "permissions",
+          "type": "string",
+          "name_zh": "权限",
+          "name_en": "Permissions"
+        }
+      ]
+    },
+    {
+      "id": "prompt-wall-post",
+      "name_zh": "发表到动态",
+      "name_en": "Prompt wall post",
+      "description_zh": "弹出分享对话框，用户可以输入文字，也可以选择取消。",
+      "description_en": "Bring up a dialog where the user can share some text on their wall or choose to cancel.",
+      "scriptName": "PromptWallPost",
+      "category": "prompt-no-permissions-required"
+    },
+    {
+      "id": "prompt-to-share-this-app",
+      "name_zh": "分享此应用",
+      "name_en": "Prompt to share this app",
+      "description_zh": "弹出分享对话框，用户可以共享应用程序的链接，也可以选择取消。",
+      "description_en": "Bring up a dialog where the user can share a link to the app on their wall or choose to cancel.",
+      "scriptName": "PromptToShareApp",
+      "category": "prompt-no-permissions-required"
+    },
+    {
+      "id": "prompt-to-share-link",
+      "name_zh": "分享链接",
+      "name_en": "Prompt to share link",
+      "description_zh": "弹出分享对话框，用户可以共享指定的链接，也可以选择取消。",
+      "description_en": "Bring up a dialog where the user can share a link on their wall or choose to cancel.",
+      "scriptName": "PromptToShareLink",
+      "category": "prompt-no-permissions-required",
+      "params": [
+        {
+          "id": "url",
+          "type": "string",
+          "name_zh": "URL",
+          "name_en": "URL",
+          "initialValue": "\"https://\""
+        }
+      ]
+    },
+    {
+      "id": "publish-wall-post",
+      "name_zh": "发布动态",
+      "name_en": "Publish wall post",
+      "description_zh": "将消息发布到用户的墙上。 用户应明确启动此操作。",
+      "description_en": "Publish a message to the user's wall.  The user should explicitly initiate this.",
+      "scriptName": "PublishToWall",
+      "category": "publish-to-stream-when-logged-in-with-permission",
+      "params": [
+        {
+          "id": "message",
+          "type": "string",
+          "name_zh": "消息",
+          "name_en": "Message"
+        }
+      ]
+    },
+    {
+      "id": "publish-link",
+      "name_zh": "发布链接",
+      "name_en": "Publish link",
+      "description_zh": "发布指向用户墙的链接。 用户应明确启动此操作。",
+      "description_en": "Publish a link to the user's wall.  The user should explicitly initiate this.",
+      "scriptName": "PublishLink",
+      "category": "publish-to-stream-when-logged-in-with-permission",
+      "params": [
+        {
+          "id": "message",
+          "type": "string",
+          "name_zh": "消息",
+          "name_en": "Message"
+        },
+        {
+          "id": "url",
+          "type": "string",
+          "name_zh": "URL",
+          "name_en": "URL",
+          "initialValue": "\"https://\""
+        },
+        {
+          "id": "name",
+          "type": "string",
+          "name_zh": "名称",
+          "name_en": "Name"
+        },
+        {
+          "id": "caption",
+          "type": "string",
+          "name_zh": "标题",
+          "name_en": "Caption"
+        },
+        {
+          "id": "description",
+          "type": "string",
+          "name_zh": "描述",
+          "name_en": "Description"
+        },
+        {
+          "id": "picture-url-optional",
+          "type": "string",
+          "name_zh": "图片URL(可选)",
+          "name_en": "Picture URL (optional)"
+        }
+      ]
+    },
+    {
+      "id": "publish-score",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "PublishScore",
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission",
+      "params": [
+        {
+          "id": "score",
+          "type": "number",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "request-user-top-score",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "RequestUserHiscore",
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission"
+    },
+    {
+      "id": "request-hi-score-board",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "RequestHiscores",
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission",
+      "params": [
+        {
+          "id": "number-of-scores",
+          "type": "number",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "10"
+        }
+      ]
+    },
+    {
+      "id": "on-cta-click",
+      "name_zh": "点击行动号召按钮",
+      "name_en": "On CTA click",
+      "description_zh": "在 Facebook 可试玩广告中，当用户点击行动号召按钮 (CTA) 时，触发此动作。",
+      "description_en": "In a Facebook Playable Ad, use this action when the user interacts with the call-to-action (CTA) in the ad.",
+      "scriptName": "OnCTAClick",
+      "category": "playable-ads"
+    }
+  ],
+  "expressions": [
+    {
+      "id": "fullname",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取用户的全名，如果用户已登录。",
+      "description_en": "Get the user's full name, if they are logged in.",
+      "expressionName": "FullName",
+      "returnType": "string",
+      "category": "facebook"
+    },
+    {
+      "id": "firstname",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取用户的名字，如果用户已登录。",
+      "description_en": "Get the user's first name, if they are logged in.",
+      "expressionName": "FirstName",
+      "returnType": "string",
+      "category": "facebook"
+    },
+    {
+      "id": "lastname",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取用户的姓氏，如果用户已登录。",
+      "description_en": "Get the user's last name, if they are logged in.",
+      "expressionName": "LastName",
+      "returnType": "string",
+      "category": "facebook"
+    },
+    {
+      "id": "userid",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "UserID",
+      "returnType": "number",
+      "isDeprecated": true,
+      "category": "facebook"
+    },
+    {
+      "id": "useridstr",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取用户ID作为字符串，即使对于具有相同名称的用户也是如此。",
+      "description_en": "Get the user's ID as a string, which is different even for users with the same name.",
+      "expressionName": "UserIDStr",
+      "returnType": "string",
+      "category": "facebook"
+    },
+    {
+      "id": "score",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "Score",
+      "returnType": "number",
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission"
+    },
+    {
+      "id": "hiscorename",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "HiscoreName",
+      "returnType": "string",
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission"
+    },
+    {
+      "id": "hiscorerank",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "HiscoreRank",
+      "returnType": "number",
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission"
+    },
+    {
+      "id": "hiscoreuserid",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "HiscoreUserID",
+      "returnType": "number",
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission"
+    },
+    {
+      "id": "hiscoreuseridstr",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "HiscoreUserIDStr",
+      "returnType": "string",
+      "isDeprecated": true,
+      "category": "scores-when-logged-in-with-permission"
+    }
+  ],
+  "properties": [
+    {
+      "id": "app-id",
+      "name_zh": "App ID",
+      "name_en": "App ID",
+      "description_zh": "Facebook创建应用程序后为您提供App ID。",
+      "description_en": "The App ID Facebook gives you after creating an app."
+    },
+    {
+      "id": "app-secret",
+      "name_zh": "App secret",
+      "name_en": "App secret",
+      "description_zh": "App Secret在创建应用程序后Facebook为您提供。 仅必要提交分数！",
+      "description_en": "The App Secret Facebook gives you after creating an app. Only necessary for submitting scores!"
+    }
+  ],
+  "productTypes": "games"
+}

@@ -1,0 +1,2321 @@
+{
+  "id": "audio",
+  "originalId": "Audio",
+  "name_zh": "音频",
+  "name_en": "Audio",
+  "description_zh": "播放您导入的文件中的音效和音乐。",
+  "description_en": "Play sound effects and music from files you've imported.",
+  "path": "media/audio",
+  "categories": [
+    "advanced",
+    "scheduling",
+    "effects",
+    "panning-positioning",
+    "audio",
+    "memory",
+    "web"
+  ],
+  "conditions": [
+    {
+      "id": "advanced-audio-supported",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "AdvancedAudioSupported",
+      "isDeprecated": true,
+      "category": "advanced"
+    },
+    {
+      "id": "on-ended",
+      "name_zh": "播放结束",
+      "name_en": "On ended",
+      "description_zh": "音频文件播放完成后触发。",
+      "description_en": "Triggered when an audio file finishes playing.",
+      "scriptName": "OnEnded",
+      "isTrigger": true,
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "on-fade-ended",
+      "name_zh": "当淡出结束",
+      "name_en": "On fade ended",
+      "description_zh": "执行 '淡出声音' 动作后，声音淡出完成时触发。",
+      "description_en": "Triggered after 'Fade volume' when the fade finishes.",
+      "scriptName": "OnFadeEnded",
+      "isTrigger": true,
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "preloads-complete",
+      "name_zh": "预加载完成",
+      "name_en": "Preloads complete",
+      "description_zh": "检测是否所有预加载的音频都准备就绪，随时可播放。",
+      "description_en": "True when all preloaded audio is ready to play.",
+      "scriptName": "PreloadsComplete",
+      "category": "audio"
+    },
+    {
+      "id": "is-silent",
+      "name_zh": "如果已静音",
+      "name_en": "Is silent",
+      "description_zh": "检测是否已启用静音模式。",
+      "description_en": "True if silent mode has been enabled.",
+      "scriptName": "IsSilent",
+      "category": "audio"
+    },
+    {
+      "id": "is-any-playing",
+      "name_zh": "任意音频正在播放",
+      "name_en": "Is any playing",
+      "description_zh": "检测当前是否有任何音频正在播放。",
+      "description_en": "True if any audio is actively playing.",
+      "scriptName": "IsAnyPlaying",
+      "category": "audio"
+    },
+    {
+      "id": "is-tag-playing",
+      "name_zh": "标签正在播放",
+      "name_en": "Is tag playing",
+      "description_zh": "检测指定的标签下当前是否有任何音频正在播放。",
+      "description_en": "True if any audio with a given tag is currently playing.",
+      "scriptName": "IsTagPlaying",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "schedule-next-play",
+      "name_zh": "安排下一首播放",
+      "name_en": "Schedule next play",
+      "description_zh": "准确安排下一首播放的时间，避免因帧率变化导致声音播放延时。",
+      "description_en": "Schedule the next Play action sample-accurately.",
+      "scriptName": "ScheduleNextPlay",
+      "category": "scheduling",
+      "params": [
+        {
+          "id": "time",
+          "type": "number",
+          "name_zh": "时间",
+          "name_en": "Time"
+        }
+      ]
+    },
+    {
+      "id": "add-filter-effect",
+      "name_zh": "添加滤波器",
+      "name_en": "Add filter effect",
+      "description_zh": "添加 Biquad Filter 滤波器效果。实现各种频率变化声音。",
+      "description_en": "Add a bi-quad filter effect to all audio with a given tag.",
+      "scriptName": "AddFilterEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "type",
+          "type": "combo",
+          "name_zh": "类型",
+          "name_en": "Type",
+          "items": [
+            "low-pass",
+            "high-pass",
+            "band-pass",
+            "low-shelf",
+            "high-shelf",
+            "peaking",
+            "notch",
+            "all-pass"
+          ],
+          "items_i18n": {
+            "low-pass": {
+              "zh": "低通",
+              "en": "low-pass"
+            },
+            "high-pass": {
+              "zh": "高通",
+              "en": "high-pass"
+            },
+            "band-pass": {
+              "zh": "带通",
+              "en": "band-pass"
+            },
+            "low-shelf": {
+              "zh": "低频",
+              "en": "low shelf"
+            },
+            "high-shelf": {
+              "zh": "高频",
+              "en": "high shelf"
+            },
+            "peaking": {
+              "zh": "峰值",
+              "en": "peaking"
+            },
+            "notch": {
+              "zh": "陷波",
+              "en": "notch"
+            },
+            "all-pass": {
+              "zh": "全通",
+              "en": "all-pass"
+            }
+          }
+        },
+        {
+          "id": "frequency",
+          "type": "number",
+          "name_zh": "频率",
+          "name_en": "Frequency",
+          "initialValue": "350"
+        },
+        {
+          "id": "detune",
+          "type": "number",
+          "name_zh": "失谐",
+          "name_en": "Detune"
+        },
+        {
+          "id": "q",
+          "type": "number",
+          "name_zh": "Q",
+          "name_en": "Q",
+          "initialValue": "1"
+        },
+        {
+          "id": "gain",
+          "type": "number",
+          "name_zh": "增益",
+          "name_en": "Gain"
+        },
+        {
+          "id": "mix",
+          "type": "number",
+          "name_zh": "混合",
+          "name_en": "Mix",
+          "initialValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "remove-all-effects",
+      "name_zh": "移除所有效果",
+      "name_en": "Remove all effects",
+      "description_zh": "移除指定标签的所有音频效果。",
+      "description_en": "Remove all effects from a given tag.",
+      "scriptName": "RemoveEffects",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "add-delay-effect",
+      "name_zh": "添加延迟效果",
+      "name_en": "Add delay effect",
+      "description_zh": "添加 Delay 延迟器效果，实现简单的回声。",
+      "description_en": "Add a delay effect to all audio with a given tag.",
+      "scriptName": "AddDelayEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "delay",
+          "type": "number",
+          "name_zh": "延迟",
+          "name_en": "Delay",
+          "initialValue": "0.4"
+        },
+        {
+          "id": "gain",
+          "type": "number",
+          "name_zh": "增益",
+          "name_en": "Gain",
+          "initialValue": "-5"
+        },
+        {
+          "id": "mix",
+          "type": "number",
+          "name_zh": "混合",
+          "name_en": "Mix",
+          "initialValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "add-convolution-effect",
+      "name_zh": "添加混响效果",
+      "name_en": "Add convolution effect",
+      "description_zh": "添加 Convolution 卷积混响效果，使用另一种声音作为脉冲混响，模拟真实空间中的声学效果。如大型仓库的混响，或产生 '电话质量' 的声音。",
+      "description_en": "Add a convolution effect (using another sound as impulse response) to all audio with a given tag.",
+      "scriptName": "AddConvolutionEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "audio",
+          "type": "audiofile",
+          "name_zh": "音频",
+          "name_en": "Audio"
+        },
+        {
+          "id": "level",
+          "type": "combo",
+          "name_zh": "级别",
+          "name_en": "Level",
+          "items": [
+            "normalize",
+            "dont-normalize"
+          ],
+          "items_i18n": {
+            "normalize": {
+              "zh": "标准化",
+              "en": "normalize"
+            },
+            "dont-normalize": {
+              "zh": "非标准化",
+              "en": "don't normalize"
+            }
+          }
+        },
+        {
+          "id": "mix",
+          "type": "number",
+          "name_zh": "混合",
+          "name_en": "Mix",
+          "initialValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "set-effect-parameter",
+      "name_zh": "设置音效参数",
+      "name_en": "Set effect parameter",
+      "description_zh": "设置或渐变效果的参数。",
+      "description_en": "Set or ramp the parameter of an effect.",
+      "scriptName": "SetEffectParameter",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        },
+        {
+          "id": "parameter",
+          "type": "combo",
+          "name_zh": "参数",
+          "name_en": "Parameter",
+          "items": [
+            "mix",
+            "filterphaser-frequency",
+            "filterphaser-detune",
+            "filterphaser-q",
+            "filterdelaygain-gain",
+            "delay-time",
+            "flangerphaser-modulation",
+            "flangerphasertremoloring-modulation-frequency",
+            "flanger-feedback",
+            "stereo-pan"
+          ],
+          "items_i18n": {
+            "mix": {
+              "zh": "混合",
+              "en": "Mix"
+            },
+            "filterphaser-frequency": {
+              "zh": "频率 (滤波器/移相器)",
+              "en": "Filter/phaser frequency"
+            },
+            "filterphaser-detune": {
+              "zh": "失谐 (滤波器/相位器)",
+              "en": "Filter/phaser detune"
+            },
+            "filterphaser-q": {
+              "zh": "Q值 (滤波器/移相器)",
+              "en": "Filter/phaser Q"
+            },
+            "filterdelaygain-gain": {
+              "zh": "增益 (滤波器/延迟/增益)",
+              "en": "Filter/delay/gain gain"
+            },
+            "delay-time": {
+              "zh": "延迟时间",
+              "en": "Delay time"
+            },
+            "flangerphaser-modulation": {
+              "zh": "调制 (镶边/相位)",
+              "en": "Flanger/phaser modulation"
+            },
+            "flangerphasertremoloring-modulation-frequency": {
+              "zh": "调制频率 (镶边/移相/颤音/变调)",
+              "en": "Flanger/phaser/tremolo/ring modulation frequency"
+            },
+            "flanger-feedback": {
+              "zh": "镶边反馈",
+              "en": "Flanger feedback"
+            },
+            "stereo-pan": {
+              "zh": "声道",
+              "en": "Stereo pan"
+            }
+          }
+        },
+        {
+          "id": "value",
+          "type": "number",
+          "name_zh": "值",
+          "name_en": "Value"
+        },
+        {
+          "id": "ramp",
+          "type": "combo",
+          "name_zh": "过渡",
+          "name_en": "Ramp",
+          "items": [
+            "step",
+            "linear",
+            "exponential"
+          ],
+          "items_i18n": {
+            "step": {
+              "zh": "步进",
+              "en": "Step"
+            },
+            "linear": {
+              "zh": "线性",
+              "en": "Linear"
+            },
+            "exponential": {
+              "zh": "指数",
+              "en": "Exponential"
+            }
+          }
+        },
+        {
+          "id": "time",
+          "type": "number",
+          "name_zh": "时间",
+          "name_en": "Time"
+        }
+      ]
+    },
+    {
+      "id": "add-flanger-effect",
+      "name_zh": "添加镶边效果",
+      "name_en": "Add flanger effect",
+      "description_zh": "添加 Flanger 镶边效果或类似 Chorus 的多人和声效果，产生更厚实、立体、被强调的声音。",
+      "description_en": "Add a flanger or chorus style effect to all audio with a given tag.",
+      "scriptName": "AddFlangerEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "delay",
+          "type": "number",
+          "name_zh": "延迟",
+          "name_en": "Delay",
+          "initialValue": "5"
+        },
+        {
+          "id": "modulation",
+          "type": "number",
+          "name_zh": "调制",
+          "name_en": "Modulation",
+          "initialValue": "3"
+        },
+        {
+          "id": "frequency",
+          "type": "number",
+          "name_zh": "频率",
+          "name_en": "Frequency",
+          "initialValue": "0.25"
+        },
+        {
+          "id": "feedback",
+          "type": "number",
+          "name_zh": "反馈",
+          "name_en": "Feedback",
+          "initialValue": "50"
+        },
+        {
+          "id": "mix",
+          "type": "number",
+          "name_zh": "混合",
+          "name_en": "Mix",
+          "initialValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "add-phaser-effect",
+      "name_zh": "添加移相效果",
+      "name_en": "Add phaser effect",
+      "description_zh": "添加 Phaser 移相效果，产生如涡流般迷幻风格的声音。",
+      "description_en": "Add a phaser effect to all audio with a given tag.",
+      "scriptName": "AddPhaserEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "frequency",
+          "type": "number",
+          "name_zh": "频率",
+          "name_en": "Frequency",
+          "initialValue": "4000"
+        },
+        {
+          "id": "detune",
+          "type": "number",
+          "name_zh": "微调",
+          "name_en": "Detune"
+        },
+        {
+          "id": "q",
+          "type": "number",
+          "name_zh": "Q",
+          "name_en": "Q",
+          "initialValue": "0.5"
+        },
+        {
+          "id": "modulation",
+          "type": "number",
+          "name_zh": "调频",
+          "name_en": "Modulation",
+          "initialValue": "3900"
+        },
+        {
+          "id": "modulation-frequency",
+          "type": "number",
+          "name_zh": "调制频率",
+          "name_en": "Modulation frequency",
+          "initialValue": "1"
+        },
+        {
+          "id": "mix",
+          "type": "number",
+          "name_zh": "混合",
+          "name_en": "Mix",
+          "initialValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "add-gain-effect",
+      "name_zh": "添加增益效果",
+      "name_en": "Add gain effect",
+      "description_zh": "添加 Gain 增益效果，增强声音的音量。",
+      "description_en": "Add a gain (volume adjustment) effect to all audio with a given tag.",
+      "scriptName": "AddGainEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "gain",
+          "type": "number",
+          "name_zh": "增益",
+          "name_en": "Gain",
+          "initialValue": "-10"
+        }
+      ]
+    },
+    {
+      "id": "add-stereo-pan-effect",
+      "name_zh": "添加立体声效果",
+      "name_en": "Add stereo pan effect",
+      "description_zh": "添加 Stereo pan 立体声效果，用于平衡左右声道的声音。",
+      "description_en": "Add a stereo left/right pan effect to all audio with a given tag.",
+      "scriptName": "AddStereoPanEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "stereo-pan",
+          "type": "number",
+          "name_zh": "声道",
+          "name_en": "Stereo pan",
+          "initialValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "add-compressor-effect",
+      "name_zh": "添加压缩效果",
+      "name_en": "Add compressor effect",
+      "description_zh": "添加 Compressor 压缩器效果，针对各方面的指标对音量进行动态调整，让产生的声音更稳定，具有层次感。",
+      "description_en": "Add a dynamics compressor effect to all audio with a given tag.",
+      "scriptName": "AddCompressorEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "threshold",
+          "type": "number",
+          "name_zh": "阈值",
+          "name_en": "Threshold",
+          "initialValue": "-24"
+        },
+        {
+          "id": "knee",
+          "type": "number",
+          "name_zh": "转折点",
+          "name_en": "Knee",
+          "initialValue": "30"
+        },
+        {
+          "id": "ratio",
+          "type": "number",
+          "name_zh": "比率",
+          "name_en": "Ratio",
+          "initialValue": "12"
+        },
+        {
+          "id": "attack",
+          "type": "number",
+          "name_zh": "起音",
+          "name_en": "Attack",
+          "initialValue": "3"
+        },
+        {
+          "id": "release",
+          "type": "number",
+          "name_zh": "释放",
+          "name_en": "Release",
+          "initialValue": "250"
+        }
+      ]
+    },
+    {
+      "id": "add-tremolo-effect",
+      "name_zh": "添加颤音效果",
+      "name_en": "Add tremolo effect",
+      "description_zh": "添加 Tremolo 颤音效果，通过快速上下调节指定频率的音量，产生忽大忽小起伏变化的声音。",
+      "description_en": "Add a tremolo (amplitude modulation) effect to all audio with a given tag.",
+      "scriptName": "AddTremoloEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "frequency",
+          "type": "number",
+          "name_zh": "频率",
+          "name_en": "Frequency",
+          "initialValue": "10"
+        },
+        {
+          "id": "mix",
+          "type": "number",
+          "name_zh": "混合",
+          "name_en": "Mix",
+          "initialValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "add-analyser-effect",
+      "name_zh": "添加分析器效果",
+      "name_en": "Add analyser effect",
+      "description_zh": "添加音频分析器效果，用于分析音频频谱的信息，如频率、峰值、声音强度等。",
+      "description_en": "Add an audio analyser in to a tag's effect chain.",
+      "scriptName": "AddAnalyserEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "fft-size",
+          "type": "number",
+          "name_zh": "FFT 大小",
+          "name_en": "FFT size",
+          "initialValue": "512"
+        },
+        {
+          "id": "smoothing",
+          "type": "number",
+          "name_zh": "平滑",
+          "name_en": "Smoothing"
+        }
+      ]
+    },
+    {
+      "id": "add-ring-mod-effect",
+      "name_zh": "添加变调效果",
+      "name_en": "Add ring mod effect",
+      "description_zh": "添加 Ring Modulator 环形变调效果，产生更强撕裂感的破音，模拟邪恶外星人或机器人的声音。",
+      "description_en": "Add a ring modulator effect to all audio with a given tag.",
+      "scriptName": "AddRingModEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "frequency",
+          "type": "number",
+          "name_zh": "频率",
+          "name_en": "Frequency",
+          "initialValue": "600"
+        },
+        {
+          "id": "mix",
+          "type": "number",
+          "name_zh": "混合",
+          "name_en": "Mix",
+          "initialValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "add-distortion-effect",
+      "name_zh": "添加失真效果",
+      "name_en": "Add distortion effect",
+      "description_zh": "添加 Distortion 失真效果，产生破碎撕裂、模糊不清、锐利的声音。",
+      "description_en": "Add a distortion effect to all audio with a given tag.",
+      "scriptName": "AddDistortionEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "threshold",
+          "type": "number",
+          "name_zh": "阈值",
+          "name_en": "Threshold",
+          "initialValue": "-27"
+        },
+        {
+          "id": "headroom",
+          "type": "number",
+          "name_zh": "动态余量",
+          "name_en": "Headroom",
+          "initialValue": "21"
+        },
+        {
+          "id": "drive",
+          "type": "number",
+          "name_zh": "驱动",
+          "name_en": "Drive",
+          "initialValue": "5"
+        },
+        {
+          "id": "make-up-gain",
+          "type": "number",
+          "name_zh": "增益补偿",
+          "name_en": "Make-up gain",
+          "initialValue": "3"
+        },
+        {
+          "id": "mix",
+          "type": "number",
+          "name_zh": "混合",
+          "name_en": "Mix",
+          "initialValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "add-mute-effect",
+      "name_zh": "添加静音效果",
+      "name_en": "Add mute effect",
+      "description_zh": "添加 Mute 静音效果，常用于 '音频分析' 效果一起使用。",
+      "description_en": "Add a mute to an effect chain, useful after an analyser.",
+      "scriptName": "AddMuteEffect",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "play-at-position",
+      "name_zh": "在位置播放",
+      "name_en": "Play at position",
+      "description_zh": "在场景中的指定位置播放音频。",
+      "description_en": "Play audio at a position in the layout.",
+      "scriptName": "PlayAtPosition",
+      "category": "panning-positioning",
+      "params": [
+        {
+          "id": "audio-file",
+          "type": "audiofile",
+          "name_zh": "音频",
+          "name_en": "Audio file"
+        },
+        {
+          "id": "loop",
+          "type": "combo",
+          "name_zh": "循环",
+          "name_en": "Loop",
+          "items": [
+            "not-looping",
+            "looping"
+          ],
+          "items_i18n": {
+            "not-looping": {
+              "zh": "仅播放一次",
+              "en": "not looping"
+            },
+            "looping": {
+              "zh": "循环播放",
+              "en": "looping"
+            }
+          }
+        },
+        {
+          "id": "volume",
+          "type": "number",
+          "name_zh": "音量",
+          "name_en": "Volume"
+        },
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        },
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        },
+        {
+          "id": "z",
+          "type": "number",
+          "name_zh": "Z",
+          "name_en": "Z"
+        },
+        {
+          "id": "angle",
+          "type": "number",
+          "name_zh": "角度",
+          "name_en": "Angle"
+        },
+        {
+          "id": "inner-angle",
+          "type": "number",
+          "name_zh": "内角",
+          "name_en": "Inner angle",
+          "initialValue": "360"
+        },
+        {
+          "id": "outer-angle",
+          "type": "number",
+          "name_zh": "外角",
+          "name_en": "Outer angle",
+          "initialValue": "360"
+        },
+        {
+          "id": "outer-gain",
+          "type": "number",
+          "name_zh": "外角增益",
+          "name_en": "Outer gain"
+        },
+        {
+          "id": "tag-optional",
+          "type": "string",
+          "name_zh": "标签(可选)",
+          "name_en": "Tag (optional)"
+        }
+      ]
+    },
+    {
+      "id": "play-at-object",
+      "name_zh": "在对象播放",
+      "name_en": "Play at object",
+      "description_zh": "在对象位置播放音频，并跟随其移动。",
+      "description_en": "Play audio at an object and track its movement.",
+      "scriptName": "PlayAtObject",
+      "category": "panning-positioning",
+      "params": [
+        {
+          "id": "audio-file",
+          "type": "audiofile",
+          "name_zh": "音频",
+          "name_en": "Audio file"
+        },
+        {
+          "id": "loop",
+          "type": "combo",
+          "name_zh": "循环",
+          "name_en": "Loop",
+          "items": [
+            "not-looping",
+            "looping"
+          ],
+          "items_i18n": {
+            "not-looping": {
+              "zh": "仅播放一次",
+              "en": "not looping"
+            },
+            "looping": {
+              "zh": "循环播放",
+              "en": "looping"
+            }
+          }
+        },
+        {
+          "id": "volume",
+          "type": "number",
+          "name_zh": "音量",
+          "name_en": "Volume"
+        },
+        {
+          "id": "object",
+          "type": "object",
+          "name_zh": "目标",
+          "name_en": "Object"
+        },
+        {
+          "id": "inner-angle",
+          "type": "number",
+          "name_zh": "内角",
+          "name_en": "Inner angle",
+          "initialValue": "360"
+        },
+        {
+          "id": "outer-angle",
+          "type": "number",
+          "name_zh": "外角",
+          "name_en": "Outer angle",
+          "initialValue": "360"
+        },
+        {
+          "id": "outer-gain",
+          "type": "number",
+          "name_zh": "外部增益",
+          "name_en": "Outer gain"
+        },
+        {
+          "id": "tag-optional",
+          "type": "string",
+          "name_zh": "标签(可选)",
+          "name_en": "Tag (optional)"
+        }
+      ]
+    },
+    {
+      "id": "set-listener-object",
+      "name_zh": "设置监听器对象",
+      "name_en": "Set listener object",
+      "description_zh": "设置音量和声像定位所相对的对象。",
+      "description_en": "Set the object to which volume and panning are relative.",
+      "scriptName": "SetListenerObject",
+      "category": "panning-positioning",
+      "params": [
+        {
+          "id": "object",
+          "type": "object",
+          "name_zh": "目标",
+          "name_en": "Object"
+        }
+      ]
+    },
+    {
+      "id": "set-listener-z",
+      "name_zh": "设置监听器高度",
+      "name_en": "Set listener Z",
+      "description_zh": "设置监听器在场景上方的高度位置。",
+      "description_en": "Set the listener height above the layout.",
+      "scriptName": "SetListenerZ",
+      "category": "panning-positioning",
+      "params": [
+        {
+          "id": "z",
+          "type": "number",
+          "name_zh": "Z",
+          "name_en": "Z"
+        }
+      ]
+    },
+    {
+      "id": "set-listener-orientation",
+      "name_zh": "设置监听器方向",
+      "name_en": "Set listener orientation",
+      "description_zh": "设置监听器的3D方向",
+      "description_en": "Set the 3D orientation of the listener.",
+      "scriptName": "SetListenerOrientation",
+      "category": "panning-positioning",
+      "params": [
+        {
+          "id": "forwardX",
+          "type": "number",
+          "name_zh": "前推X",
+          "name_en": "Forward X",
+          "initialValue": "0"
+        },
+        {
+          "id": "forwardY",
+          "type": "number",
+          "name_zh": "前推Y",
+          "name_en": "Forward Y",
+          "initialValue": "0"
+        },
+        {
+          "id": "forwardZ",
+          "type": "number",
+          "name_zh": "前推Z",
+          "name_en": "Forward Z",
+          "initialValue": "-1"
+        },
+        {
+          "id": "upX",
+          "type": "number",
+          "name_zh": "升降X",
+          "name_en": "Up X",
+          "initialValue": "0"
+        },
+        {
+          "id": "upY",
+          "type": "number",
+          "name_zh": "升降Y",
+          "name_en": "Up Y",
+          "initialValue": "1"
+        },
+        {
+          "id": "upZ",
+          "type": "number",
+          "name_zh": "升降Z",
+          "name_en": "Up Z",
+          "initialValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "play-at-object-by-name",
+      "name_zh": "在对象播放(按名称)",
+      "name_en": "Play at object (by name)",
+      "description_zh": "在对象位置播放指定名称的音频，并跟随其移动。",
+      "description_en": "Play an audio file by its name at an object and track its movement.",
+      "scriptName": "PlayAtObjectByName",
+      "category": "panning-positioning",
+      "params": [
+        {
+          "id": "folder",
+          "type": "combo",
+          "name_zh": "文件夹",
+          "name_en": "Folder",
+          "items": [
+            "sounds",
+            "music"
+          ],
+          "items_i18n": {
+            "sounds": {
+              "zh": "声音",
+              "en": "Sounds"
+            },
+            "music": {
+              "zh": "音乐",
+              "en": "Music"
+            }
+          }
+        },
+        {
+          "id": "audio-file-name",
+          "type": "string",
+          "name_zh": "音频文件名",
+          "name_en": "Audio file name"
+        },
+        {
+          "id": "loop",
+          "type": "combo",
+          "name_zh": "循环播放",
+          "name_en": "Loop",
+          "items": [
+            "not-looping",
+            "looping"
+          ],
+          "items_i18n": {
+            "not-looping": {
+              "zh": "仅播放一次",
+              "en": "not looping"
+            },
+            "looping": {
+              "zh": "循环播放",
+              "en": "looping"
+            }
+          }
+        },
+        {
+          "id": "volume",
+          "type": "number",
+          "name_zh": "音量",
+          "name_en": "Volume"
+        },
+        {
+          "id": "object",
+          "type": "object",
+          "name_zh": "目标",
+          "name_en": "Object"
+        },
+        {
+          "id": "inner-angle",
+          "type": "number",
+          "name_zh": "内角",
+          "name_en": "Inner angle",
+          "initialValue": "360"
+        },
+        {
+          "id": "outer-angle",
+          "type": "number",
+          "name_zh": "外角",
+          "name_en": "Outer angle",
+          "initialValue": "360"
+        },
+        {
+          "id": "outer-gain",
+          "type": "number",
+          "name_zh": "外部增益",
+          "name_en": "Outer gain"
+        },
+        {
+          "id": "tag-optional",
+          "type": "string",
+          "name_zh": "标签(可选)",
+          "name_en": "Tag (optional)"
+        }
+      ]
+    },
+    {
+      "id": "play-at-position-by-name",
+      "name_zh": "在位置播放(按名称)",
+      "name_en": "Play at position (by name)",
+      "description_zh": "在场景中的指定位置播放音频，使用名称来播放。",
+      "description_en": "Play an audio file by its name at a position in the layout.",
+      "scriptName": "PlayAtPositionByName",
+      "category": "panning-positioning",
+      "params": [
+        {
+          "id": "folder",
+          "type": "combo",
+          "name_zh": "文件夹",
+          "name_en": "Folder",
+          "items": [
+            "sounds",
+            "music"
+          ],
+          "items_i18n": {
+            "sounds": {
+              "zh": "声音",
+              "en": "Sounds"
+            },
+            "music": {
+              "zh": "音乐",
+              "en": "Music"
+            }
+          }
+        },
+        {
+          "id": "audio-file-name",
+          "type": "string",
+          "name_zh": "音频文件名",
+          "name_en": "Audio file name"
+        },
+        {
+          "id": "loop",
+          "type": "combo",
+          "name_zh": "循环播放",
+          "name_en": "Loop",
+          "items": [
+            "not-looping",
+            "looping"
+          ],
+          "items_i18n": {
+            "not-looping": {
+              "zh": "仅播放一次",
+              "en": "not looping"
+            },
+            "looping": {
+              "zh": "循环播放",
+              "en": "looping"
+            }
+          }
+        },
+        {
+          "id": "volume",
+          "type": "number",
+          "name_zh": "音量",
+          "name_en": "Volume"
+        },
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        },
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        },
+        {
+          "id": "z",
+          "type": "number",
+          "name_zh": "Z",
+          "name_en": "Z"
+        },
+        {
+          "id": "angle",
+          "type": "number",
+          "name_zh": "角度",
+          "name_en": "Angle"
+        },
+        {
+          "id": "inner-angle",
+          "type": "number",
+          "name_zh": "内角",
+          "name_en": "Inner angle",
+          "initialValue": "360"
+        },
+        {
+          "id": "outer-angle",
+          "type": "number",
+          "name_zh": "外角",
+          "name_en": "Outer angle",
+          "initialValue": "360"
+        },
+        {
+          "id": "outer-gain",
+          "type": "number",
+          "name_zh": "外角增益",
+          "name_en": "Outer gain"
+        },
+        {
+          "id": "tag-optional",
+          "type": "string",
+          "name_zh": "标签(可选)",
+          "name_en": "Tag (optional)"
+        }
+      ]
+    },
+    {
+      "id": "set-stereo-pan",
+      "name_zh": "设置声道平衡",
+      "name_en": "Set stereo pan",
+      "description_zh": "设置一个声音的立体声，左/右声道平移的效果。",
+      "description_en": "Set the stereo (left/right) pan of a sound.",
+      "scriptName": "SetStereoPan",
+      "category": "panning-positioning",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "stereo-pan",
+          "type": "number",
+          "name_zh": "声道",
+          "name_en": "Stereo pan",
+          "initialValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "play",
+      "name_zh": "播放",
+      "name_en": "Play",
+      "description_zh": "播放音频文件。",
+      "description_en": "Play an audio file.",
+      "scriptName": "Play",
+      "category": "audio",
+      "params": [
+        {
+          "id": "audio-file",
+          "type": "audiofile",
+          "name_zh": "音频",
+          "name_en": "Audio file"
+        },
+        {
+          "id": "loop",
+          "type": "combo",
+          "name_zh": "循环",
+          "name_en": "Loop",
+          "items": [
+            "not-looping",
+            "looping"
+          ],
+          "items_i18n": {
+            "not-looping": {
+              "zh": "仅播放一次",
+              "en": "not looping"
+            },
+            "looping": {
+              "zh": "循环播放",
+              "en": "looping"
+            }
+          }
+        },
+        {
+          "id": "volume",
+          "type": "number",
+          "name_zh": "音量",
+          "name_en": "Volume"
+        },
+        {
+          "id": "stereo-pan",
+          "type": "number",
+          "name_zh": "声道",
+          "name_en": "Stereo pan",
+          "initialValue": "0"
+        },
+        {
+          "id": "tag-optional",
+          "type": "string",
+          "name_zh": "标签(可选)",
+          "name_en": "Tag (optional)"
+        }
+      ]
+    },
+    {
+      "id": "set-looping",
+      "name_zh": "设置循环",
+      "name_en": "Set looping",
+      "description_zh": "启用或禁用声音循环。",
+      "description_en": "Enable or disable looping on a sound.",
+      "scriptName": "SetLooping",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "looping",
+            "not-looping"
+          ],
+          "items_i18n": {
+            "looping": {
+              "zh": "循环播放",
+              "en": "looping"
+            },
+            "not-looping": {
+              "zh": "仅播放一次",
+              "en": "not looping"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-muted",
+      "name_zh": "设置静音",
+      "name_en": "Set muted",
+      "description_zh": "将指定标签的声音静音或取消静音。",
+      "description_en": "Mute (make silent) or unmute a sound.",
+      "scriptName": "SetMuted",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "muted",
+            "unmuted"
+          ],
+          "items_i18n": {
+            "muted": {
+              "zh": "静音",
+              "en": "muted"
+            },
+            "unmuted": {
+              "zh": "关闭静音",
+              "en": "unmuted"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-volume",
+      "name_zh": "设置音量",
+      "name_en": "Set volume",
+      "description_zh": "设置声音的音量（响度）。",
+      "description_en": "Set the volume (loudness) of a sound.",
+      "scriptName": "SetVolume",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "db",
+          "type": "number",
+          "name_zh": "dB",
+          "name_en": "dB",
+          "initialValue": "-10"
+        }
+      ]
+    },
+    {
+      "id": "fade-volume",
+      "name_zh": "淡出音量",
+      "name_en": "Fade volume",
+      "description_zh": "随着时间的推移，逐渐改变声音的音量。",
+      "description_en": "Gradually change the volume of a sound over time.",
+      "scriptName": "FadeVolume",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "db",
+          "type": "number",
+          "name_zh": "dB",
+          "name_en": "dB",
+          "initialValue": "-100"
+        },
+        {
+          "id": "duration",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Duration",
+          "initialValue": "3"
+        },
+        {
+          "id": "ending",
+          "type": "combo",
+          "name_zh": "淡出完成后",
+          "name_en": "On end",
+          "items": [
+            "stop",
+            "keep-playing"
+          ],
+          "items_i18n": {
+            "stop": {
+              "zh": "停止播放",
+              "en": "stop"
+            },
+            "keep-playing": {
+              "zh": "保持播放",
+              "en": "keep playing"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "preload",
+      "name_zh": "预加载",
+      "name_en": "Preload",
+      "description_zh": "从服务器下载音频文件而不播放它。 这可以确保它立即播放。",
+      "description_en": "Download an audio file from the server without playing it.  This ensures it will play immediately.",
+      "scriptName": "Preload",
+      "isAsync": true,
+      "category": "audio",
+      "params": [
+        {
+          "id": "audio-file",
+          "type": "audiofile",
+          "name_zh": "音频文件",
+          "name_en": "Audio file"
+        }
+      ]
+    },
+    {
+      "id": "set-playback-rate",
+      "name_zh": "设置播放速度",
+      "name_en": "Set playback rate",
+      "description_zh": "设置声音播放的速度。1.0是正常速度，0.5半速，2.0倍速等。",
+      "description_en": "Set the speed at which a sound plays at.",
+      "scriptName": "SetPlaybackRate",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "playback-rate",
+          "type": "number",
+          "name_zh": "播放速度",
+          "name_en": "Playback rate",
+          "initialValue": "1.0"
+        }
+      ]
+    },
+    {
+      "id": "stop",
+      "name_zh": "停止",
+      "name_en": "Stop",
+      "description_zh": "停止播放声音。",
+      "description_en": "Stop a sound from playing.",
+      "scriptName": "Stop",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "play-by-name",
+      "name_zh": "播放(按名称)",
+      "name_en": "Play (by name)",
+      "description_zh": "使用字符串作为文件名播放音频文件。",
+      "description_en": "Play an audio file using a string for the filename.",
+      "scriptName": "PlayByName",
+      "category": "audio",
+      "params": [
+        {
+          "id": "folder",
+          "type": "combo",
+          "name_zh": "文件夹",
+          "name_en": "Folder",
+          "items": [
+            "sounds",
+            "music"
+          ],
+          "items_i18n": {
+            "sounds": {
+              "zh": "声音",
+              "en": "Sounds"
+            },
+            "music": {
+              "zh": "音乐",
+              "en": "Music"
+            }
+          }
+        },
+        {
+          "id": "audio-file-name",
+          "type": "string",
+          "name_zh": "音频文件名",
+          "name_en": "Audio file name"
+        },
+        {
+          "id": "loop",
+          "type": "combo",
+          "name_zh": "循环",
+          "name_en": "Loop",
+          "items": [
+            "not-looping",
+            "looping"
+          ],
+          "items_i18n": {
+            "not-looping": {
+              "zh": "仅播放一次",
+              "en": "not looping"
+            },
+            "looping": {
+              "zh": "循环播放",
+              "en": "looping"
+            }
+          }
+        },
+        {
+          "id": "volume",
+          "type": "number",
+          "name_zh": "音量",
+          "name_en": "Volume"
+        },
+        {
+          "id": "stereo-pan",
+          "type": "number",
+          "name_zh": "声道",
+          "name_en": "Stereo pan",
+          "initialValue": "0"
+        },
+        {
+          "id": "tag-optional",
+          "type": "string",
+          "name_zh": "标签(可选)",
+          "name_en": "Tag (optional)"
+        }
+      ]
+    },
+    {
+      "id": "set-silent",
+      "name_zh": "设置静音模式",
+      "name_en": "Set silent",
+      "description_zh": "设置静音模式。 在静音模式下，所有当前声音均被静音，不会播放新声音。",
+      "description_en": "Set silent mode.  In silent mode all current sounds are muted and no new sounds will play.",
+      "scriptName": "SetSilent",
+      "category": "audio",
+      "params": [
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "模式",
+          "name_en": "Mode",
+          "items": [
+            "silent",
+            "not-silent",
+            "toggle-silent"
+          ],
+          "items_i18n": {
+            "silent": {
+              "zh": "静音",
+              "en": "silent"
+            },
+            "not-silent": {
+              "zh": "关闭静音",
+              "en": "not silent"
+            },
+            "toggle-silent": {
+              "zh": "反转静音状态",
+              "en": "toggle silent"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "preload-by-name",
+      "name_zh": "预加载(按名称)",
+      "name_en": "Preload (by name)",
+      "description_zh": "从服务器下载一个名称字符串的音频文件，而不播放它。",
+      "description_en": "Download an audio file by a string of its name from the server without playing it.",
+      "scriptName": "PreloadByName",
+      "isAsync": true,
+      "category": "audio",
+      "params": [
+        {
+          "id": "folder",
+          "type": "combo",
+          "name_zh": "文件夹",
+          "name_en": "Folder",
+          "items": [
+            "sounds",
+            "music"
+          ],
+          "items_i18n": {
+            "sounds": {
+              "zh": "声音",
+              "en": "Sounds"
+            },
+            "music": {
+              "zh": "音乐",
+              "en": "Music"
+            }
+          }
+        },
+        {
+          "id": "audio-file-name",
+          "type": "string",
+          "name_zh": "音频文件名",
+          "name_en": "Audio file name"
+        }
+      ]
+    },
+    {
+      "id": "set-master-volume",
+      "name_zh": "设置主音量",
+      "name_en": "Set master volume",
+      "description_zh": "设置所有音频的总音量。",
+      "description_en": "Set the overall volume of all audio.",
+      "scriptName": "SetMasterVolume",
+      "category": "audio",
+      "params": [
+        {
+          "id": "db",
+          "type": "number",
+          "name_zh": "dB",
+          "name_en": "dB",
+          "initialValue": "-10"
+        }
+      ]
+    },
+    {
+      "id": "set-paused",
+      "name_zh": "设置暂停",
+      "name_en": "Set paused",
+      "description_zh": "使用给定标记暂停或恢复音频。",
+      "description_en": "Pause or resume audio with a given tag.",
+      "scriptName": "SetPaused",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "pause",
+            "resume"
+          ],
+          "items_i18n": {
+            "pause": {
+              "zh": "暂停",
+              "en": "Pause"
+            },
+            "resume": {
+              "zh": "恢复",
+              "en": "Resume"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "seek-to",
+      "name_zh": "跳转播放位置",
+      "name_en": "Seek to",
+      "description_zh": "将指定的音频标签，跳转到到指定的位置继续播放。",
+      "description_en": "Seek to a particular location in a sound with a tag.",
+      "scriptName": "Seek",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "position",
+          "type": "number",
+          "name_zh": "位置",
+          "name_en": "Position"
+        }
+      ]
+    },
+    {
+      "id": "stop-all",
+      "name_zh": "停止所有",
+      "name_en": "Stop all",
+      "description_zh": "停止所有正在播放的声音。",
+      "description_en": "Stop all currently playing sounds.",
+      "scriptName": "StopAll",
+      "category": "audio"
+    },
+    {
+      "id": "unload-audio",
+      "name_zh": "卸载音频",
+      "name_en": "Unload audio",
+      "description_zh": "从内存中卸载音频文件。后续想再次播放则需要重新加载它。",
+      "description_en": "Unload an audio file from memory.",
+      "scriptName": "UnloadAudio",
+      "category": "memory",
+      "params": [
+        {
+          "id": "audio-file",
+          "type": "audiofile",
+          "name_zh": "音频文件",
+          "name_en": "Audio file"
+        }
+      ]
+    },
+    {
+      "id": "unload-audio-by-name",
+      "name_zh": "卸载音频(按名称)",
+      "name_en": "Unload audio (by name)",
+      "description_zh": "通过音频文件名称，从内存中卸载音频文件。后续想再次播放则需要重新加载它。",
+      "description_en": "Unload an audio file from memory by a string of its name.",
+      "scriptName": "UnloadAudioByName",
+      "category": "memory",
+      "params": [
+        {
+          "id": "folder",
+          "type": "combo",
+          "name_zh": "文件夹",
+          "name_en": "Folder",
+          "items": [
+            "sounds",
+            "music"
+          ],
+          "items_i18n": {
+            "sounds": {
+              "zh": "声音",
+              "en": "Sounds"
+            },
+            "music": {
+              "zh": "音乐",
+              "en": "Music"
+            }
+          }
+        },
+        {
+          "id": "audio-file-name",
+          "type": "string",
+          "name_zh": "音频文件名",
+          "name_en": "Audio file name"
+        }
+      ]
+    },
+    {
+      "id": "unload-all",
+      "name_zh": "卸载全部音频",
+      "name_en": "Unload all audio",
+      "description_zh": "从内存中卸载所有音频文件。后续想再次播放则需要重新加载它。",
+      "description_en": "Unload all audio files from memory.",
+      "scriptName": "UnloadAll",
+      "category": "memory"
+    },
+    {
+      "id": "add-remote-url",
+      "name_zh": "加载远程音频",
+      "name_en": "Add remote URL",
+      "description_zh": "从指定的链接加载音频，通过指定一个名称，在事件中根据该名称字符串进行播放。",
+      "description_en": "Play audio from a URL by giving it a name to use with the actions that use a string for the name.",
+      "scriptName": "AddRemoteURL",
+      "category": "web",
+      "params": [
+        {
+          "id": "url",
+          "type": "string",
+          "name_zh": "URL",
+          "name_en": "URL",
+          "initialValue": "\"https://\""
+        },
+        {
+          "id": "type",
+          "type": "string",
+          "name_zh": "类型",
+          "name_en": "Type",
+          "initialValue": "\"audio/webm; codecs=opus\""
+        },
+        {
+          "id": "name",
+          "type": "string",
+          "name_zh": "名称",
+          "name_en": "Name"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "effectcount",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取音频标签已添加的声音效果的数量。",
+      "description_en": "Get the current number of effects added to a tag.",
+      "expressionName": "EffectCount",
+      "returnType": "number",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "analyserfreqbincount",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "从音频分析器中，获取采样点的数量。",
+      "description_en": "Get the number of frequency bins returned by an analyser effect.",
+      "expressionName": "AnalyserFreqBinCount",
+      "returnType": "number",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "analyserfreqbinat",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "从音频分析器中，获取采样点的幅度。",
+      "description_en": "Get the magnitude of an analyser's Nth frequency bin.",
+      "expressionName": "AnalyserFreqBinAt",
+      "returnType": "number",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        },
+        {
+          "id": "bin",
+          "type": "number",
+          "name_zh": "采样点",
+          "name_en": "Bin"
+        }
+      ]
+    },
+    {
+      "id": "analyserpeaklevel",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "从音频分析器中，获取采样点的峰值水平。",
+      "description_en": "Get the peak level from an analyser.",
+      "expressionName": "AnalyserPeakLevel",
+      "returnType": "number",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "analyserrmslevel",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "从音频分析器中，获取采样点的平均功率级别。",
+      "description_en": "Get the RMS level from an analyser.",
+      "expressionName": "AnalyserRMSLevel",
+      "returnType": "number",
+      "category": "effects",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        },
+        {
+          "id": "index",
+          "type": "number",
+          "name_zh": "索引",
+          "name_en": "Index"
+        }
+      ]
+    },
+    {
+      "id": "duration",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定标签的声音的持续时间，以秒为单位。",
+      "description_en": "Get the duration in seconds of a sound with a tag.",
+      "expressionName": "Duration",
+      "returnType": "number",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "playbacktime",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定标签声音的播放位置，以秒为单位。",
+      "description_en": "Get the playback position in seconds of a sound with a tag.",
+      "expressionName": "PlaybackTime",
+      "returnType": "number",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "playbackrate",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "设置指定标签的声音的播放速度。",
+      "description_en": "Get the playback rate of a sound with a tag.",
+      "expressionName": "PlaybackRate",
+      "returnType": "number",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "volume",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取指定标签的声音的当前音量，以分贝为单位。",
+      "description_en": "Get the current volume, in decibels, of a sound with a tag.",
+      "expressionName": "Volume",
+      "returnType": "number",
+      "category": "audio",
+      "params": [
+        {
+          "id": "tag",
+          "type": "string",
+          "name_zh": "标签",
+          "name_en": "Tag"
+        }
+      ]
+    },
+    {
+      "id": "mastervolume",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取当前主音量，以分贝为单位。",
+      "description_en": "Get the current master volume, in decibels.",
+      "expressionName": "MasterVolume",
+      "returnType": "number",
+      "category": "audio"
+    },
+    {
+      "id": "samplerate",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取音频输出采样率，以赫兹为单位。",
+      "description_en": "Get the audio output sample rate in Hz.",
+      "expressionName": "SampleRate",
+      "returnType": "number",
+      "category": "audio"
+    },
+    {
+      "id": "currenttime",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取当前音频的真实时间，以秒为单位。常用于安排音频播放的准确时间，对 '安排下一首播放' 动作非常重要。",
+      "description_en": "Get the audio clock time in seconds.",
+      "expressionName": "CurrentTime",
+      "returnType": "number",
+      "category": "audio"
+    },
+    {
+      "id": "output-latency",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "音频在输出设备上实际播放的延迟，以秒为单位。如果延迟未知，则返回为 -1。",
+      "description_en": "Time delay in seconds for audio to actually be played on output device (or -1 if not known).",
+      "expressionName": "OutputLatency",
+      "returnType": "number",
+      "category": "audio"
+    },
+    {
+      "id": "normalized-volume",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将音量转换为分贝，音量在 0-100 范围。",
+      "description_en": "Convert a volume in the range 0-100 to dB.",
+      "expressionName": "NormalizedVolume",
+      "returnType": "number",
+      "category": "audio",
+      "params": [
+        {
+          "id": "volume",
+          "type": "number",
+          "name_zh": "音量",
+          "name_en": "Volume"
+        },
+        {
+          "id": "dbThreshold",
+          "type": "number",
+          "name_zh": "分贝阈值",
+          "name_en": "dbThreshold"
+        }
+      ]
+    }
+  ],
+  "properties": [
+    {
+      "id": "timescale-audio",
+      "name_zh": "同步时间速率",
+      "name_en": "Timescale audio",
+      "description_zh": "调整游戏内的时间速率时，声音播放的速率是否也跟着变化。",
+      "description_en": "Choose whether the audio playback rate changes with the time scale.",
+      "items": {
+        "off": {
+          "zh": "关",
+          "en": "Off"
+        },
+        "sounds-only": {
+          "zh": "仅声音",
+          "en": "On (sounds only)"
+        },
+        "sounds-and-music": {
+          "zh": "声音和音乐",
+          "en": "On (sounds and music)"
+        }
+      }
+    },
+    {
+      "id": "save-load",
+      "name_zh": "保存音频状态",
+      "name_en": "Save/load",
+      "description_zh": "使用内置的存档系统时，是否要保存声音的播放状态。",
+      "description_en": "What playback state to save when using the savegame system.",
+      "items": {
+        "all": {
+          "zh": "所有",
+          "en": "All"
+        },
+        "sounds-only": {
+          "zh": "仅声音",
+          "en": "Sounds only"
+        },
+        "music-only": {
+          "zh": "仅音乐",
+          "en": "Music only"
+        },
+        "none": {
+          "zh": "不保存",
+          "en": "None"
+        }
+      }
+    },
+    {
+      "id": "play-in-background",
+      "name_zh": "后台继续播放",
+      "name_en": "Play in background",
+      "description_zh": "游戏窗口最小化或切换到后台时，是否继续播放音频。",
+      "description_en": "Keep playing audio even when the tab or app goes in to the background."
+    },
+    {
+      "id": "positioned-audio",
+      "name_zh": "空间音频",
+      "name_en": "Positioned audio",
+      "description_zh": "影响声音在空间定位的属性。",
+      "description_en": "Properties affecting the playback of positioned sounds."
+    },
+    {
+      "id": "panning-model",
+      "name_zh": "声像模型",
+      "name_en": "Panning model",
+      "description_zh": "用于处理音频在空间定位的平移模型。",
+      "description_en": "The panning model used to process positioned audio.",
+      "items": {
+        "equal-power": {
+          "zh": "Equal power",
+          "en": "Equal power"
+        },
+        "hrtf": {
+          "zh": "HRTF",
+          "en": "HRTF"
+        }
+      }
+    },
+    {
+      "id": "distance-model",
+      "name_zh": "距离模型",
+      "name_en": "Distance model",
+      "description_zh": "用于处理音频对象相对听众的距离公式。根据距离的变化影响音量的大小。",
+      "description_en": "The formula to determine volume reduction over distance.",
+      "items": {
+        "linear": {
+          "zh": "线性",
+          "en": "Linear"
+        },
+        "inverse": {
+          "zh": "反向",
+          "en": "Inverse"
+        },
+        "exponential": {
+          "zh": "指数",
+          "en": "Exponential"
+        }
+      }
+    },
+    {
+      "id": "listener-z-height",
+      "name_zh": "音频空间高度",
+      "name_en": "Listener Z height",
+      "description_zh": "监听器在场景的高度，以像素为单位。用于影响空间定位的相对音量变化。高度越小，靠近声源时有更明显的变化。高度增加，即使远离声源变化也不明显。",
+      "description_en": "The height of the listener above the layout, in pixels."
+    },
+    {
+      "id": "reference-distance",
+      "name_zh": "相对距离",
+      "name_en": "Reference distance",
+      "description_zh": "用于减少音量的参考距离，因为光源移动得更远，以像素为单位。",
+      "description_en": "A reference distance for reducing volume as sources move further away, in pixels."
+    },
+    {
+      "id": "maximum-distance",
+      "name_zh": "最大距离",
+      "name_en": "Maximum distance",
+      "description_zh": "以像素为单位的距离，之后不再减小音量。",
+      "description_en": "The distance, in pixels, after which volume is not reduced any further."
+    },
+    {
+      "id": "roll-off-factor",
+      "name_zh": "衰减效率",
+      "name_en": "Roll-off factor",
+      "description_zh": "随着声源移动时，音量减弱的速度变化有多快。",
+      "description_en": "How quickly the volume is reduced as sources move away."
+    },
+    {
+      "id": "latency-hint",
+      "name_zh": "延迟模式",
+      "name_en": "Latency hint",
+      "description_zh": "针对音频延迟与电池功耗之间的调整。对于实时交互的音频，推荐低延迟模式。对于背景音乐，推荐节能模式。",
+      "description_en": "Provide a hint to the audio engine about the preferred latency vs. power usage tradeoff.",
+      "items": {
+        "interactive": {
+          "zh": "交互式(低延迟, 高功耗)",
+          "en": "Interactive"
+        },
+        "balanced": {
+          "zh": "标准",
+          "en": "Balanced"
+        },
+        "playback": {
+          "zh": "流媒体 (低功耗, 高延迟)",
+          "en": "Playback"
+        }
+      }
+    },
+    {
+      "id": "enable-multiple-tags",
+      "name_zh": "启用多标签",
+      "name_en": "Enable multiple tags",
+      "description_zh": "允许使用多标签管理声音播放，用空格分隔。",
+      "description_en": "Check to enable using multiple tags by separating them with spaces."
+    }
+  ]
+}

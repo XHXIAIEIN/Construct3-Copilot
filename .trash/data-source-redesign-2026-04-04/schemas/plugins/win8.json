@@ -1,0 +1,637 @@
+{
+  "id": "win8",
+  "originalId": "win8",
+  "name_zh": "",
+  "name_en": "",
+  "description_zh": "",
+  "description_en": "",
+  "path": "deprecated/windowsstore",
+  "categories": [
+    "live-tile",
+    "other",
+    "purchases",
+    "roaming-storage",
+    "sharing",
+    "store-listing",
+    "view-state",
+    "windows-store",
+    "windows-10"
+  ],
+  "conditions": [
+    {
+      "id": "on-license-changed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnLicenseChanged",
+      "isTrigger": true,
+      "category": "purchases"
+    },
+    {
+      "id": "is-trial",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsTrial",
+      "category": "purchases"
+    },
+    {
+      "id": "is-licensed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsLicensed",
+      "category": "purchases"
+    },
+    {
+      "id": "is-expired-trial",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsExpiredTrial",
+      "category": "purchases"
+    },
+    {
+      "id": "has-product",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "HasProduct",
+      "category": "purchases",
+      "params": [
+        {
+          "id": "product-id",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "on-successful-purchase",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnPurchaseSuccess",
+      "isTrigger": true,
+      "category": "purchases"
+    },
+    {
+      "id": "on-failed-purchase",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnPurchaseFail",
+      "isTrigger": true,
+      "category": "purchases"
+    },
+    {
+      "id": "on-store-listing-received",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnStoreListing",
+      "isTrigger": true,
+      "category": "purchases"
+    },
+    {
+      "id": "on-data-changed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnDataChanged",
+      "isTrigger": true,
+      "category": "roaming-storage"
+    },
+    {
+      "id": "roaming-key-exists",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "RoamingKeyExists",
+      "category": "roaming-storage",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "on-share",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnShare",
+      "isTrigger": true,
+      "category": "sharing"
+    },
+    {
+      "id": "on-view-state-changed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnViewStateChange",
+      "isTrigger": true,
+      "isDeprecated": true,
+      "category": "view-state",
+      "params": [
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "fullscreen-landscape",
+            "filled",
+            "snapped",
+            "fullscreen-portrait"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "compare-view-state",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "CompareViewState",
+      "isDeprecated": true,
+      "category": "view-state",
+      "params": [
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "fullscreen-landscape",
+            "filled",
+            "snapped",
+            "fullscreen-portrait"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "is-windows-8-app",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsWindows8",
+      "isDeprecated": true,
+      "category": "windows-store"
+    },
+    {
+      "id": "is-windows-store-app",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "IsWindowsStoreApp",
+      "category": "windows-store"
+    }
+  ],
+  "actions": [
+    {
+      "id": "set-live-tile-text",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetLiveTileText",
+      "category": "live-tile",
+      "params": [
+        {
+          "id": "template",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "tilesquareblock-2-texts",
+            "tilesquaretext02-2-texts",
+            "tilesquaretext04-1-text",
+            "tilewidetext03-1-text",
+            "tilewidetext04-1-text",
+            "tilewidetext09-2-texts"
+          ]
+        },
+        {
+          "id": "text-1",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "text-2",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "open-windows-store",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OpenWindowsStore",
+      "category": "other",
+      "params": [
+        {
+          "id": "go-to",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "app-listing-page",
+            "publisher-page",
+            "review-app"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "purchase-app",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "PurchaseApp",
+      "category": "purchases"
+    },
+    {
+      "id": "purchase-product",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "PurchaseProduct",
+      "category": "purchases",
+      "params": [
+        {
+          "id": "product-id",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "request-store-listing",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "RequestStoreListing",
+      "category": "purchases"
+    },
+    {
+      "id": "set-roaming-value",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetRoamingValue",
+      "category": "roaming-storage",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "value",
+          "type": "any",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "\"\""
+        }
+      ]
+    },
+    {
+      "id": "remove-roaming-value",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "RemoveRoamingValue",
+      "category": "roaming-storage",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "clear-roaming-data",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ClearRoamingData",
+      "category": "roaming-storage"
+    },
+    {
+      "id": "show-share-ui",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ShowShareUI",
+      "category": "sharing"
+    },
+    {
+      "id": "share-text",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ShareText",
+      "category": "sharing",
+      "params": [
+        {
+          "id": "title",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "description",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "text",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "share-link",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ShareLink",
+      "category": "sharing",
+      "params": [
+        {
+          "id": "title",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "description",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "uri",
+          "type": "string",
+          "name_zh": "",
+          "name_en": "",
+          "initialValue": "\"https://\""
+        }
+      ]
+    },
+    {
+      "id": "share-html",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ShareHTML",
+      "category": "sharing",
+      "params": [
+        {
+          "id": "title",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "description",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "html",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "share-sprite-image",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ShareSpriteImage",
+      "category": "sharing",
+      "params": [
+        {
+          "id": "title",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "description",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "sprite",
+          "type": "object",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "share-data-uri",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "ShareDataUri",
+      "category": "sharing",
+      "params": [
+        {
+          "id": "title",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "description",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        },
+        {
+          "id": "data-uri",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "fail-share",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "FailShare",
+      "category": "sharing",
+      "params": [
+        {
+          "id": "text",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "try-unsnap",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "TryUnsnap",
+      "isDeprecated": true,
+      "category": "view-state"
+    },
+    {
+      "id": "set-back-button-visible",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetBackButtonVisible",
+      "category": "windows-10",
+      "params": [
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "hidden",
+            "visible"
+          ]
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "trialtimeleft",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "TrialTimeLeft",
+      "returnType": "number",
+      "category": "purchases"
+    },
+    {
+      "id": "roamingvalue",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "RoamingValue",
+      "returnType": "string",
+      "category": "roaming-storage",
+      "params": [
+        {
+          "id": "key",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "appformattedprice",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "AppFormattedPrice",
+      "returnType": "number",
+      "category": "store-listing"
+    },
+    {
+      "id": "productname",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "ProductName",
+      "returnType": "string",
+      "category": "store-listing",
+      "params": [
+        {
+          "id": "productid",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "productformattedprice",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "expressionName": "ProductFormattedPrice",
+      "returnType": "string",
+      "category": "store-listing",
+      "params": [
+        {
+          "id": "productid",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    }
+  ],
+  "productTypes": "games"
+}

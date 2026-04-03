@@ -1,0 +1,548 @@
+{
+  "id": "custom",
+  "originalId": "custom",
+  "name_zh": "自定义移动",
+  "name_en": "Custom",
+  "description_zh": "使用最底层的移动方式，执行自定义移动功能。",
+  "description_en": "Make your own movement using low-level movement functions.",
+  "path": "movements/custom",
+  "categories": [
+    "angle-of-motion",
+    "velocity"
+  ],
+  "conditions": [
+    {
+      "id": "is-moving",
+      "name_zh": "正在移动",
+      "name_en": "Is moving",
+      "description_zh": "检测对象是否正在移动。",
+      "description_en": "True when the object is moving.",
+      "scriptName": "IsMoving"
+    },
+    {
+      "id": "compare-speed",
+      "name_zh": "比较移动速度",
+      "name_en": "Compare speed",
+      "description_zh": "比较对象的当前速度。",
+      "description_en": "Compare the current speed of the object.",
+      "scriptName": "CompareSpeed",
+      "params": [
+        {
+          "id": "which",
+          "type": "combo",
+          "name_zh": "比较",
+          "name_en": "Which",
+          "items": [
+            "overall",
+            "horizontal",
+            "vertical"
+          ],
+          "items_i18n": {
+            "overall": {
+              "zh": "总体",
+              "en": "Overall"
+            },
+            "horizontal": {
+              "zh": "水平方向",
+              "en": "Horizontal"
+            },
+            "vertical": {
+              "zh": "垂直方向",
+              "en": "Vertical"
+            }
+          }
+        },
+        {
+          "id": "comparison",
+          "type": "cmp",
+          "name_zh": "比较",
+          "name_en": "Comparison"
+        },
+        {
+          "id": "speed",
+          "type": "number",
+          "name_zh": "速度",
+          "name_en": "Speed"
+        }
+      ]
+    },
+    {
+      "id": "on-step",
+      "name_zh": "触发步进",
+      "name_en": "On step",
+      "description_zh": "对象进行步进运动时触发。",
+      "description_en": "Triggered when stepping the object for motion.",
+      "scriptName": "OnCMStep",
+      "isTrigger": true
+    },
+    {
+      "id": "on-horizontal-step",
+      "name_zh": "向水平方向步进",
+      "name_en": "On horizontal step",
+      "description_zh": "对象在水平方向进行步进移动时触发。",
+      "description_en": "Triggered when stepping the object horizontally for motion.",
+      "scriptName": "OnCMHorizStep",
+      "isTrigger": true
+    },
+    {
+      "id": "on-vertical-step",
+      "name_zh": "向垂直方向步进",
+      "name_en": "On vertical step",
+      "description_zh": "对象在垂直方向进行步进移动时触发。",
+      "description_en": "Triggered when stepping the object vertically for motion.",
+      "scriptName": "OnCMVertStep",
+      "isTrigger": true
+    },
+    {
+      "id": "is-enabled",
+      "name_zh": "已启用",
+      "name_en": "Is enabled",
+      "description_zh": "检测当前行为是否已启用。",
+      "description_en": "Test if the behavior is enabled.",
+      "scriptName": "IsEnabled"
+    }
+  ],
+  "actions": [
+    {
+      "id": "set-enabled",
+      "name_zh": "设置启用",
+      "name_en": "Set enabled",
+      "description_zh": "启用或禁用此行为。",
+      "description_en": "Set whether this behavior is enabled.",
+      "scriptName": "SetEnabled",
+      "params": [
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "disabled",
+            "enabled"
+          ],
+          "items_i18n": {
+            "disabled": {
+              "zh": "禁用",
+              "en": "Disabled"
+            },
+            "enabled": {
+              "zh": "启用",
+              "en": "Enabled"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-angle-of-motion",
+      "name_zh": "设置移动角度",
+      "name_en": "Set angle of motion",
+      "description_zh": "设置对象当前正在移动的角度的角度。",
+      "description_en": "Set the angle the object is currently moving at.",
+      "scriptName": "SetAngleOfMotion",
+      "category": "angle-of-motion",
+      "params": [
+        {
+          "id": "angle",
+          "type": "number",
+          "name_zh": "角度",
+          "name_en": "Angle"
+        }
+      ]
+    },
+    {
+      "id": "rotate-clockwise",
+      "name_zh": "顺时针旋转",
+      "name_en": "Rotate clockwise",
+      "description_zh": "将运动角度进行顺时针旋转",
+      "description_en": "Rotate the angle of motion in a clockwise direction.",
+      "scriptName": "RotateAngleOfMotionClockwise",
+      "category": "angle-of-motion",
+      "params": [
+        {
+          "id": "angle",
+          "type": "number",
+          "name_zh": "角度",
+          "name_en": "Angle"
+        }
+      ]
+    },
+    {
+      "id": "rotate-counter-clockwise",
+      "name_zh": "逆时针旋转",
+      "name_en": "Rotate counter-clockwise",
+      "description_zh": "将运动角度进行逆时针旋转",
+      "description_en": "Rotate the angle of motion in a counter-clockwise direction.",
+      "scriptName": "RotateAngleOfMotionCounterClockwise",
+      "category": "angle-of-motion",
+      "params": [
+        {
+          "id": "angle",
+          "type": "number",
+          "name_zh": "角度",
+          "name_en": "Angle"
+        }
+      ]
+    },
+    {
+      "id": "stop",
+      "name_zh": "停止",
+      "name_en": "Stop",
+      "description_zh": "设置速度为0",
+      "description_en": "Set the speed to zero.",
+      "scriptName": "Stop",
+      "category": "velocity"
+    },
+    {
+      "id": "reverse",
+      "name_zh": "反转",
+      "name_en": "Reverse",
+      "description_zh": "进行反向移动",
+      "description_en": "Invert the direction of motion.",
+      "scriptName": "Reverse",
+      "category": "velocity",
+      "params": [
+        {
+          "id": "axes",
+          "type": "combo",
+          "name_zh": "坐标轴",
+          "name_en": "Axes",
+          "items": [
+            "both",
+            "horizontally",
+            "vertically"
+          ],
+          "items_i18n": {
+            "both": {
+              "zh": "全部",
+              "en": "Both"
+            },
+            "horizontally": {
+              "zh": "水平",
+              "en": "Horizontally"
+            },
+            "vertically": {
+              "zh": "垂直",
+              "en": "Vertically"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-speed",
+      "name_zh": "设置速度",
+      "name_en": "Set speed",
+      "description_zh": "设置对象当前运动速度",
+      "description_en": "Set the object's current speed.",
+      "scriptName": "SetSpeed",
+      "category": "velocity",
+      "params": [
+        {
+          "id": "which",
+          "type": "combo",
+          "name_zh": "选择",
+          "name_en": "Which",
+          "items": [
+            "overall",
+            "horizontal",
+            "vertical"
+          ],
+          "items_i18n": {
+            "overall": {
+              "zh": "整体",
+              "en": "Overall"
+            },
+            "horizontal": {
+              "zh": "水平方向",
+              "en": "Horizontal"
+            },
+            "vertical": {
+              "zh": "垂直方向",
+              "en": "Vertical"
+            }
+          }
+        },
+        {
+          "id": "speed",
+          "type": "number",
+          "name_zh": "速度",
+          "name_en": "Speed"
+        }
+      ]
+    },
+    {
+      "id": "accelerate",
+      "name_zh": "加速",
+      "name_en": "Accelerate",
+      "description_zh": "让对象向前或沿轴方向加速。",
+      "description_en": "Accelerate the object forwards or on an axis.",
+      "scriptName": "Accelerate",
+      "category": "velocity",
+      "params": [
+        {
+          "id": "which",
+          "type": "combo",
+          "name_zh": "选择",
+          "name_en": "Which",
+          "items": [
+            "forwards",
+            "horizontally",
+            "vertically"
+          ],
+          "items_i18n": {
+            "forwards": {
+              "zh": "向前",
+              "en": "Forwards"
+            },
+            "horizontally": {
+              "zh": "水平方向",
+              "en": "Horizontally"
+            },
+            "vertically": {
+              "zh": "垂直方向",
+              "en": "Vertically"
+            }
+          }
+        },
+        {
+          "id": "acceleration",
+          "type": "number",
+          "name_zh": "加速",
+          "name_en": "Acceleration"
+        }
+      ]
+    },
+    {
+      "id": "accelerate-toward-angle",
+      "name_zh": "朝角度加速",
+      "name_en": "Accelerate toward angle",
+      "description_zh": "使对象向指定角度的方向加速移动。",
+      "description_en": "Accelerate the object at an angle.",
+      "scriptName": "AccelerateAngle",
+      "category": "velocity",
+      "params": [
+        {
+          "id": "acceleration",
+          "type": "number",
+          "name_zh": "加速度",
+          "name_en": "Acceleration"
+        },
+        {
+          "id": "angle",
+          "type": "number",
+          "name_zh": "角度",
+          "name_en": "Angle"
+        }
+      ]
+    },
+    {
+      "id": "accelerate-toward-position",
+      "name_zh": "朝位置加速",
+      "name_en": "Accelerate toward position",
+      "description_zh": "使对象向指定位置加速移动。",
+      "description_en": "Accelerate the object toward a position.",
+      "scriptName": "AcceleratePos",
+      "category": "velocity",
+      "params": [
+        {
+          "id": "acceleration",
+          "type": "number",
+          "name_zh": "加速度",
+          "name_en": "Acceleration"
+        },
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        },
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        }
+      ]
+    },
+    {
+      "id": "stop-stepping",
+      "name_zh": "停止步进",
+      "name_en": "Stop stepping",
+      "description_zh": "停止当前的步进模式，防止在这一帧触发更多的步进。",
+      "description_en": "Stop the current stepping, preventing any more step triggers firing this tick.",
+      "scriptName": "StopStepping",
+      "category": "velocity",
+      "params": [
+        {
+          "id": "position",
+          "type": "combo",
+          "name_zh": "位置",
+          "name_en": "Position",
+          "items": [
+            "go-back-a-step",
+            "stay-at-current-position"
+          ],
+          "items_i18n": {
+            "go-back-a-step": {
+              "zh": "上一次步进位置",
+              "en": "Go back a step"
+            },
+            "stay-at-current-position": {
+              "zh": "停留在当前位置",
+              "en": "Stay at current position"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "push-out-solid",
+      "name_zh": "推开实体",
+      "name_en": "Push out solid",
+      "description_zh": "此对象与具有 '实体' 的对象发生重叠时，将此对象朝向指定的方向推开。",
+      "description_en": "Push the object to a space if it is overlapping a solid.",
+      "scriptName": "PushOutSolid",
+      "category": "velocity",
+      "params": [
+        {
+          "id": "direction",
+          "type": "combo",
+          "name_zh": "方向",
+          "name_en": "Direction",
+          "items": [
+            "opposite-angle",
+            "nearest",
+            "up",
+            "down",
+            "left",
+            "right"
+          ],
+          "items_i18n": {
+            "opposite-angle": {
+              "zh": "相反的角度",
+              "en": "Opposite angle"
+            },
+            "nearest": {
+              "zh": "最近的方向",
+              "en": "Nearest"
+            },
+            "up": {
+              "zh": "向上",
+              "en": "Up"
+            },
+            "down": {
+              "zh": "向下",
+              "en": "Down"
+            },
+            "left": {
+              "zh": "向左",
+              "en": "Left"
+            },
+            "right": {
+              "zh": "向右",
+              "en": "Right"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "push-out-solid-at-angle",
+      "name_zh": "推开实体 (角度)",
+      "name_en": "Push out solid at angle",
+      "description_zh": "此对象与具有 '实体' 的对象发生重叠时，将此对象朝向指定的角度方向推开。",
+      "description_en": "Push the object to a space at an angle if it is overlapping a solid.",
+      "scriptName": "PushOutSolidAngle",
+      "category": "velocity",
+      "params": [
+        {
+          "id": "angle",
+          "type": "number",
+          "name_zh": "角度",
+          "name_en": "Angle"
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "speed",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前对象的移动速度，以像素/秒为单位。",
+      "description_en": "The current object speed, in pixels per second.",
+      "expressionName": "Speed",
+      "returnType": "number"
+    },
+    {
+      "id": "movingangle",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前的移动方向，以度数为单位。",
+      "description_en": "The current angle of motion, in degrees.",
+      "expressionName": "MovingAngle",
+      "returnType": "number"
+    },
+    {
+      "id": "dx",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前在水平方向移动速度，以像素/秒为单位。",
+      "description_en": "The current X component of motion, in pixels per second.",
+      "expressionName": "dx",
+      "returnType": "number"
+    },
+    {
+      "id": "dy",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "当前在垂直方向的移动速度，以像素/秒为单位。",
+      "description_en": "The current Y component of motion, in pixels per second.",
+      "expressionName": "dy",
+      "returnType": "number"
+    }
+  ],
+  "properties": [
+    {
+      "id": "stepping-mode",
+      "name_zh": "步进模式",
+      "name_en": "Stepping mode",
+      "description_zh": "触发 '步进' 条件后，以增量移动。",
+      "description_en": "Move in increments while firing the step triggers.",
+      "items": {
+        "none": {
+          "zh": "无",
+          "en": "None"
+        },
+        "linear": {
+          "zh": "线性",
+          "en": "Linear"
+        },
+        "horizontal-then-vertical": {
+          "zh": "水平方向优先",
+          "en": "Horizontal then vertical"
+        },
+        "vertical-then-horizontal": {
+          "zh": "垂直方向优先",
+          "en": "Vertical then horizontal"
+        }
+      }
+    },
+    {
+      "id": "pixels-per-step",
+      "name_zh": "像素/步进",
+      "name_en": "Pixels per step",
+      "description_zh": "启用步进时，每一步移动的像素数量。",
+      "description_en": "When stepping enabled, the number of pixels to move each step."
+    },
+    {
+      "id": "enabled",
+      "name_zh": "启用",
+      "name_en": "Enabled",
+      "description_zh": "游戏初始化时，是否默认启用该行为。",
+      "description_en": "Whether the behavior is initially enabled or disabled."
+    }
+  ],
+  "productTypes": "games"
+}

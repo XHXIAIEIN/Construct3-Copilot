@@ -1,0 +1,137 @@
+{
+  "id": "cordovaOptions",
+  "name_zh": "Cordova 选项",
+  "name_en": "Cordova options",
+  "strings": {
+    "hide-status-bar": {
+      "zh": "隐藏状态栏",
+      "en": "Hide status bar"
+    },
+    "permissions.vibrate": {
+      "zh": "请求振动权限",
+      "en": "Require Vibrate permission"
+    },
+    "permissions.camera": {
+      "zh": "请求相机权限",
+      "en": "Require Camera permission"
+    },
+    "min-version": {
+      "zh": "最低版本兼容",
+      "en": "Min. version"
+    },
+    "android-build": {
+      "zh": "导出类型",
+      "en": "Android build"
+    },
+    "ios-build": {
+      "zh": "iOS 生成",
+      "en": "iOS build"
+    },
+    "url-whitelist": {
+      "zh": "URL 白名单",
+      "en": "URL whitelist"
+    },
+    "builds.cordova-project": {
+      "zh": "Cordova project",
+      "en": "Cordova project"
+    },
+    "builds.android-studio-project": {
+      "zh": "Android Studio project",
+      "en": "Android Studio project"
+    },
+    "builds.xcode-project": {
+      "zh": "Xcode project",
+      "en": "Xcode project"
+    },
+    "builds.debug-apk": {
+      "zh": "Debug APK",
+      "en": "Debug APK"
+    },
+    "builds.unsigned-release-apk": {
+      "zh": "Unsigned release APK",
+      "en": "Unsigned release APK"
+    },
+    "builds.signed-release-apk": {
+      "zh": "Signed release APK",
+      "en": "Signed release APK"
+    },
+    "general": {
+      "zh": "常规",
+      "en": "General"
+    },
+    "properties": {
+      "zh": "属性",
+      "en": "Properties"
+    },
+    "signing": {
+      "zh": "签名",
+      "en": "Signing"
+    },
+    "keystore": {
+      "zh": "签名证书",
+      "en": "Keystore"
+    },
+    "choose": {
+      "zh": "选择",
+      "en": "Choose"
+    },
+    "create": {
+      "zh": "创建",
+      "en": "Create"
+    },
+    "clear": {
+      "zh": "清除",
+      "en": "Clear"
+    },
+    "permissions.microphone": {
+      "zh": "请求麦克风权限",
+      "en": "Require Microphone permission"
+    },
+    "android-version-code": {
+      "zh": "项目版本号",
+      "en": "Android version code"
+    },
+    "invalid-version-code": {
+      "zh": "选择版本号，数字范围在 0 到 2147483647 之间",
+      "en": "The chosen version code is outside the range 0 to 2147483647"
+    },
+    "builds.signed-app-bundle": {
+      "zh": "Signed Android App Bundle",
+      "en": "Signed Android App Bundle"
+    },
+    "builds.unsigned-app-bundle": {
+      "zh": "Unsigned Android App Bundle",
+      "en": "Unsigned Android App Bundle"
+    },
+    "builds.signed-debug-apk": {
+      "zh": "Signed debug APK",
+      "en": "Signed debug APK"
+    },
+    "key-alias": {
+      "zh": "密钥别名",
+      "en": "Key alias"
+    },
+    "keystore-password": {
+      "zh": "签名证书密码",
+      "en": "Keystore password"
+    },
+    "show-passwords": {
+      "zh": "显示密码",
+      "en": "Show passwords"
+    },
+    "key-password": {
+      "zh": "密钥密码 (可选)",
+      "en": "Key password (optional)"
+    },
+    "target-version": {
+      "zh": "Android 版本",
+      "en": "Target version"
+    },
+    "android-target-version-info": {
+      "zh": "Android {0} (API level {1})",
+      "en": "Android {0} (API level {1})"
+    }
+  },
+  "description_en": "Paid plans only The Cordova options dialog is used to change settings for an Android or iOS export, both of which are built with Cordova. For more information, also refer to the tutorial How to publish mobile apps . The Cordova options dialog The dialog shown is for an Android export, but the appearance is similar for an iOS export. The following options are available. Min. version Choose the minimum Android or iOS version that the app will support. A lower minimum version will make your app ava",
+  "url": "/en/make-games/manuals/construct-3/interface/dialogs/cordova-options"
+}

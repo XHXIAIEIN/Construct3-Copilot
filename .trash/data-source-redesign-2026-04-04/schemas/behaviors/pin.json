@@ -1,0 +1,357 @@
+{
+  "id": "pin",
+  "originalId": "Pin",
+  "name_zh": "固定",
+  "name_en": "Pin",
+  "description_zh": "与另一个对象保持相对的距离和角度。",
+  "description_en": "Stick to another object maintaining a relative distance and angle.",
+  "path": "general/pin",
+  "categories": [],
+  "conditions": [
+    {
+      "id": "is-pinned",
+      "name_zh": "已固定",
+      "name_en": "Is pinned",
+      "description_zh": "检查对象当前是否已被固定到另一个对象。",
+      "description_en": "Object is currently pinned to another object.",
+      "scriptName": "IsPinned"
+    },
+    {
+      "id": "will-destroy",
+      "name_zh": "与被固定的对象一起被销毁",
+      "name_en": "Will destroy with pinned object",
+      "description_zh": "如果被固定的对象被销毁时，该对象也将被销毁。",
+      "description_en": "True if the object will be destroyed when the object it is pinned to is destroyed.",
+      "scriptName": "WillDestroy"
+    }
+  ],
+  "actions": [
+    {
+      "id": "pin-to-object",
+      "name_zh": "固定在对象",
+      "name_en": "Pin to object",
+      "description_zh": "把对象固定另一个对象上",
+      "description_en": "Pin the object to another object.",
+      "scriptName": "Pin",
+      "isDeprecated": true,
+      "params": [
+        {
+          "id": "pin-to",
+          "type": "object",
+          "name_zh": "钉在",
+          "name_en": "Pin to"
+        },
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "模式",
+          "name_en": "Mode",
+          "items": [
+            "position-angle",
+            "position-only",
+            "angle-only",
+            "rope-style",
+            "bar-style"
+          ],
+          "items_i18n": {
+            "position-angle": {
+              "zh": "位置与角度",
+              "en": "Position & angle"
+            },
+            "position-only": {
+              "zh": "仅位置",
+              "en": "Position only"
+            },
+            "angle-only": {
+              "zh": "仅角度",
+              "en": "Angle only"
+            },
+            "rope-style": {
+              "zh": "绳索方式",
+              "en": "Rope style"
+            },
+            "bar-style": {
+              "zh": "小节方式",
+              "en": "Bar style"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "pin-to-object-distance",
+      "name_zh": "固定到距离",
+      "name_en": "Pin at distance",
+      "description_zh": "通过限制对象到另一个对象的距离来将该对象固定到另一个对象上。",
+      "description_en": "Pin the object to another object by restricting its distance to that object.",
+      "scriptName": "PinByDistance",
+      "params": [
+        {
+          "id": "pin-to",
+          "type": "object",
+          "name_zh": "固定到",
+          "name_en": "Pin to"
+        },
+        {
+          "id": "mode",
+          "type": "combo",
+          "name_zh": "模式",
+          "name_en": "Mode",
+          "items": [
+            "rope-style",
+            "bar-style"
+          ],
+          "items_i18n": {
+            "rope-style": {
+              "zh": "锁链(最大距离)",
+              "en": "Rope style (maximum distance)"
+            },
+            "bar-style": {
+              "zh": "条形(固定距离)",
+              "en": "Bar style (fixed distance)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "pin-to-object-properties",
+      "name_zh": "固定到对象",
+      "name_en": "Pin to object",
+      "description_zh": "将对象固定到另一个对象上。",
+      "description_en": "Pin the object to another object.",
+      "scriptName": "PinByProperties",
+      "params": [
+        {
+          "id": "pin-to",
+          "type": "object",
+          "name_zh": "固定到",
+          "name_en": "Pin to"
+        },
+        {
+          "id": "x",
+          "type": "boolean",
+          "name_zh": "X",
+          "name_en": "X",
+          "initialValue": "true"
+        },
+        {
+          "id": "y",
+          "type": "boolean",
+          "name_zh": "Y",
+          "name_en": "Y",
+          "initialValue": "true"
+        },
+        {
+          "id": "angle",
+          "type": "boolean",
+          "name_zh": "角度",
+          "name_en": "Angle",
+          "initialValue": "true"
+        },
+        {
+          "id": "width-type",
+          "type": "combo",
+          "name_zh": "宽度",
+          "name_en": "Width",
+          "items": [
+            "no",
+            "absolute",
+            "scale"
+          ],
+          "items_i18n": {
+            "no": {
+              "zh": "关闭",
+              "en": "No"
+            },
+            "absolute": {
+              "zh": "相同",
+              "en": "Absolute"
+            },
+            "scale": {
+              "zh": "比例",
+              "en": "Scale"
+            }
+          }
+        },
+        {
+          "id": "height-type",
+          "type": "combo",
+          "name_zh": "高度",
+          "name_en": "Height",
+          "items": [
+            "no",
+            "absolute",
+            "scale"
+          ],
+          "items_i18n": {
+            "no": {
+              "zh": "关闭",
+              "en": "No"
+            },
+            "absolute": {
+              "zh": "相同",
+              "en": "Absolute"
+            },
+            "scale": {
+              "zh": "比例",
+              "en": "Scale"
+            }
+          }
+        },
+        {
+          "id": "z",
+          "type": "boolean",
+          "name_zh": "视距高度",
+          "name_en": "Z elevation"
+        }
+      ]
+    },
+    {
+      "id": "pin-to-object-imagepoint",
+      "name_zh": "固定到图像点",
+      "name_en": "Pin to image point",
+      "description_zh": "将对象固定到另一个对象的图像点上。",
+      "description_en": "Pin the object to another object's image point.",
+      "scriptName": "PinByImagePoint",
+      "params": [
+        {
+          "id": "pin-to",
+          "type": "object",
+          "name_zh": "固定到",
+          "name_en": "Pin to"
+        },
+        {
+          "id": "image-point",
+          "type": "any",
+          "name_zh": "图像点",
+          "name_en": "Image point"
+        },
+        {
+          "id": "angle",
+          "type": "boolean",
+          "name_zh": "角度",
+          "name_en": "Angle",
+          "initialValue": "true"
+        },
+        {
+          "id": "width-type",
+          "type": "combo",
+          "name_zh": "宽度",
+          "name_en": "Width",
+          "items": [
+            "no",
+            "absolute",
+            "scale"
+          ],
+          "items_i18n": {
+            "no": {
+              "zh": "关闭",
+              "en": "No"
+            },
+            "absolute": {
+              "zh": "相同",
+              "en": "Absolute"
+            },
+            "scale": {
+              "zh": "比例",
+              "en": "Scale"
+            }
+          }
+        },
+        {
+          "id": "height-type",
+          "type": "combo",
+          "name_zh": "高度",
+          "name_en": "Height",
+          "items": [
+            "no",
+            "absolute",
+            "scale"
+          ],
+          "items_i18n": {
+            "no": {
+              "zh": "关闭",
+              "en": "No"
+            },
+            "absolute": {
+              "zh": "相同",
+              "en": "Absolute"
+            },
+            "scale": {
+              "zh": "比例",
+              "en": "Scale"
+            }
+          }
+        },
+        {
+          "id": "z",
+          "type": "boolean",
+          "name_zh": "视距高度",
+          "name_en": "Z elevation"
+        }
+      ]
+    },
+    {
+      "id": "set-pin-distance",
+      "name_zh": "设置固定距离",
+      "name_en": "Set pin distance",
+      "description_zh": "使用'固定到距离'时，设置距离限制。",
+      "description_en": "When using 'Pin at distance', set the distance limit.",
+      "scriptName": "SetPinDistance",
+      "params": [
+        {
+          "id": "distance",
+          "type": "number",
+          "name_zh": "距离",
+          "name_en": "Distance"
+        }
+      ]
+    },
+    {
+      "id": "set-destroy",
+      "name_zh": "设置与固定的对象一起被销毁",
+      "name_en": "Set destroy with pinned object",
+      "description_zh": "设置固定的对象被销毁时，是否也将该对象销毁。",
+      "description_en": "Set whether to destroy this object if the object it is pinned to is destroyed.",
+      "scriptName": "SetDestroy",
+      "params": [
+        {
+          "id": "destroy",
+          "type": "boolean",
+          "name_zh": "与被固定的对象一起被销毁",
+          "name_en": "Destroy with pinned object"
+        }
+      ]
+    },
+    {
+      "id": "unpin",
+      "name_zh": "解除固定",
+      "name_en": "Unpin",
+      "description_zh": "解除固定到其他对象。",
+      "description_en": "Unpin the object.",
+      "scriptName": "Unpin"
+    }
+  ],
+  "expressions": [
+    {
+      "id": "pinneduid",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获得当前被固定对象的UID，如果没有，则返回 -1",
+      "description_en": "Get the UID of the object pinned to, or -1 if not pinned.",
+      "expressionName": "PinnedUID",
+      "returnType": "number"
+    }
+  ],
+  "properties": [
+    {
+      "id": "destroy",
+      "name_zh": "与被固定的对象一起被销毁",
+      "name_en": "Destroy with pinned object",
+      "description_zh": "如果被固定的对象被销毁时，该对象也将被销毁。",
+      "description_en": "If the object pinned to is destroyed, also destroy this object."
+    }
+  ],
+  "productTypes": "games"
+}

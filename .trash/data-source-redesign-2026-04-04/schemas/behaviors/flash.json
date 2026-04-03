@@ -1,0 +1,71 @@
+{
+  "id": "flash",
+  "originalId": "Flash",
+  "name_zh": "闪烁",
+  "name_en": "Flash",
+  "description_zh": "使对象闪烁，不断地出现和隐去",
+  "description_en": "Make an object temporarily flash, alternately becoming visible and invisible.",
+  "path": "general/flash",
+  "categories": [],
+  "conditions": [
+    {
+      "id": "is-flashing",
+      "name_zh": "正在闪烁",
+      "name_en": "Is flashing",
+      "description_zh": "检测对象当前是否处于闪烁状态中。",
+      "description_en": "True if the object is currently flashing.",
+      "scriptName": "IsFlashing"
+    },
+    {
+      "id": "on-flash-ended",
+      "name_zh": "闪烁结束",
+      "name_en": "On flash ended",
+      "description_zh": "当闪烁结束时执行",
+      "description_en": "Triggered when the object stops flashing.",
+      "scriptName": "OnFlashEnded",
+      "isTrigger": true
+    }
+  ],
+  "actions": [
+    {
+      "id": "flash",
+      "name_zh": "闪烁",
+      "name_en": "Flash",
+      "description_zh": "使对象仅在一段时间内闪烁",
+      "description_en": "Make the object flash for a period of time.",
+      "scriptName": "Flash",
+      "params": [
+        {
+          "id": "on-time",
+          "type": "number",
+          "name_zh": "可见时间",
+          "name_en": "'On' time",
+          "initialValue": "0.1"
+        },
+        {
+          "id": "off-time",
+          "type": "number",
+          "name_zh": "隐去时间",
+          "name_en": "'Off' time",
+          "initialValue": "0.1"
+        },
+        {
+          "id": "duration",
+          "type": "number",
+          "name_zh": "持续时间",
+          "name_en": "Duration",
+          "initialValue": "1.0"
+        }
+      ]
+    },
+    {
+      "id": "stop-flashing",
+      "name_zh": "停止闪烁",
+      "name_en": "Stop flashing",
+      "description_zh": "停止闪烁并使对象可见",
+      "description_en": "Stop the flashing and set the object visible.",
+      "scriptName": "StopFlashing"
+    }
+  ],
+  "expressions": []
+}

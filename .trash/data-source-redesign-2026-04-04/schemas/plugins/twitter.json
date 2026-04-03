@@ -1,0 +1,126 @@
+{
+  "id": "twitter",
+  "originalId": "Twitter",
+  "name_zh": "",
+  "name_en": "",
+  "description_zh": "",
+  "description_en": "",
+  "path": "deprecated/twitter",
+  "categories": [
+    "appearance",
+    "twitter"
+  ],
+  "conditions": [
+    {
+      "id": "on-button-loaded",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "OnLoaded",
+      "isTrigger": true,
+      "category": "twitter"
+    }
+  ],
+  "actions": [
+    {
+      "id": "set-visible",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetVisible",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "visibility",
+          "type": "combo",
+          "name_zh": "",
+          "name_en": "",
+          "items": [
+            "invisible",
+            "visible"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "set-share",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetShare",
+      "category": "twitter",
+      "params": [
+        {
+          "id": "share",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "set-text",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetText",
+      "category": "twitter",
+      "params": [
+        {
+          "id": "text",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "set-via",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetVia",
+      "category": "twitter",
+      "params": [
+        {
+          "id": "via",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "set-hashtags",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "SetHashtags",
+      "category": "twitter",
+      "params": [
+        {
+          "id": "hashtags",
+          "type": "string",
+          "name_zh": "",
+          "name_en": ""
+        }
+      ]
+    },
+    {
+      "id": "reload",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "",
+      "description_en": "",
+      "scriptName": "Reload",
+      "category": "twitter"
+    }
+  ],
+  "expressions": []
+}

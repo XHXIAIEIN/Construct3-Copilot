@@ -1,0 +1,1495 @@
+{
+  "id": "tilemap",
+  "originalId": "Tilemap",
+  "name_zh": "瓦片图",
+  "name_en": "Tilemap",
+  "description_zh": "创建基于图块设计的关卡地图，支持导入 TMX 文件。",
+  "description_en": "Create tile-based level designs. TMX maps are also supported.",
+  "path": "general/tilemap",
+  "categories": [
+    "appearance",
+    "json",
+    "tilemap",
+    "tilemap-brushes",
+    "tilemap-patch-brushes",
+    "web"
+  ],
+  "conditions": [
+    {
+      "id": "compare-tile-at",
+      "name_zh": "比较特定位置的图块ID",
+      "name_en": "Compare tile at",
+      "description_zh": "比较某个位置的图块编号。",
+      "description_en": "Compare the tile number at a position.",
+      "scriptName": "CompareTileAt",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "comparison",
+          "type": "cmp",
+          "name_zh": "比较",
+          "name_en": "Comparison"
+        },
+        {
+          "id": "tile",
+          "type": "number",
+          "name_zh": "图块编号",
+          "name_en": "Tile"
+        }
+      ]
+    },
+    {
+      "id": "compare-tile-state-at",
+      "name_zh": "比较图块状态",
+      "name_en": "Compare tile state at",
+      "description_zh": "比较某个位置的图块的翻转或旋转状态。",
+      "description_en": "Compare the flipped or rotated state of a tile at a position.",
+      "scriptName": "CompareTileStateAt",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "normal",
+            "flipped-horizontal",
+            "flipped-vertical",
+            "rotated-90",
+            "rotated-180",
+            "rotated-270",
+            "rotated-90-flipped-vertical",
+            "rotated-270-flipped-vertical"
+          ],
+          "items_i18n": {
+            "normal": {
+              "zh": "普通",
+              "en": "normal"
+            },
+            "flipped-horizontal": {
+              "zh": "左右翻转",
+              "en": "flipped horizontal"
+            },
+            "flipped-vertical": {
+              "zh": "上下翻转",
+              "en": "flipped vertical"
+            },
+            "rotated-90": {
+              "zh": "90°旋转",
+              "en": "rotated 90°"
+            },
+            "rotated-180": {
+              "zh": "180°旋转",
+              "en": "rotated 180°"
+            },
+            "rotated-270": {
+              "zh": "270°旋转",
+              "en": "rotated 270°"
+            },
+            "rotated-90-flipped-vertical": {
+              "zh": "旋转90°，上下翻转",
+              "en": "rotated 90°, flipped vertical"
+            },
+            "rotated-270-flipped-vertical": {
+              "zh": "旋转270°，上下翻转",
+              "en": "rotated 270°, flipped vertical"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "brush-exists",
+      "name_zh": "笔刷已存在",
+      "name_en": "Brush exists",
+      "description_zh": "检测笔刷是否已存在。",
+      "description_en": "Check if a brush exists.",
+      "scriptName": "BrushExists",
+      "category": "tilemap-brushes",
+      "params": [
+        {
+          "id": "brush",
+          "type": "tilemapbrush-string",
+          "name_zh": "笔刷名称",
+          "name_en": "Brush name"
+        }
+      ]
+    },
+    {
+      "id": "on-image-url-loaded",
+      "name_zh": "图像加载完成",
+      "name_en": "On image URL loaded",
+      "description_zh": "执行 '加载网络图像' 动作后，图像加载完成时触发。",
+      "description_en": "Triggered after 'Load image from URL' when the image has finished loading.",
+      "scriptName": "OnURLLoaded",
+      "isTrigger": true,
+      "category": "web"
+    },
+    {
+      "id": "on-image-url-failed",
+      "name_zh": "图像加载失败",
+      "name_en": "On image URL failed",
+      "description_zh": "执行 '加载网络图像' 动作后，图像加载失败时触发。",
+      "description_en": "Triggered after 'Load image from URL' if the image fails to load.",
+      "scriptName": "OnURLFailed",
+      "isTrigger": true,
+      "category": "web"
+    }
+  ],
+  "actions": [
+    {
+      "id": "set-blend-mode",
+      "name_zh": "设置混合模式",
+      "name_en": "Set blend mode",
+      "description_zh": "设置此对象的背景混合模式。",
+      "description_en": "Set the background blend mode for this object.",
+      "scriptName": "SetEffect",
+      "category": "appearance",
+      "params": [
+        {
+          "id": "blend-mode",
+          "type": "combo",
+          "name_zh": "混合模式",
+          "name_en": "Blend mode",
+          "items": [
+            "normal",
+            "additive",
+            "copy",
+            "destination-over",
+            "source-in",
+            "destination-in",
+            "source-out",
+            "destination-out",
+            "source-atop",
+            "destination-atop",
+            "lighten",
+            "darken",
+            "multiply",
+            "screen"
+          ],
+          "items_i18n": {
+            "normal": {
+              "zh": "正常",
+              "en": "Normal"
+            },
+            "additive": {
+              "zh": "叠加",
+              "en": "Additive"
+            },
+            "copy": {
+              "zh": "覆盖",
+              "en": "Copy"
+            },
+            "destination-over": {
+              "zh": "背景穿透",
+              "en": "Destination over"
+            },
+            "source-in": {
+              "zh": "前景剪贴",
+              "en": "Source in"
+            },
+            "destination-in": {
+              "zh": "背景剪贴",
+              "en": "Destination in"
+            },
+            "source-out": {
+              "zh": "前景剔除",
+              "en": "Source out"
+            },
+            "destination-out": {
+              "zh": "背景剔除",
+              "en": "Destination out"
+            },
+            "source-atop": {
+              "zh": "前景混合",
+              "en": "Source atop"
+            },
+            "destination-atop": {
+              "zh": "背景混合",
+              "en": "Destination atop"
+            },
+            "lighten": {
+              "zh": "变亮",
+              "en": "Lighten"
+            },
+            "darken": {
+              "zh": "变暗",
+              "en": "Darken"
+            },
+            "multiply": {
+              "zh": "正片叠底",
+              "en": "Multiply"
+            },
+            "screen": {
+              "zh": "滤色",
+              "en": "Screen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "load",
+      "name_zh": "导入",
+      "name_en": "Load",
+      "description_zh": "导入瓦片图数据。",
+      "description_en": "Load tiles from a JSON string.",
+      "scriptName": "LoadFromJSON",
+      "category": "json",
+      "params": [
+        {
+          "id": "json",
+          "type": "string",
+          "name_zh": "JSON",
+          "name_en": "JSON"
+        }
+      ]
+    },
+    {
+      "id": "download",
+      "name_zh": "下载",
+      "name_en": "Download",
+      "description_zh": "下载瓦片图数据，保存到本地文件。",
+      "description_en": "Download the tilemap data as a JSON file.",
+      "scriptName": "JSONDownload",
+      "category": "json",
+      "params": [
+        {
+          "id": "filename",
+          "type": "string",
+          "name_zh": "文件名",
+          "name_en": "Filename",
+          "initialValue": "\"tilemap.json\""
+        }
+      ]
+    },
+    {
+      "id": "erase-tile",
+      "name_zh": "擦除图块",
+      "name_en": "Erase tile",
+      "description_zh": "擦除某个位置的图块。",
+      "description_en": "Erase a tile at a position.",
+      "scriptName": "EraseTile",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        }
+      ]
+    },
+    {
+      "id": "set-tile",
+      "name_zh": "设置图块",
+      "name_en": "Set tile",
+      "description_zh": "更改某个位置的图块。",
+      "description_en": "Change a tile at a position.",
+      "scriptName": "SetTile",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "tile",
+          "type": "number",
+          "name_zh": "瓷砖",
+          "name_en": "Tile"
+        },
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "normal",
+            "flipped-horizontal",
+            "flipped-vertical",
+            "rotated-90",
+            "rotated-180",
+            "rotated-270",
+            "rotated-90-flipped-vertical",
+            "rotated-270-flipped-vertical"
+          ],
+          "items_i18n": {
+            "normal": {
+              "zh": "普通",
+              "en": "normal"
+            },
+            "flipped-horizontal": {
+              "zh": "左右翻转",
+              "en": "flipped horizontal"
+            },
+            "flipped-vertical": {
+              "zh": "上下翻转",
+              "en": "flipped vertical"
+            },
+            "rotated-90": {
+              "zh": "90°旋转",
+              "en": "rotated 90°"
+            },
+            "rotated-180": {
+              "zh": "180°旋转",
+              "en": "rotated 180°"
+            },
+            "rotated-270": {
+              "zh": "270°旋转",
+              "en": "rotated 270°"
+            },
+            "rotated-90-flipped-vertical": {
+              "zh": "旋转90°，上下翻转",
+              "en": "rotated 90°, flipped vertical"
+            },
+            "rotated-270-flipped-vertical": {
+              "zh": "旋转270°，上下翻转",
+              "en": "rotated 270°, flipped vertical"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "erase-tile-range",
+      "name_zh": "擦除图块 (范围)",
+      "name_en": "Erase tile range",
+      "description_zh": "擦除矩形区域的图块。",
+      "description_en": "Erase a rectangular area of tiles.",
+      "scriptName": "EraseTileRange",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "width",
+          "type": "number",
+          "name_zh": "宽度",
+          "name_en": "Width",
+          "initialValue": "1"
+        },
+        {
+          "id": "height",
+          "type": "number",
+          "name_zh": "高度",
+          "name_en": "Height",
+          "initialValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "set-tile-range",
+      "name_zh": "设置图块 (范围)",
+      "name_en": "Set tile range",
+      "description_zh": "设置矩形区域的图块。",
+      "description_en": "Set a rectangular area of tiles.",
+      "scriptName": "SetTileRange",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "width",
+          "type": "number",
+          "name_zh": "宽度",
+          "name_en": "Width",
+          "initialValue": "1"
+        },
+        {
+          "id": "height",
+          "type": "number",
+          "name_zh": "高度",
+          "name_en": "Height",
+          "initialValue": "1"
+        },
+        {
+          "id": "tile",
+          "type": "number",
+          "name_zh": "图块",
+          "name_en": "Tile"
+        },
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "normal",
+            "flipped-horizontal",
+            "flipped-vertical",
+            "rotated-90",
+            "rotated-180",
+            "rotated-270",
+            "rotated-90-flipped-vertical",
+            "rotated-270-flipped-vertical"
+          ],
+          "items_i18n": {
+            "normal": {
+              "zh": "普通",
+              "en": "normal"
+            },
+            "flipped-horizontal": {
+              "zh": "左右翻转",
+              "en": "flipped horizontal"
+            },
+            "flipped-vertical": {
+              "zh": "上下翻转",
+              "en": "flipped vertical"
+            },
+            "rotated-90": {
+              "zh": "90°旋转",
+              "en": "rotated 90°"
+            },
+            "rotated-180": {
+              "zh": "180°旋转",
+              "en": "rotated 180°"
+            },
+            "rotated-270": {
+              "zh": "270°旋转",
+              "en": "rotated 270°"
+            },
+            "rotated-90-flipped-vertical": {
+              "zh": "旋转90°，上下翻转",
+              "en": "rotated 90°, flipped vertical"
+            },
+            "rotated-270-flipped-vertical": {
+              "zh": "旋转270°，上下翻转",
+              "en": "rotated 270°, flipped vertical"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-tile-state",
+      "name_zh": "设置图块状态",
+      "name_en": "Set tile state",
+      "description_zh": "更改图块的翻转或旋转状态。",
+      "description_en": "Change a tile's flipped or rotated state.",
+      "scriptName": "SetTileState",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "normal",
+            "flipped-horizontal",
+            "flipped-vertical",
+            "rotated-90",
+            "rotated-180",
+            "rotated-270",
+            "rotated-90-flipped-vertical",
+            "rotated-270-flipped-vertical"
+          ],
+          "items_i18n": {
+            "normal": {
+              "zh": "普通",
+              "en": "normal"
+            },
+            "flipped-horizontal": {
+              "zh": "左右翻转",
+              "en": "flipped horizontal"
+            },
+            "flipped-vertical": {
+              "zh": "上下翻转",
+              "en": "flipped vertical"
+            },
+            "rotated-90": {
+              "zh": "90°旋转",
+              "en": "rotated 90°"
+            },
+            "rotated-180": {
+              "zh": "180°旋转",
+              "en": "rotated 180°"
+            },
+            "rotated-270": {
+              "zh": "270°旋转",
+              "en": "rotated 270°"
+            },
+            "rotated-90-flipped-vertical": {
+              "zh": "旋转90°, 上下翻转",
+              "en": "rotated 90°, flipped vertical"
+            },
+            "rotated-270-flipped-vertical": {
+              "zh": "旋转270°, 上下翻转",
+              "en": "rotated 270°, flipped vertical"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-tile-state-range",
+      "name_zh": "设置图块状态 (范围)",
+      "name_en": "Set tile state range",
+      "description_zh": "改变图块的矩形区域的翻转或旋转状态。",
+      "description_en": "Change the flipped or rotated state of a rectangular area of tiles.",
+      "scriptName": "SetTileStateRange",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "width",
+          "type": "number",
+          "name_zh": "宽度",
+          "name_en": "Width",
+          "initialValue": "1"
+        },
+        {
+          "id": "height",
+          "type": "number",
+          "name_zh": "高度",
+          "name_en": "Height",
+          "initialValue": "1"
+        },
+        {
+          "id": "state",
+          "type": "combo",
+          "name_zh": "状态",
+          "name_en": "State",
+          "items": [
+            "normal",
+            "flipped-horizontal",
+            "flipped-vertical",
+            "rotated-90",
+            "rotated-180",
+            "rotated-270",
+            "rotated-90-flipped-vertical",
+            "rotated-270-flipped-vertical"
+          ],
+          "items_i18n": {
+            "normal": {
+              "zh": "普通",
+              "en": "normal"
+            },
+            "flipped-horizontal": {
+              "zh": "左右翻转",
+              "en": "flipped horizontal"
+            },
+            "flipped-vertical": {
+              "zh": "上下翻转",
+              "en": "flipped vertical"
+            },
+            "rotated-90": {
+              "zh": "90°旋转",
+              "en": "rotated 90°"
+            },
+            "rotated-180": {
+              "zh": "180°旋转",
+              "en": "rotated 180°"
+            },
+            "rotated-270": {
+              "zh": "270°旋转",
+              "en": "rotated 270°"
+            },
+            "rotated-90-flipped-vertical": {
+              "zh": "旋转90°，上下翻转",
+              "en": "rotated 90°, flipped vertical"
+            },
+            "rotated-270-flipped-vertical": {
+              "zh": "旋转270°，上下翻转",
+              "en": "rotated 270°, flipped vertical"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-tile-with-brush",
+      "name_zh": "绘制图块",
+      "name_en": "Set tile with brush",
+      "description_zh": "使用自动图块笔刷在指定的位置绘制图块。",
+      "description_en": "Change a tile at a position using a brush.",
+      "scriptName": "SetTileWithBrush",
+      "category": "tilemap-brushes",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "brush",
+          "type": "tilemapbrush",
+          "name_zh": "笔刷",
+          "name_en": "Brush"
+        }
+      ]
+    },
+    {
+      "id": "erase-tile-with-brush",
+      "name_zh": "擦除图块 (自动笔刷)",
+      "name_en": "Erase tile with brush",
+      "description_zh": "使用自动图块笔刷擦除指定位置的图块。",
+      "description_en": "Erase a tile at a position using a brush.",
+      "scriptName": "EraseTileWithBrush",
+      "category": "tilemap-brushes",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "brush",
+          "type": "tilemapbrush",
+          "name_zh": "笔刷",
+          "name_en": "Brush"
+        }
+      ]
+    },
+    {
+      "id": "set-tile-with-brush-by-name",
+      "name_zh": "绘制图块 (根据名称)",
+      "name_en": "Set tile with brush (by name)",
+      "description_zh": "使用自动图块笔刷，在指定位置绘制图块。",
+      "description_en": "Change a tile at a position using a brush.",
+      "scriptName": "SetTileWithBrushByName",
+      "category": "tilemap-brushes",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "brush",
+          "type": "tilemapbrush-string",
+          "name_zh": "笔刷名称",
+          "name_en": "Brush name"
+        }
+      ]
+    },
+    {
+      "id": "erase-tile-with-brush-by-name",
+      "name_zh": "擦除图块 (自动笔刷, 根据名称)",
+      "name_en": "Erase tile with brush (by name)",
+      "description_zh": "使用自动图块笔刷，擦除指定位置的图块。",
+      "description_en": "Erase a tile at a position using a brush.",
+      "scriptName": "EraseTileWithBrushByName",
+      "category": "tilemap-brushes",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "brush",
+          "type": "tilemapbrush-string",
+          "name_zh": "笔刷名称",
+          "name_en": "Brush name"
+        }
+      ]
+    },
+    {
+      "id": "set-tile-with-patch-brush",
+      "name_zh": "设置印章笔刷",
+      "name_en": "Set tiles with patch brush",
+      "description_zh": "使用笔刷在指定位置绘制图块。",
+      "description_en": "Change a tile at a position using a brush.",
+      "scriptName": "SetTileWithPatchBrush",
+      "category": "tilemap-patch-brushes",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "brush",
+          "type": "tilemapbrush",
+          "name_zh": "笔刷",
+          "name_en": "Brush"
+        },
+        {
+          "id": "mirror",
+          "type": "boolean",
+          "name_zh": "左右翻转",
+          "name_en": "Mirror",
+          "initialValue": "false"
+        },
+        {
+          "id": "flip",
+          "type": "boolean",
+          "name_zh": "上下翻转",
+          "name_en": "Flip",
+          "initialValue": "false"
+        },
+        {
+          "id": "rotation",
+          "type": "combo",
+          "name_zh": "旋转图块",
+          "name_en": "Rotation",
+          "items": [
+            "0",
+            "90",
+            "180",
+            "270"
+          ],
+          "items_i18n": {
+            "0": {
+              "zh": "0°",
+              "en": "0° degrees"
+            },
+            "90": {
+              "zh": "90°",
+              "en": "90° degrees"
+            },
+            "180": {
+              "zh": "180°",
+              "en": "180° degrees"
+            },
+            "270": {
+              "zh": "270°",
+              "en": "270° degrees"
+            }
+          }
+        },
+        {
+          "id": "invalid-indexes",
+          "type": "combo",
+          "name_zh": "无效索引",
+          "name_en": "Invalid indexes",
+          "items": [
+            "erase",
+            "ignore"
+          ],
+          "items_i18n": {
+            "erase": {
+              "zh": "擦除",
+              "en": "Erase"
+            },
+            "ignore": {
+              "zh": "忽略",
+              "en": "Ignore"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "erase-tile-with-patch-brush",
+      "name_zh": "擦除图块 (印章笔刷)",
+      "name_en": "Erase tiles with patch brush",
+      "description_zh": "使用笔刷在指定位置绘制图块。",
+      "description_en": "Change a tile at a position using a brush.",
+      "scriptName": "EraseTileWithPatchBrush",
+      "category": "tilemap-patch-brushes",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "brush",
+          "type": "tilemapbrush",
+          "name_zh": "笔刷",
+          "name_en": "Brush"
+        },
+        {
+          "id": "mirror",
+          "type": "boolean",
+          "name_zh": "左右翻转",
+          "name_en": "Mirror",
+          "initialValue": "false"
+        },
+        {
+          "id": "flip",
+          "type": "boolean",
+          "name_zh": "上下翻转",
+          "name_en": "Flip",
+          "initialValue": "false"
+        },
+        {
+          "id": "rotation",
+          "type": "combo",
+          "name_zh": "旋转角度",
+          "name_en": "Rotation",
+          "items": [
+            "0",
+            "90",
+            "180",
+            "270"
+          ],
+          "items_i18n": {
+            "0": {
+              "zh": "0°",
+              "en": "0° degrees"
+            },
+            "90": {
+              "zh": "90°",
+              "en": "90° degrees"
+            },
+            "180": {
+              "zh": "180°",
+              "en": "180° degrees"
+            },
+            "270": {
+              "zh": "270°",
+              "en": "270° degrees"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-tile-with-patch-brush-by-name",
+      "name_zh": "设置印章笔刷 (按名称)",
+      "name_en": "Set tiles with patch brush (by name)",
+      "description_zh": "使用笔刷在指定位置绘制图块。",
+      "description_en": "Change a tile at a position using a brush.",
+      "scriptName": "SetTileWithPatchBrushByName",
+      "category": "tilemap-patch-brushes",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "brush",
+          "type": "tilemapbrush-string",
+          "name_zh": "笔刷名称",
+          "name_en": "Brush name"
+        },
+        {
+          "id": "mirror",
+          "type": "boolean",
+          "name_zh": "左右翻转",
+          "name_en": "Mirror",
+          "initialValue": "false"
+        },
+        {
+          "id": "flip",
+          "type": "boolean",
+          "name_zh": "上下翻转",
+          "name_en": "Flip",
+          "initialValue": "false"
+        },
+        {
+          "id": "rotation",
+          "type": "combo",
+          "name_zh": "旋转角度",
+          "name_en": "Rotation",
+          "items": [
+            "0",
+            "90",
+            "180",
+            "270"
+          ],
+          "items_i18n": {
+            "0": {
+              "zh": "0°",
+              "en": "0° degrees"
+            },
+            "90": {
+              "zh": "90°",
+              "en": "90° degrees"
+            },
+            "180": {
+              "zh": "180°",
+              "en": "180° degrees"
+            },
+            "270": {
+              "zh": "270°",
+              "en": "270° degrees"
+            }
+          }
+        },
+        {
+          "id": "invalid-indexes",
+          "type": "combo",
+          "name_zh": "无效索引",
+          "name_en": "Invalid indexes",
+          "items": [
+            "erase",
+            "ignore"
+          ],
+          "items_i18n": {
+            "erase": {
+              "zh": "擦除",
+              "en": "Erase"
+            },
+            "ignore": {
+              "zh": "忽略",
+              "en": "Ignore"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "erase-tile-with-patch-brush-by-name",
+      "name_zh": "擦除图块 (印章笔刷, 按名称)",
+      "name_en": "Erase tiles with patch brush (by name)",
+      "description_zh": "使用自动图块笔刷，在指定位置绘制图块。",
+      "description_en": "Change a tile at a position using a brush.",
+      "scriptName": "EraseTileWithPatchBrushByName",
+      "category": "tilemap-patch-brushes",
+      "params": [
+        {
+          "id": "tile-x",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "Tile X"
+        },
+        {
+          "id": "tile-y",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "Tile Y"
+        },
+        {
+          "id": "brush",
+          "type": "tilemapbrush-string",
+          "name_zh": "笔刷名称",
+          "name_en": "Brush name"
+        },
+        {
+          "id": "mirror",
+          "type": "boolean",
+          "name_zh": "左右翻转",
+          "name_en": "Mirror",
+          "initialValue": "false"
+        },
+        {
+          "id": "flip",
+          "type": "boolean",
+          "name_zh": "上下翻转",
+          "name_en": "Flip",
+          "initialValue": "false"
+        },
+        {
+          "id": "rotation",
+          "type": "combo",
+          "name_zh": "旋转角度",
+          "name_en": "Rotation",
+          "items": [
+            "0",
+            "90",
+            "180",
+            "270"
+          ],
+          "items_i18n": {
+            "0": {
+              "zh": "0°",
+              "en": "0° degrees"
+            },
+            "90": {
+              "zh": "90°",
+              "en": "90° degrees"
+            },
+            "180": {
+              "zh": "180°",
+              "en": "180° degrees"
+            },
+            "270": {
+              "zh": "270°",
+              "en": "270° degrees"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "load-image-from-url",
+      "name_zh": "加载网络图像",
+      "name_en": "Load image from URL",
+      "description_zh": "从远程服务器下载图块数据。",
+      "description_en": "Load the tilemap source image from a web address or data URI.",
+      "scriptName": "LoadURL",
+      "isAsync": true,
+      "category": "web",
+      "params": [
+        {
+          "id": "uri",
+          "type": "string",
+          "name_zh": "URI",
+          "name_en": "URI",
+          "initialValue": "\"https://\""
+        },
+        {
+          "id": "cross-origin",
+          "type": "combo",
+          "name_zh": "跨域",
+          "name_en": "Cross-origin",
+          "items": [
+            "anonymous",
+            "none"
+          ],
+          "items_i18n": {
+            "anonymous": {
+              "zh": "匿名",
+              "en": "anonymous"
+            },
+            "none": {
+              "zh": "无",
+              "en": "none"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "expressions": [
+    {
+      "id": "tilesjson",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将图块数据导出为 JSON格式的字符串。",
+      "description_en": "Get tilemap data as a JSON-formatted string.",
+      "expressionName": "TilesJSON",
+      "returnType": "string",
+      "category": "json"
+    },
+    {
+      "id": "tileat",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将图块编号返回到图块中的位置。",
+      "description_en": "Return the tile number at a position in tiles.",
+      "expressionName": "TileAt",
+      "returnType": "number",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tilex",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "TileX"
+        },
+        {
+          "id": "tiley",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "TileY"
+        }
+      ]
+    },
+    {
+      "id": "positiontotilex",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将X坐标转换为图块X索引。",
+      "description_en": "Convert an X co-ordinate to a tile X index.",
+      "expressionName": "PositionToTileX",
+      "returnType": "number",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        }
+      ]
+    },
+    {
+      "id": "positiontotiley",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将Y坐标转换为图块Y索引。",
+      "description_en": "Convert a Y co-ordinate to a tile Y index.",
+      "expressionName": "PositionToTileY",
+      "returnType": "number",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        }
+      ]
+    },
+    {
+      "id": "tiletopositionx",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将图块X索引转换为X坐标。",
+      "description_en": "Convert a tile X index to X co-ordinate.",
+      "expressionName": "TileToPositionX",
+      "returnType": "number",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tilex",
+          "type": "number",
+          "name_zh": "图块X",
+          "name_en": "TileX"
+        }
+      ]
+    },
+    {
+      "id": "tiletopositiony",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将索引的图块转换为Y坐标。",
+      "description_en": "Convert a tile Y index to Y co-ordinate.",
+      "expressionName": "TileToPositionY",
+      "returnType": "number",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "tiley",
+          "type": "number",
+          "name_zh": "图块Y",
+          "name_en": "TileY"
+        }
+      ]
+    },
+    {
+      "id": "snapx",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将X坐标与最近的图块X对齐。",
+      "description_en": "Snap an X co-ordinate to the nearest tile X.",
+      "expressionName": "SnapX",
+      "returnType": "number",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "x",
+          "type": "number",
+          "name_zh": "X",
+          "name_en": "X"
+        }
+      ]
+    },
+    {
+      "id": "snapy",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "将Y坐标与最近的图块Y对齐。",
+      "description_en": "Snap a Y co-ordinate to the nearest tile Y.",
+      "expressionName": "SnapY",
+      "returnType": "number",
+      "category": "tilemap",
+      "params": [
+        {
+          "id": "y",
+          "type": "number",
+          "name_zh": "Y",
+          "name_en": "Y"
+        }
+      ]
+    },
+    {
+      "id": "tile-width",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "图块的宽度，以像素为单位。",
+      "description_en": "The width of a tile, in pixels.",
+      "expressionName": "TileWidth",
+      "returnType": "number",
+      "category": "tilemap"
+    },
+    {
+      "id": "tile-height",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "图块的高度，以像素为单位",
+      "description_en": "The height of a tile, in pixels.",
+      "expressionName": "TileHeight",
+      "returnType": "number",
+      "category": "tilemap"
+    },
+    {
+      "id": "map-display-width",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "瓦片地图显示的水平瓦片数",
+      "description_en": "The horizontal number of tiles shown by the tilemap.",
+      "expressionName": "MapDisplayWidth",
+      "returnType": "number",
+      "category": "tilemap"
+    },
+    {
+      "id": "map-display-height",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "瓦片地图显示的垂直瓦片数量。",
+      "description_en": "The vertical number of tiles shown by the tilemap.",
+      "expressionName": "MapDisplayHeight",
+      "returnType": "number",
+      "category": "tilemap"
+    },
+    {
+      "id": "brush-width",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取画笔的图块宽度。",
+      "description_en": "The tile width of the specified brush.",
+      "expressionName": "BrushWidth",
+      "returnType": "number",
+      "category": "tilemap-brushes",
+      "params": [
+        {
+          "id": "brush",
+          "type": "string",
+          "name_zh": "笔刷",
+          "name_en": "Brush"
+        }
+      ]
+    },
+    {
+      "id": "brush-height",
+      "name_zh": "",
+      "name_en": "",
+      "description_zh": "获取画笔的图块高度。",
+      "description_en": "The tile height of the specified brush.",
+      "expressionName": "BrushHeight",
+      "returnType": "number",
+      "category": "tilemap-brushes",
+      "params": [
+        {
+          "id": "brush",
+          "type": "string",
+          "name_zh": "笔刷",
+          "name_en": "Brush"
+        }
+      ]
+    }
+  ],
+  "properties": [
+    {
+      "id": "edit-image",
+      "name_zh": "图像",
+      "name_en": "Image",
+      "description_zh": "单击以编辑瓦片图像资源。",
+      "description_en": "Click to edit the tilemap image."
+    },
+    {
+      "id": "initially-visible",
+      "name_zh": "初始可见",
+      "name_en": "Initially visible",
+      "description_zh": "在场景开始时，对象是否可见。",
+      "description_en": "Choose whether the object is visible when the layout starts."
+    },
+    {
+      "id": "tile-width",
+      "name_zh": "图块宽度",
+      "name_en": "Tile width",
+      "description_zh": "每个图块的宽度，以像素为单位。",
+      "description_en": "Width of each tile, in pixels."
+    },
+    {
+      "id": "tile-height",
+      "name_zh": "图块高度",
+      "name_en": "Tile height",
+      "description_zh": "每个图块的高度，以像素为单位。",
+      "description_en": "Height of each tile, in pixels."
+    },
+    {
+      "id": "tile-x-offset",
+      "name_zh": "图块偏移X",
+      "name_en": "Tile X offset",
+      "description_zh": "第一个图块在图像中的X偏移值。",
+      "description_en": "X offset in image of first tile."
+    },
+    {
+      "id": "tile-y-offset",
+      "name_zh": "图块偏移Y",
+      "name_en": "Tile Y offset",
+      "description_zh": "第一个图块在图像中的Y偏移值。",
+      "description_en": "Y offset in image of first tile."
+    },
+    {
+      "id": "tile-x-spacing",
+      "name_zh": "图块间距X",
+      "name_en": "Tile X spacing",
+      "description_zh": "每个图块之间的水平间隙。",
+      "description_en": "Horizontal gap in pixels between each tile."
+    },
+    {
+      "id": "tile-y-spacing",
+      "name_zh": "图块间距Y",
+      "name_en": "Tile Y spacing",
+      "description_zh": "每个图块之间的垂直间隙。",
+      "description_en": "Vertical gap in pixels between each tile."
+    },
+    {
+      "id": "tile-x-drawing-offset",
+      "name_zh": "图块偏移X",
+      "name_en": "Tile X drawing offset",
+      "description_zh": "绘制时应用在每个图块的水平偏移",
+      "description_en": "Horizontal offset applied to each tile when it is drawn"
+    },
+    {
+      "id": "tile-y-drawing-offset",
+      "name_zh": "图块偏移Y",
+      "name_en": "Tile Y drawing offset",
+      "description_zh": "绘制时应用于每个图块的垂直偏移",
+      "description_en": "Vertical offset applied to each tile when it is drawn"
+    },
+    {
+      "id": "drawing-mode",
+      "name_zh": "绘图模式",
+      "name_en": "Drawing mode",
+      "description_zh": "图块绘制的顺序",
+      "description_en": "Order in which tiles are drawn",
+      "items": {
+        "top-to-right": {
+          "zh": "顶部到右",
+          "en": "Top to right"
+        },
+        "bottom-to-right": {
+          "zh": "底部到右",
+          "en": "Bottom to right"
+        },
+        "top-to-left": {
+          "zh": "顶部到左",
+          "en": "Top to left"
+        },
+        "bottom-to-left": {
+          "zh": "底部到左",
+          "en": "Bottom to left"
+        }
+      }
+    },
+    {
+      "id": "seamless-mode",
+      "name_zh": "无缝模式",
+      "name_en": "Seamless mode",
+      "description_zh": "使用一种性能较慢但无缝衔接的渲染方式。",
+      "description_en": "Use a slower but seamless rendering method."
+    }
+  ]
+}

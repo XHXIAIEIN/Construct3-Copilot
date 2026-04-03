@@ -1,0 +1,27 @@
+{
+  "id": "hexpixellate",
+  "name_zh": "像素化(晶体)",
+  "name_en": "Hexagonal pixellate",
+  "description_zh": "六边形的像素化效果。",
+  "description_en": "A hexagon shaped pixellate effect.",
+  "category": "color",
+  "author": "Evan Wallace",
+  "supportedRenderers": [
+    "webgl",
+    "webgl2",
+    "webgpu"
+  ],
+  "blendsBackground": false,
+  "preservesOpaqueness": false,
+  "animated": false,
+  "parameters": [
+    {
+      "id": "scale",
+      "type": "float",
+      "name_zh": "scale",
+      "name_en": "scale",
+      "initialValue": 16,
+      "interpolatable": true
+    }
+  ]
+}

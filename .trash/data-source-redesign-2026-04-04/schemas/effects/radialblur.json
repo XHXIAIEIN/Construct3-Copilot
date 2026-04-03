@@ -1,0 +1,34 @@
+{
+  "id": "radialblur",
+  "name_zh": "径向模糊",
+  "name_en": "Radial blur",
+  "description_zh": "采样11 次的径向模糊。",
+  "description_en": "A radial 11-sample blur.",
+  "category": "color",
+  "author": "Scirra",
+  "supportedRenderers": [
+    "webgl",
+    "webgpu"
+  ],
+  "blendsBackground": false,
+  "preservesOpaqueness": false,
+  "animated": false,
+  "parameters": [
+    {
+      "id": "radius",
+      "type": "percent",
+      "name_zh": "radius",
+      "name_en": "radius",
+      "initialValue": 0.4,
+      "interpolatable": true
+    },
+    {
+      "id": "intensity",
+      "type": "percent",
+      "name_zh": "intensity",
+      "name_en": "intensity",
+      "initialValue": 1,
+      "interpolatable": true
+    }
+  ]
+}
