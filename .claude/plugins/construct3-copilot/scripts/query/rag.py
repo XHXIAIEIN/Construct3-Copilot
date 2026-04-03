@@ -26,7 +26,7 @@ import urllib.error
 import urllib.request
 
 RAG_URL = "http://localhost:8765/search"
-TIMEOUT = 10  # seconds — semantic search can be slow
+TIMEOUT = 120  # seconds — embedding + reranker on CPU can take 30-60s
 
 SUBCOMMANDS = {
     "search": "semantic",

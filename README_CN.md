@@ -6,16 +6,6 @@
 
 ## 快速开始
 
-### OpenAI Codex Skills（推荐）
-
-1. 克隆仓库并在 Codex 中打开。
-2. 保持技能目录为 `.agents/skills/construct3-copilot/`。
-3. 直接提出 Construct 3 需求（事件表、对象、布局、ACE 检索）。
-
-Codex 会从 `.agents/skills` 自动发现技能，并加载 `SKILL.md` 与配套资源。
-
-### Claude Code（兼容）
-
 ```bash
 git clone https://github.com/XHXIAIEIN/Construct3-Copilot.git
 cd Construct3-Copilot
@@ -84,17 +74,14 @@ python scripts/preflight.py output.json
 
 ```
 Construct3-Copilot/
-├── .agents/
-│   └── skills/
-│       └── construct3-copilot/    # OpenAI Codex Skill（主入口）
-│           ├── SKILL.md
+├── .claude/
+│   └── plugins/
+│       └── construct3-copilot/    # Claude Code Plugin
+│           ├── plugin.json
 │           ├── CLAUDE.md
-│           ├── agents/openai.yaml
+│           ├── skills/            # 4 个技能 (create, search, validate, addon)
 │           ├── references/
 │           └── scripts/
-├── .claude/
-│   └── skills/
-│       └── construct3-copilot/    # Claude 兼容镜像
 ├── data/
 │   └── schemas/                   # ACE Schema (72 插件 + 31 行为)
 └── tests/

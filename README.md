@@ -6,16 +6,6 @@ Generate Construct 3 clipboard JSON from natural language and paste directly int
 
 ## Quick Start
 
-### OpenAI Codex Skills (Recommended)
-
-1. Clone this repository and open it in Codex.
-2. Keep the skill at `.agents/skills/construct3-copilot/`.
-3. Ask for Construct 3 tasks directly (events, objects, layouts, ACE lookup).
-
-Codex discovers skills from `.agents/skills` and uses `SKILL.md` + bundled resources.
-
-### Claude Code (Compatible)
-
 ```bash
 git clone https://github.com/XHXIAIEIN/Construct3-Copilot.git
 cd Construct3-Copilot
@@ -84,17 +74,14 @@ python scripts/preflight.py output.json
 
 ```
 Construct3-Copilot/
-├── .agents/
-│   └── skills/
-│       └── construct3-copilot/    # OpenAI Codex Skill (primary)
-│           ├── SKILL.md
+├── .claude/
+│   └── plugins/
+│       └── construct3-copilot/    # Claude Code Plugin
+│           ├── plugin.json
 │           ├── CLAUDE.md
-│           ├── agents/openai.yaml
+│           ├── skills/            # 4 skills (create, search, validate, addon)
 │           ├── references/
 │           └── scripts/
-├── .claude/
-│   └── skills/
-│       └── construct3-copilot/    # Claude-compatible skill mirror
 ├── data/
 │   └── schemas/                   # ACE Schema (72 plugins + 31 behaviors)
 └── tests/
