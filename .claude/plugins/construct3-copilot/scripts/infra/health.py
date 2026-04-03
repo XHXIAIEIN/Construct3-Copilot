@@ -39,24 +39,32 @@ def probe_service(base_url: str) -> dict:
 
 
 def check_local_data() -> dict:
-    """Check local schema data directory."""
-    # Resolve project root relative to this script:
-    # scripts/infra/health.py -> scripts -> .claude/skills/construct3-copilot -> skill_root
-    # skill_root -> .claude/skills -> .claude -> project_root
-    script_dir = Path(__file__).resolve().parent
-    skill_root = script_dir.parent.parent  # .claude/skills/construct3-copilot/
-    project_root = skill_root.parent.parent.parent  # project root
+    """Check that Construct3-RAG sibling repo and schema data are accessible."""
+    try:
+        import importlib.util
+        scripts_dir = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location("_resolve", scripts_dir / "_resolve.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        schemas_dir = mod.resolve_rag_schemas("en-US")
+    except (SystemExit, Exception):
+        return {
+            "source": "Construct3-RAG",
+            "available": False,
+            "plugins": 0,
+        }
 
-    plugins_dir = project_root / "data" / "schemas" / "plugins"
+    plugins_dir = schemas_dir / "plugins"
     if plugins_dir.exists():
-        plugin_count = len(list(plugins_dir.glob("*.json")))
+        plugin_count = len([f for f in plugins_dir.glob("*.json") if f.stem not in ("index", "_common")])
         available = plugin_count > 0
     else:
         plugin_count = 0
         available = False
 
     return {
-        "schemas_dir": str(plugins_dir),
+        "source": "Construct3-RAG",
+        "schemas_dir": str(schemas_dir),
         "available": available,
         "plugins": plugin_count,
     }
