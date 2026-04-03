@@ -35,6 +35,8 @@ class C3ClipboardValidator:
         self.errors = []
         self.warnings = []
         self.schema_index = SchemaIndex()
+        if not self.schema_index.available:
+            self.warnings.append("⚠ Schema cross-check skipped: Construct3-RAG not found")
 
     def validate(self, data: dict) -> bool:
         """Main validation entry point"""
@@ -444,37 +446,55 @@ class SchemaInfo:
 
 class SchemaIndex:
     def __init__(self):
-        script_dir = Path(__file__).resolve().parent
-        project_root = script_dir.parent.parent.parent.parent
-        self.schemas_dir = project_root / "data" / "schemas"
+        self.schemas_dir = None
         self.plugin_map = {}
         self.behavior_map = {}
+        self._available = False
         self._load_schemas()
+
+    @property
+    def available(self) -> bool:
+        return self._available
 
     def _normalize(self, name: str) -> str:
         return re.sub(r"[^a-z0-9]", "", name.lower())
 
     def _load_schemas(self):
+        try:
+            scripts_dir = Path(__file__).resolve().parent.parent
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("_resolve", scripts_dir / "_resolve.py")
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            self.schemas_dir = mod.resolve_rag_schemas("en-US")
+        except (SystemExit, Exception):
+            return  # RAG not available, layer 3 skipped
+
+        self._available = True
         plugins_dir = self.schemas_dir / "plugins"
         behaviors_dir = self.schemas_dir / "behaviors"
         if plugins_dir.exists():
             for path in plugins_dir.glob("*.json"):
+                if path.name in ("index.json", "_common.json"):
+                    continue
                 with open(path, "r", encoding="utf-8") as f:
                     schema = json.load(f)
-                info = SchemaInfo(schema.get("name_en", path.stem), schema)
+                info = SchemaInfo(schema.get("name", path.stem), schema)
                 for key in self._schema_keys(schema, path.stem):
                     self.plugin_map[key] = info
         if behaviors_dir.exists():
             for path in behaviors_dir.glob("*.json"):
+                if path.name in ("index.json", "_common.json"):
+                    continue
                 with open(path, "r", encoding="utf-8") as f:
                     schema = json.load(f)
-                info = SchemaInfo(schema.get("name_en", path.stem), schema)
+                info = SchemaInfo(schema.get("name", path.stem), schema)
                 for key in self._schema_keys(schema, path.stem):
                     self.behavior_map[key] = info
 
     def _schema_keys(self, schema: dict, stem: str):
         keys = {stem}
-        for key in [schema.get("id"), schema.get("name_en"), schema.get("name_zh")]:
+        for key in [schema.get("id"), schema.get("name")]:
             if key:
                 keys.add(key)
         return {self._normalize(k) for k in keys if k}
@@ -490,26 +510,33 @@ class SchemaIndex:
 
     def validate_params(self, ace: dict, params: dict, prefix: str):
         warnings = []
-        schema_params = ace.get("params", [])
-        schema_ids = {p.get("id") for p in schema_params if p.get("id")}
+        schema_params = ace.get("params", {})
+        # RAG format: params is a dict {param_id: {type, name, desc, items?}}
+        if isinstance(schema_params, dict):
+            schema_ids = set(schema_params.keys())
+        else:
+            schema_ids = {p.get("id") for p in schema_params if p.get("id")}
+
         for pid in schema_ids:
             if pid not in params:
                 warnings.append(f"{prefix}: missing parameter '{pid}'")
         for pid in params.keys():
             if pid not in schema_ids:
                 warnings.append(f"{prefix}: unknown parameter '{pid}'")
-        for p in schema_params:
-            pid = p.get("id")
-            items = p.get("items")
-            if not pid or not items or pid not in params:
-                continue
-            value = params.get(pid)
-            if isinstance(value, str):
-                normalized = value.strip('"')
-                if normalized in items:
+
+        # Validate enum values (dict format)
+        if isinstance(schema_params, dict):
+            for pid, pinfo in schema_params.items():
+                items = pinfo.get("items", {})
+                if not isinstance(items, dict) or not items or pid not in params:
                     continue
-                if not re.search(r"[()+\\-*/&.]", value):
-                    warnings.append(f"{prefix}.{pid}: value '{value}' not in {items}")
+                value = params.get(pid)
+                if isinstance(value, str):
+                    normalized = value.strip('"')
+                    if normalized in items:
+                        continue
+                    if not re.search(r"[()+\-*/&.]", value):
+                        warnings.append(f"{prefix}.{pid}: value '{value}' not in {list(items.keys())}")
         return warnings
 
 
