@@ -40,6 +40,7 @@ app = FastAPI(
     title="Construct 3 Copilot Core",
     description="Semantic understanding engine + orchestration service for Construct 3",
     version="2.0.0",
+    docs_url="/portal",
 )
 
 app.add_middleware(

@@ -20,6 +20,10 @@ from typing import Any
 class ValidationError(Exception):
     pass
 
+V1_TO_V2_BEHAVIORS = {"Solid": "solid", "ScrollTo": "scrollto"}
+REMOVED_BEHAVIORS = {"DestroyOutsideLayout"}
+
+
 class C3ClipboardValidator:
     """Validates Construct 3 clipboard JSON format"""
 
@@ -78,6 +82,9 @@ class C3ClipboardValidator:
         elif data["type"] == "event-sheets":
             self._validate_event_sheets(data)
 
+        # 3. SID uniqueness check
+        self._validate_sid_uniqueness(data)
+
         return len(self.errors) == 0
 
     def _validate_events(self, items: list):
@@ -107,19 +114,48 @@ class C3ClipboardValidator:
 
     def _validate_block(self, block: dict, prefix: str):
         """Validate event block"""
-        if "conditions" not in block:
+        conditions = block.get("conditions")
+        if conditions is None:
             self.errors.append(f"{prefix}: missing 'conditions' array")
-        elif isinstance(block["conditions"], list):
-            self._validate_conditions(block["conditions"], f"{prefix}.conditions")
+        elif isinstance(conditions, list):
+            self._validate_conditions(conditions, f"{prefix}.conditions")
+
+            # Empty parameters {} warning
+            for cidx, cond in enumerate(conditions):
+                if isinstance(cond, dict) and cond.get("parameters") == {}:
+                    self.warnings.append(
+                        f"{prefix}.conditions[{cidx}]: empty 'parameters' object — "
+                        "omit the field entirely instead"
+                    )
+
+            # Multiple triggers in one block
+            trigger_ids = [
+                c.get("id", "") for c in conditions
+                if isinstance(c, dict) and str(c.get("id", "")).startswith("on-")
+            ]
+            if len(trigger_ids) > 1:
+                self.errors.append(
+                    f"{prefix}: has {len(trigger_ids)} trigger conditions "
+                    f"({', '.join(trigger_ids)}). A block may have at most one trigger."
+                )
 
         if "actions" not in block:
             self.errors.append(f"{prefix}: missing 'actions' array")
         elif isinstance(block["actions"], list):
             self._validate_actions(block["actions"], f"{prefix}.actions")
 
-        # Validate sub-events
-        if "children" in block and isinstance(block["children"], list):
-            for i, child in enumerate(block["children"]):
+        # Validate sub-events — also check for triggers in children
+        children = block.get("children")
+        if isinstance(children, list):
+            for i, child in enumerate(children):
+                if isinstance(child, dict):
+                    child_conds = child.get("conditions") or []
+                    for ccidx, cc in enumerate(child_conds):
+                        if isinstance(cc, dict) and str(cc.get("id", "")).startswith("on-"):
+                            self.errors.append(
+                                f"{prefix}.children[{i}].conditions[{ccidx}]: "
+                                f"trigger '{cc.get('id')}' cannot appear in sub-events"
+                            )
                 self._validate_events([child])
 
     def _validate_variable(self, var: dict, prefix: str):
@@ -204,10 +240,39 @@ class C3ClipboardValidator:
         items = data.get("items", [])
         for i, item in enumerate(items):
             prefix = f"object-types[{i}]"
+            obj_name = item.get("name", "?")
             if "name" not in item:
                 self.errors.append(f"{prefix}: missing 'name'")
             if "plugin-id" not in item:
                 self.errors.append(f"{prefix}: missing 'plugin-id'")
+
+            # effectTypes must be array
+            effect_types = item.get("effectTypes")
+            if effect_types is not None and not isinstance(effect_types, list):
+                self.errors.append(f"{prefix}: '{obj_name}' effectTypes must be an array, not {type(effect_types).__name__}")
+
+            # instanceVariables must be array
+            inst_vars = item.get("instanceVariables")
+            if inst_vars is not None and not isinstance(inst_vars, list):
+                self.errors.append(f"{prefix}: '{obj_name}' instanceVariables must be an array, not {type(inst_vars).__name__}")
+
+            # Behavior checks: V1→V2 migration, removed behaviors
+            behavior_types = item.get("behaviorTypes") or []
+            if isinstance(behavior_types, list):
+                for bidx, btype in enumerate(behavior_types):
+                    if not isinstance(btype, dict):
+                        continue
+                    bid = btype.get("behaviorId", "")
+                    if bid in V1_TO_V2_BEHAVIORS:
+                        self.warnings.append(
+                            f"{prefix}.behaviorTypes[{bidx}]: behaviorId '{bid}' is V1 — "
+                            f"use '{V1_TO_V2_BEHAVIORS[bid]}' instead"
+                        )
+                    if bid in REMOVED_BEHAVIORS:
+                        self.errors.append(
+                            f"{prefix}.behaviorTypes[{bidx}]: behaviorId '{bid}' has been "
+                            "removed in Construct 3 V2"
+                        )
 
         # Check imageData for sprites
         if "imageData" in data:
@@ -292,6 +357,26 @@ class C3ClipboardValidator:
                 self.errors.append(f"{prefix}: missing 'events' array")
             elif isinstance(sheet.get("events"), list):
                 self._validate_events(sheet["events"])
+
+    def _validate_sid_uniqueness(self, data: Any):
+        """Check all SID values are unique across the entire JSON."""
+        sids: list[int] = []
+        self._collect_sids(data, sids)
+        seen: set[int] = set()
+        for sid in sids:
+            if sid in seen:
+                self.errors.append(f"Duplicate SID {sid} — all SIDs must be unique")
+            seen.add(sid)
+
+    def _collect_sids(self, obj: Any, sids: list[int]):
+        if isinstance(obj, dict):
+            if "sid" in obj and isinstance(obj["sid"], int):
+                sids.append(obj["sid"])
+            for v in obj.values():
+                self._collect_sids(v, sids)
+        elif isinstance(obj, list):
+            for item in obj:
+                self._collect_sids(item, sids)
 
     def _validate_ace_id(self, ace_id: str, prefix: str):
         """Validate ACE ID format"""

@@ -2,7 +2,7 @@ name: construct3-copilot
 description: >
   Construct 3 游戏开发助手。生成可直接粘贴到 C3 编辑器的剪贴板 JSON（事件表、对象、布局）。
   适用于：游戏逻辑（移动、碰撞、计分）、角色控制（键盘、鼠标、触摸）、UI 界面、场景布局。
-  Generates Construct 3 clipboard JSON for events, objects, layouts. game logic,
+  Generates Construct 3 clipboard JSON for events, objects, layouts. Game logic,
   character control, collision, scoring, UI elements, and level design.
 triggers:
   keywords:
@@ -42,33 +42,21 @@ triggers:
     - particle
     - audio
     - multiplayer
-    # 中文 - 核心
+    # 中文
     - 事件表
     - 场景
     - 布局
     - 精灵
     - 行为
-    # 中文 - 游戏类型
     - 平台游戏
     - 射击游戏
     - 角色扮演
     - 塔防
-    - 消除游戏
-    # 中文 - 功能
     - 玩法
-    - 目标
-    - 逻辑
-    - 移动
-    - 控制
     - 碰撞
-    - 生成敌人
-    - 生成子弹
-    - 存档
-    - 读档
     - 动画
     - 物理
     - 粒子效果
-    - 音频播放
     - 对话系统
     - 背包系统
   intents:
@@ -78,66 +66,61 @@ triggers:
     - create_game_logic
 ---
 
-# Execution Instructions
+# Construct 3 Copilot
+
+Generate paste-ready Construct 3 clipboard JSON (event sheets, object types, layouts) and guide addon SDK development.
 
 ## 1. Load Constraints
 
-Read @CLAUDE.md for workflow rules (Intent IR, Clarification, output format).
+Read @CLAUDE.md — it contains hallucination traps, mandatory workflow, and the pre-output checklist. Skip nothing.
 
-## 2. Available Scripts
+## 2. Script Toolkit
+
+All scripts: stdout = structured data, stderr = logs, exit 0 = success. `query/` scripts are read-only and safe to run in parallel.
 
 ```bash
-# ⚠️ 必须先检索再生成！禁止凭记忆猜测 ACE ID
+# ACE schema lookup — MANDATORY before using any ACE ID
+python3 scripts/query/schema.py plugin {name} {ace-id}
+python3 scripts/query/schema.py behavior {name} {ace-id}
+python3 scripts/query/schema.py search {keyword}
 
-# ACE schema lookup (确认 ACE ID 存在)
-python3 scripts/query_schema.py plugin {name} {ace}
-python3 scripts/query_schema.py behavior {name} {ace}
-python3 scripts/query_schema.py search {keyword}
+# Real-world usage patterns (403 official projects)
+python3 scripts/query/examples.py action {ace_id}
+python3 scripts/query/examples.py condition {ace_id}
+python3 scripts/query/examples.py top actions 20
 
-# 案例库查询 (学习真实用法，403 个官方项目)
-python3 scripts/query_examples.py action {ace_id}
-python3 scripts/query_examples.py condition {ace_id}
-python3 scripts/query_examples.py top actions 20
-
-# ImageData generation
-python3 scripts/generate_imagedata.py --color {color} --width {W} --height {H}
-python3 scripts/generate_imagedata.py --kenney {preset} --color {color}
+# ImageData generation (placeholder art only)
+python3 scripts/generate/imagedata.py --color {color} --width {W} --height {H}
+python3 scripts/generate/imagedata.py --kenney {preset} --color {color}
 
 # Layout presets
-python3 scripts/generate_layout.py --preset {platformer|breakout} -W {W} -H {H}
+python3 scripts/generate/layout.py --preset {platformer|breakout} -W {W} -H {H}
 
-# Validate before output
-python3 scripts/validate_output.py '<json>'
+# Validate before output — MANDATORY
+python3 scripts/validate/output.py '<json>'
 ```
 
-## 3. Reference Files
+## 3. Reference Routing
 
-### Core References
-| When | Load |
+| Task | Load |
 |------|------|
-| JSON format rules | @references/clipboard-format.md |
-| Object templates | @references/object-templates.md |
-| Layout templates | @references/layout-templates.md |
-| Behavior mapping | @references/behavior-names.md |
-| Chinese terms | @references/zh-cn.md |
-| Error debugging | @references/troubleshooting.md |
-| Full examples | @references/examples.md |
-
-### Advanced Topics
-| When | Load |
-|------|------|
-| Multi-layer layouts (Background/Game/UI) | @references/multi-layer-layouts.md |
-| Complete game levels | @references/complete-levels.md |
-| Multiplayer networking | @references/multiplayer-patterns.md |
-| Complex state management | @references/limitations-and-refinement.md |
-| Prompt patterns & templates | @references/prompt-patterns.md |
-| Advanced JSON examples | @references/advanced-examples.md |
+| Detailed workflow (Intent IR, clarification, generation pipeline) | @references/instructions.md |
+| JSON format rules + templates | @references/clipboard-format.md |
+| Object type templates with imageData | @references/object-templates.md |
+| Layout/world-instance templates | @references/layout-templates.md |
+| Behavior ID → display name mapping | @references/behavior-names.md |
+| Chinese term mapping | @references/zh-cn.md |
+| Paste errors, debugging | @references/troubleshooting.md |
+| End-to-end examples | @references/examples.md |
 | Family system patterns | @references/family-patterns.md |
 | Effects & shaders | @references/effects-guide.md |
-| Validation rules | @references/checklist.json |
+| Prompt templates (clarification, generation, review) | @references/prompts.md |
+| Addon SDK development | @references/addon-sdk-index.md |
+| Runtime scripting API | @references/runtime-api.md |
 
 ## 4. Boundaries
 
-- Output: Clipboard JSON only (events, objects, layouts)
-- Images: Placeholder shapes only (no real art)
-- Engine: Construct 3 only
+- **Output**: Construct 3 clipboard JSON only (events, object-types, layouts, world-instances, event-sheets, conditions, actions)
+- **Images**: Placeholder geometric shapes only via `scripts/generate/imagedata.py` — no pixel art, no AI-generated art
+- **Engine**: Construct 3 only — no Phaser, Unity, Godot
+- **Validation**: JSON must pass `scripts/validate/output.py` before delivery. Fail = do not deliver
