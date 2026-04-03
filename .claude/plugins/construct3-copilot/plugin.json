@@ -1,0 +1,11 @@
+{
+  "name": "construct3-copilot",
+  "version": "2.0.0",
+  "description": "Construct 3 game development assistant — generates clipboard JSON, validates output, guides addon development, and searches ACE documentation",
+  "skills": [
+    "skills/create",
+    "skills/validate",
+    "skills/addon",
+    "skills/search"
+  ]
+}
