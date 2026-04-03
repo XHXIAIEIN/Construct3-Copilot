@@ -1,8 +1,7 @@
 name: c3-search
 description: >
-  Search Construct 3 ACE definitions, explain plugin/behavior capabilities, and find
-  real-world usage patterns from 403 official example projects.
-  搜索 Construct 3 ACE 定义，解释插件/行为功能，查找官方示例项目中的实际用法。
+  Search Construct 3 ACE definitions and explain plugin/behavior capabilities.
+  搜索 Construct 3 ACE 定义，解释插件/行为功能。
 triggers:
   keywords:
     - search ace
@@ -40,11 +39,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py behavior {name} {ace-id}
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py list {plugin}
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py lookup {query} --plugin {plugin}
-
-# Real-world usage patterns
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/examples.py action {ace_id}
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/examples.py condition {ace_id}
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/examples.py top actions 20
 ```
 
 ## References
@@ -53,6 +47,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/examples.py top actions 20
 |------|------|
 | Always | @${CLAUDE_PLUGIN_ROOT}/references/behavior-names.md |
 | Chinese queries | @${CLAUDE_PLUGIN_ROOT}/references/zh-cn.md |
+
+## Memory Context
+
+On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{project_root}/.claude/memory/memory.md` exists, read it for project context.
 
 ## Boundaries
 

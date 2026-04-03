@@ -58,9 +58,96 @@ Before delivering JSON, all items must pass:
 - [ ] Paste location specified (Event sheet margin / Project Bar / Layout view)
 - [ ] Manual verification step included ("After pasting, run layout and confirm X")
 
+## Language-Aware ACE Output
+
+When the conversation is in Chinese, **all ACE names shown to the user must use Chinese translations** (from zh-CN schema `list-name`). Internal ACE IDs in generated JSON remain English.
+
+| Context | Example |
+|---------|---------|
+| Explaining to user (Chinese) | `键盘 > 按住按键 > 空格` |
+| Generated clipboard JSON | `"type": "keyboard", "id": "key-is-down"` |
+
+Lookup flow: `scripts/query/schema.py search {keyword}` → output includes bilingual labels (中文 / English). If zh-CN is missing, fall back to English.
+
 ## Never Do
 
 - Deliver JSON without running `scripts/validate/output.py`
 - Deliver JSON when validation reports errors
 - Use an ACE ID not confirmed by schema lookup
 - Omit paste instructions from output
+
+---
+
+## Memory Management
+
+Persistent cross-session memory. Fully automatic — users never manage memory directly.
+
+### Memory Layers
+
+| Layer | Location | Lifecycle |
+|-------|----------|-----------|
+| User Profile (global) | `${CLAUDE_PLUGIN_ROOT}/memory/profile.md` | Long-term, rarely changes |
+| Project Context (per-project) | `{project_root}/.claude/memory/memory.md` | Tied to project |
+| Session Buffer | In-context only | Extracted at session end |
+
+### Entry Format
+
+```markdown
+### [Brief title]
+[Content — abstracted, not verbatim quotes]
+_Recorded YYYY-MM-DD_
+```
+
+### Skill Level Codes
+
+| Code | Signal |
+|------|--------|
+| L1 | Unfamiliar with event sheet concepts, needs step-by-step guidance |
+| L2 | Can use basic plugins/behaviors, needs ACE lookup assistance |
+| L3 | Familiar with event system, needs help with complex logic and optimization |
+| L4 | Uses scripting/SDK, needs architecture-level discussion |
+
+### What to Extract
+
+**Profile (user-level):**
+- Skill level → store as code only (`skill_level: L2`)
+- Preferred response language and style
+- Commonly used plugins/behaviors patterns
+
+**Project context:**
+- Project name (human-readable, from `.c3proj`) + `uniqueId` in header
+- Current feature/module being worked on
+- Existing objects, behaviors, event sheet structure
+- Problems encountered and their final solutions
+
+### What NOT to Extract
+
+- Operational Q&A ("how to export", "what's the shortcut")
+- Information already in project files
+- Single-session debugging details
+- Copilot's own errors (e.g., ACE hallucinations)
+
+### Privacy
+
+- No personal identity information (name, contact, accounts)
+- No verbatim conversation quotes — only abstracted state
+- Only information directly related to C3 development
+
+### When to Write Memory
+
+At session end or when a meaningful task completes:
+
+1. Extract key information from the conversation
+2. Classify each piece as user profile or project context
+3. Check target file entry count:
+   - If count >= 20, append oldest entries to the archive file, remove them from main file
+   - Profile archive: `${CLAUDE_PLUGIN_ROOT}/memory/archive/profile-archived.md`
+   - Project archive: `{project_root}/.claude/memory/archive/memory-archived.md`
+4. Append new entries to the appropriate file
+5. If files/directories do not exist, create them
+
+### Project Identification
+
+- Read `.c3proj` file in project root
+- Use `uniqueId` field as stable project identifier (project names can change)
+- Store human-readable project name in `memory.md` header

@@ -73,10 +73,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py plugin {name} {ace-id}
 # When RAG online:
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}
 
-# 2. Usage patterns
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/examples.py action {ace_id}
-
-# 3. Generate
+# 2. Generate
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/imagedata.py --color {c} --width {W} --height {H}
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/layout.py --preset {preset} -W {W} -H {H}
 # When Clipboard online:
@@ -102,6 +99,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate '{j
 | Chinese terms | @${CLAUDE_PLUGIN_ROOT}/references/zh-cn.md |
 | Family patterns | @${CLAUDE_PLUGIN_ROOT}/references/family-patterns.md |
 | Effects/shaders | @${CLAUDE_PLUGIN_ROOT}/references/effects-guide.md |
+
+## Memory Context
+
+On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{project_root}/.claude/memory/memory.md` exists, read it for project context.
 
 ## Boundaries
 
