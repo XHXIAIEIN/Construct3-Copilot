@@ -4,14 +4,14 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - ".agents/**"
+      - ".claude/skills/**"
       - "scripts/**"
       - "data/schemas/**"
       - ".github/workflows/validate-agents-skill.yml"
   pull_request:
     branches: [main, develop]
     paths:
-      - ".agents/**"
+      - ".claude/skills/**"
       - "scripts/**"
       - "data/schemas/**"
 
@@ -32,9 +32,9 @@ jobs:
           python - << 'PY'
           from pathlib import Path
           import re
-          p = Path(".agents/skills/construct3-copilot/SKILL.md")
+          p = Path(".claude/skills/construct3-copilot/SKILL.md")
           text = p.read_text(encoding="utf-8")
-          m = re.match(r"^---\n(.*?)\n---\n", text, flags=re.S)
+          m = re.match(r"^(.*?)\n---\n", text, flags=re.S)
           if not m:
               raise SystemExit("Missing YAML frontmatter in SKILL.md")
           fm = m.group(1)
@@ -53,9 +53,9 @@ jobs:
 
       - name: Smoke test skill scripts
         run: |
-          python .agents/skills/construct3-copilot/scripts/query_schema.py search collision
-          python .agents/skills/construct3-copilot/scripts/query_examples.py top actions 5
-          python .agents/skills/construct3-copilot/scripts/validate_output.py tests/fixtures/events_basic.json
+          python .claude/skills/construct3-copilot/scripts/query/schema.py search collision
+          python .claude/skills/construct3-copilot/scripts/query/examples.py top actions 5
+          python .claude/skills/construct3-copilot/scripts/validate/output.py tests/fixtures/events_basic.json
           python scripts/preflight.py tests/fixtures/events_basic.json
 
       - name: Run fixture and example regressions
