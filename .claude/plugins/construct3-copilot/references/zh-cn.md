@@ -1,9 +1,9 @@
 # 中文语境支持
 
-## 1. schemas（优先）
+## 1. schema.py（优先）
 
 ```bash
-grep -r "八方向" data/schemas/
+python3 scripts/query/schema.py search "八方向"
 → "name_zh": "八方向", "id": "eightdir"
 ```
 

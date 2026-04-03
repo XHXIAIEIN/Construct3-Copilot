@@ -495,6 +495,7 @@ navigator.clipboard.readText().then(t => console.log(JSON.stringify(JSON.parse(t
 
 ### Query Schema
 ```bash
-grep -n "set-animation" data/schemas/plugins/sprite.json
-grep -n "simulate-control" data/schemas/behaviors/eightdir.json
+# Schemas live in the Construct3-RAG sibling repo; use schema.py to query
+python3 scripts/query/schema.py plugin sprite set-animation
+python3 scripts/query/schema.py behavior eightdir simulate-control
 ```

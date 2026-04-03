@@ -28,21 +28,6 @@ python3 scripts/query/schema.py behavior <name> [ace-id]   # behavior ACE
 
 ---
 
-## examples.py — Real-World Usage Mining
-
-Mines ACE usage patterns from `data/project_analysis/*.json`.
-
-**When to use**: Need typical parameter combinations for an ACE; user asks "how do others use X".
-**When NOT to use**: `data/project_analysis/` does not exist (run `infra/health.py` to check); only need to confirm an ID exists (use schema.py instead).
-
-```bash
-python3 scripts/query/examples.py action <ace-id>          # action usage
-python3 scripts/query/examples.py condition <ace-id>        # condition usage
-python3 scripts/query/examples.py top actions 20            # most-used actions
-```
-
----
-
 ## rag.py — RAG Semantic Search [not ready]
 
 Semantic search over Construct 3 documentation. Requires vector DB backend (not configured).
@@ -60,4 +45,4 @@ python3 scripts/query/rag.py "how to implement pathfinding"
 
 - Using an ACE ID after schema.py returns empty results
 - Writing ACE conditions/actions without running schema.py first
-- Treating examples.py output as the only valid usage (it is reference, not spec)
+- Treating RAG search results as the only valid usage (they are reference, not spec)
