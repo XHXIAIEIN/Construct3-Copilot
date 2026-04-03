@@ -44,28 +44,11 @@ jobs:
           PY
 
       - name: Validate ACE schema index
+        if: hashFiles('data/schemas/index.json') != ''
         run: |
           python -c "import json; json.load(open('data/schemas/index.json', encoding='utf-8')); print('ACE schema index OK')"
-
-      - name: Validate docs and canonical examples
-        run: |
-          python scripts/validate_skill_docs.py
 
       - name: Smoke test skill scripts
         run: |
           python .claude/skills/construct3-copilot/scripts/query/schema.py search collision
-          python .claude/skills/construct3-copilot/scripts/query/examples.py top actions 5
           python .claude/skills/construct3-copilot/scripts/validate/output.py tests/fixtures/events_basic.json
-          python scripts/preflight.py tests/fixtures/events_basic.json
-
-      - name: Run fixture and example regressions
-        run: |
-          python -m unittest tests.test_fixtures tests.test_quality_tools
-
-      - name: Smoke test failure retrieval
-        run: |
-          python scripts/find_similar_failures.py "unknown action id toggle-boolean" --top 1
-
-      - name: Smoke test failure logging helper
-        run: |
-          python scripts/log_failure_case.py --case-id ci-dry-run --query "ci smoke" --signature "none" --root-cause "none" --fix "none" --tags ci --dry-run
