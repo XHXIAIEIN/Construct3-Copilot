@@ -253,7 +253,7 @@ JSON before sharing with users.
   - `runtime.dt` 获取帧间隔时间
   - `localVars` 读写事件表局部变量
   - 脚本可以包含多行，每行是数组中的一个字符串
-  - 参考 `references/runtime-api.md` 了解完整 API
+  - 参考 Construct3-Manual 仓库的 `Construct3-Addon-SDK/runtime-reference.md` 了解完整 API
 
 ## Example 8 – Complete Platformer Character (Keyboard Input)
 

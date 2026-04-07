@@ -25,6 +25,10 @@ _SIBLINGS: dict[str, dict] = {
         "env": "C3_CLIPBOARD_ROOT",
         "url": "https://github.com/<org>/Construct3-Clipboard.git",
     },
+    "Construct3-Manual": {
+        "env": "C3_MANUAL_ROOT",
+        "url": "https://github.com/<org>/Construct3-Manual.git",
+    },
 }
 
 # ---------------------------------------------------------------------------

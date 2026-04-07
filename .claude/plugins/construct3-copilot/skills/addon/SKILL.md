@@ -35,12 +35,20 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}
 
 ## References
 
-| When | Load |
+SDK documentation lives in the `Construct3-Manual` sibling repo. Resolve its path first:
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/_resolve.py  # verify Construct3-Manual is found
+```
+
+Then read from `Construct3-Manual/Construct3-Addon-SDK/`:
+
+| When | Read from Construct3-Manual |
 |------|------|
-| Always | @${CLAUDE_PLUGIN_ROOT}/references/addon-sdk-index.md |
-| Guides | @${CLAUDE_PLUGIN_ROOT}/references/addon-sdk/guide/ (all files) |
-| API reference | @${CLAUDE_PLUGIN_ROOT}/references/addon-sdk/reference/ (all files) |
-| Scripting API | @${CLAUDE_PLUGIN_ROOT}/references/runtime-api.md |
+| Always | `Construct3-Addon-SDK/index.md` |
+| Guides | `Construct3-Addon-SDK/guide/` (all .md files) |
+| API reference | `Construct3-Addon-SDK/reference/` (all .md files) |
+| Scripting API | `Construct3-Addon-SDK/runtime-reference.md` |
 
 ## Addon Types
 
