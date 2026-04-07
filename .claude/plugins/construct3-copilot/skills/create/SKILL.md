@@ -90,8 +90,8 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate '{j
 | When | Load |
 |------|------|
 | Always | @${CLAUDE_PLUGIN_ROOT}/references/instructions.md |
-| JSON format | @${CLAUDE_PLUGIN_ROOT}/references/clipboard-format.md |
-| Object templates | @${CLAUDE_PLUGIN_ROOT}/references/object-templates.md |
+| JSON format | `Construct3-Clipboard/docs/clipboard-format.md` (sibling repo) |
+| Object templates | `Construct3-Clipboard/docs/object-templates.md` (sibling repo) |
 | Layout templates | @${CLAUDE_PLUGIN_ROOT}/references/layout-templates.md |
 | End-to-end examples | @${CLAUDE_PLUGIN_ROOT}/references/examples.md |
 | Prompt templates | @${CLAUDE_PLUGIN_ROOT}/references/prompts.md |

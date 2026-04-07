@@ -59,7 +59,7 @@ Plan:
 4. Variables: {name, type, initialValue for each}
 5. ImageData needed: {yes/no, specs}
 
-Present plan → get confirmation → generate JSON per clipboard-format.md.
+Present plan → get confirmation → generate JSON per Construct3-Clipboard/docs/clipboard-format.md.
 ```
 
 Use this template before emitting payloads with >50 events. For small snippets (<10 events), skip planning and generate directly.
