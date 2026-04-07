@@ -8,9 +8,8 @@ Outputs are Construct 3 clipboard JSON (events, object-types, layouts). Paste in
 
 ## Read First
 
-- `.claude/plugins/construct3-copilot/skills/create/SKILL.md` — execution workflow, helper scripts, hard boundaries
+- `.claude/plugins/construct3-copilot/skills/c3-create/SKILL.md` — execution workflow, helper scripts, hard boundaries
 - `.claude/plugins/construct3-copilot/CLAUDE.md` — strict generation constraints and hallucination traps
-- `data/schemas/index.json` — canonical ACE schema index (plugins, behaviors, effects)
 
 ## Mandatory Workflow
 
@@ -18,38 +17,31 @@ Outputs are Construct 3 clipboard JSON (events, object-types, layouts). Paste in
 QUERY → GENERATE → VALIDATE → FIX
 ```
 
-1. Resolve every ACE ID via schema lookup before using it — never guess
-2. Generate clipboard JSON following `references/clipboard-format.md`
-3. Validate with `scripts/validate/output.py` — fail = do not deliver
+1. Resolve every ACE ID via RAG lookup before using it — never guess
+2. Generate clipboard JSON following clipboard format conventions
+3. Validate output — fail = do not deliver
 4. Include paste location and manual verification step in every response
 
 ## Key Commands
 
 ```bash
-# ACE schema lookup (MANDATORY)
-python .claude/plugins/construct3-copilot/scripts/query/schema.py search {keyword}
-python .claude/plugins/construct3-copilot/scripts/query/schema.py plugin {name} {ace}
-
-# Validate generated JSON
-python .claude/plugins/construct3-copilot/scripts/validate/output.py '<json>'
+# ACE lookup via RAG (MANDATORY)
+python .claude/plugins/construct3-copilot/scripts/query/rag.py search {keyword}
 
 # Generate placeholder art
 python .claude/plugins/construct3-copilot/scripts/generate/imagedata.py --color red --width 64 --height 64
-
-# Regenerate ACE schema after CSV updates
-node scripts/generate-schema.js source/zh-CN_R466.csv data/schemas/
 ```
 
 ## Conventions
 
-- Do not invent ACE IDs — always query schema first
+- Do not invent ACE IDs — always query RAG first
 - Output clipboard JSON fragments only, not `.c3p` archives
 - Run validation before returning any JSON
 - Produce only Construct 3 output — no other engines
 
 ## Where to Look
 
-- ACE schema: `data/schemas/`
-- Skill references: `.claude/plugins/construct3-copilot/references/`
-- TypeScript definitions: `source/scripts/ts-defs/`
-- Test fixtures: `tests/examples/`
+- Plugin & skills: `.claude/plugins/construct3-copilot/`
+- Scripts: `.claude/plugins/construct3-copilot/scripts/`
+- Test fixtures: `tests/fixtures/`
+- Game examples: `tests/examples/`

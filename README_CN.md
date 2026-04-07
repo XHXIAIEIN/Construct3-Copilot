@@ -49,11 +49,16 @@ AI 生成事件 JSON → 粘贴到：已有事件表
 | 图像 | 占位符 PNG base64（几何图形） |
 | 验证 | 粘贴前检查 JSON 格式 |
 
-## 校验
+## 技能
 
-```bash
-python scripts/preflight.py output.json
-```
+本项目以 [Claude Code 插件](https://docs.anthropic.com/en/docs/claude-code/plugins) 形式工作，提供 4 个技能：
+
+| 技能 | 说明 |
+|------|------|
+| `/c3-create` | 用自然语言生成剪贴板 JSON |
+| `/c3-search` | ACE 查询 + Construct 3 文档搜索 |
+| `/c3-validate` | 验证/修复剪贴板 JSON |
+| `/c3-addon` | Addon SDK v2 开发指导 |
 
 ## 粘贴位置
 
@@ -76,32 +81,18 @@ python scripts/preflight.py output.json
 Construct3-Copilot/
 ├── .claude/
 │   └── plugins/
-│       └── construct3-copilot/    # Claude Code Plugin
+│       └── construct3-copilot/       # Claude Code 插件
 │           ├── plugin.json
 │           ├── CLAUDE.md
-│           ├── skills/            # 4 个技能 (create, search, validate, addon)
-│           ├── references/
-│           └── scripts/
-├── data/
-│   └── schemas/                   # ACE Schema (72 插件 + 31 行为)
-└── tests/
-    └── fixtures/                  # 最小 JSON 夹具（校验）
+│           ├── skills/               # 4 个技能 (c3-create, c3-search, c3-validate, c3-addon)
+│           └── scripts/              # RAG 查询、剪贴板服务、图像生成
+├── docs/                             # 设计文档 & 参考资料
+├── tests/
+│   ├── examples/                     # 完整游戏示例（打砖块、平台跳跃）
+│   ├── fixtures/                     # 最小 JSON 夹具（校验）
+│   └── regressions/                  # 回归测试用例
+└── plans/                            # 实施计划
 ```
-
-### ACE Schema
-
-由 `source/zh-CN_R466.csv` 通过 `scripts/generate-schema.js` 生成：
-
-```
-data/schemas/
-├── index.json          # 概要索引
-├── plugins/            # 72 插件 (677 条件, 776 动作, 957 表达式)
-├── behaviors/          # 31 行为 (115 条件, 248 动作, 138 表达式)
-├── effects/            # 89 特效
-└── editor/             # 编辑器配置
-```
-
-**统计**: 2,911 ACE (792 条件 + 1,024 动作 + 1,095 表达式)
 
 ## License
 

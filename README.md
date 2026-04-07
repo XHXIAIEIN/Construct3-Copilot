@@ -49,11 +49,16 @@ AI generates events JSON → Paste to: Existing event sheet
 | ImageData | Placeholder PNG base64 (colored shapes) |
 | Validation | Verify JSON format before paste |
 
-## Validation
+## Skills
 
-```bash
-python scripts/preflight.py output.json
-```
+This project works as a [Claude Code Plugin](https://docs.anthropic.com/en/docs/claude-code/plugins). Four skills are available:
+
+| Skill | Description |
+|-------|-------------|
+| `/c3-create` | Generate clipboard JSON from natural language |
+| `/c3-search` | Query ACE docs + search Construct 3 documentation |
+| `/c3-validate` | Validate / fix clipboard JSON |
+| `/c3-addon` | Addon SDK v2 development guidance |
 
 ## Paste Locations
 
@@ -76,32 +81,18 @@ python scripts/preflight.py output.json
 Construct3-Copilot/
 ├── .claude/
 │   └── plugins/
-│       └── construct3-copilot/    # Claude Code Plugin
+│       └── construct3-copilot/       # Claude Code Plugin
 │           ├── plugin.json
 │           ├── CLAUDE.md
-│           ├── skills/            # 4 skills (create, search, validate, addon)
-│           ├── references/
-│           └── scripts/
-├── data/
-│   └── schemas/                   # ACE Schema (72 plugins + 31 behaviors)
-└── tests/
-    └── fixtures/                  # Minimal JSON fixtures (validation)
+│           ├── skills/               # 4 skills (c3-create, c3-search, c3-validate, c3-addon)
+│           └── scripts/              # RAG query, clipboard service, image generation
+├── docs/                             # Design specs & references
+├── tests/
+│   ├── examples/                     # Full game examples (breakout, platformer)
+│   ├── fixtures/                     # Minimal JSON fixtures (validation)
+│   └── regressions/                  # Regression test cases
+└── plans/                            # Implementation plans
 ```
-
-### ACE Schema
-
-Generated from `source/zh-CN_R466.csv` via `scripts/generate-schema.js`:
-
-```
-data/schemas/
-├── index.json          # Summary index
-├── plugins/            # 72 plugins (677 conditions, 776 actions, 957 expressions)
-├── behaviors/          # 31 behaviors (115 conditions, 248 actions, 138 expressions)
-├── effects/            # 89 effects
-└── editor/             # Editor configuration
-```
-
-**Statistics**: 2,911 ACE (792 conditions + 1,024 actions + 1,095 expressions)
 
 ## License
 
