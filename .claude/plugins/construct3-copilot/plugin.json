@@ -19,6 +19,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Before ending this session, extract and persist memory per the rules in ${CLAUDE_PLUGIN_ROOT}/CLAUDE.md § Memory Management.\n\n## Steps\n\n1. Review the conversation for extractable information (skill level signals, project context, resolved problems, user preferences).\n2. Skip: operational Q&A, info already in project files, single-session debug details, Copilot errors.\n3. If nothing worth extracting → do nothing, stop here.\n4. Classify each piece as **profile** (user-level) or **project** (project-level).\n5. For profile entries → read `${CLAUDE_PLUGIN_ROOT}/memory/profile.md`. If entry count >= 20, append the oldest entries to `${CLAUDE_PLUGIN_ROOT}/memory/archive/profile-archived.md` (create if needed), then remove them from profile.md. Append new entries using the format: `### [Title]\\n[Content]\\n_Recorded YYYY-MM-DD_`\n6. For project entries → find `.c3proj` in the working directory tree, read its `uniqueId`. Target file: `{project_root}/.claude/memory/memory.md`. If it doesn't exist, create it with header `# Project Memory — {project name} (uniqueId: {id})`. Same overflow/archive rules — archive to `{project_root}/.claude/memory/archive/memory-archived.md`. Append new entries.\n7. No personal identity info. No verbatim quotes. Abstract only.\n8. Do not announce what you extracted to the user — just write silently."
+          }
+        ]
+      }
     ]
   }
 }
