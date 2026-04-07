@@ -18,6 +18,7 @@ Usage:
     python rag.py verify set-animation --plugin sprite
     python rag.py "fuzzy query"          # mode=auto
     python rag.py search "move" --plugin sprite --top-k 5 --scope eventsheet
+    python rag.py search "addon SDK plugin" --collections addon_sdk
 """
 
 import json
@@ -79,7 +80,7 @@ def _parse_args(argv: list[str]) -> tuple[int, str]:
     if not argv:
         return 1, _err(
             "Missing query argument",
-            "Usage: rag.py [search|lookup|list|semantic|verify] <query> [--plugin P] [--top-k N] [--scope S]",
+            "Usage: rag.py [search|lookup|list|semantic|verify] <query> [--plugin P] [--top-k N] [--scope S] [--collections C]",
         )
 
     # Determine subcommand / mode
@@ -94,6 +95,7 @@ def _parse_args(argv: list[str]) -> tuple[int, str]:
     plugin: str | None = None
     top_k: int | None = None
     scope: str | None = None
+    collections: list[str] | None = None
     positional: list[str] = []
 
     i = 0
@@ -111,6 +113,9 @@ def _parse_args(argv: list[str]) -> tuple[int, str]:
         elif token == "--scope" and i + 1 < len(rest):
             scope = rest[i + 1]
             i += 2
+        elif token == "--collections" and i + 1 < len(rest):
+            collections = [c.strip() for c in rest[i + 1].split(",") if c.strip()]
+            i += 2
         elif token.startswith("--"):
             return 1, _err(f"Unknown flag: {token}")
         else:
@@ -121,7 +126,7 @@ def _parse_args(argv: list[str]) -> tuple[int, str]:
     if not query:
         return 1, _err(
             "Missing query argument",
-            "Usage: rag.py [search|lookup|list|semantic|verify] <query> [--plugin P] [--top-k N] [--scope S]",
+            "Usage: rag.py [search|lookup|list|semantic|verify] <query> [--plugin P] [--top-k N] [--scope S] [--collections C]",
         )
 
     body: dict = {"query": query, "mode": mode}
@@ -131,6 +136,8 @@ def _parse_args(argv: list[str]) -> tuple[int, str]:
         body["top_k"] = top_k
     if scope is not None:
         body["scope"] = scope
+    if collections is not None:
+        body["collections"] = collections
 
     return _call_rag(body)
 

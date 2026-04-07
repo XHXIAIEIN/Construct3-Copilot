@@ -29,20 +29,23 @@ triggers:
 ## Scripts
 
 ```bash
-# Search SDK documentation (when RAG online)
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}
+# Search SDK documentation via RAG (preferred — includes code samples)
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query} --collections addon_sdk
+
+# Broader search (SDK + scripting API + plugins)
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query} --collections addon_sdk,scripting,plugins
 ```
 
 ## References
 
-SDK documentation lives in the `Construct3-Manual` sibling repo. Read from `Construct3-Manual/Construct3-Addon-SDK/`:
+SDK documentation is indexed in the RAG `addon_sdk` collection (127 doc chunks + 144 code samples from 12 addon templates).
 
-| When | Read from Construct3-Manual |
-|------|------|
-| Always | `Construct3-Addon-SDK/index.md` |
-| Guides | `Construct3-Addon-SDK/guide/` (all .md files) |
-| API reference | `Construct3-Addon-SDK/reference/` (all .md files) |
-| Scripting API | `Construct3-Addon-SDK/runtime-reference.md` |
+Fallback: read directly from sibling repos if RAG is offline.
+
+| Source | Path |
+|--------|------|
+| SDK manual | `Construct3-Manual/Construct3-Addon-SDK/` (guide/, reference/) |
+| SDK code samples | `Construct-Addon-SDK/` (plugin-sdk/, behavior-sdk/, effect-sdk/, theme-sdk/) |
 
 ## Addon Types
 
