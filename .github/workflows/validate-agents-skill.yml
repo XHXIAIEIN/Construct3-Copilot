@@ -69,10 +69,13 @@ jobs:
           python .claude/plugins/construct3-copilot/scripts/infra/health.py --brief
 
           # Service bridges must exit 1 with valid JSON when offline (not crash)
-          python .claude/plugins/construct3-copilot/scripts/query/rag.py search collision; RC=$?
+          # Use || true to capture exit code under bash -e
+          RC=0
+          python .claude/plugins/construct3-copilot/scripts/query/rag.py search collision || RC=$?
           if [ "$RC" -ne 1 ]; then echo "Expected exit 1 (offline), got $RC"; exit 1; fi
 
-          python .claude/plugins/construct3-copilot/scripts/generate/clipboard_service.py health; RC=$?
+          RC=0
+          python .claude/plugins/construct3-copilot/scripts/generate/clipboard_service.py health || RC=$?
           if [ "$RC" -ne 1 ]; then echo "Expected exit 1 (offline), got $RC"; exit 1; fi
 
       - name: Run all tests
