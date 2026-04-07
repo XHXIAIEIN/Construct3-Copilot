@@ -29,12 +29,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/CLAUDE.md` for known hallucination traps and format 
 
 ## Workflow
 
-1. Run local validation:
-```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate/output.py '{json}'
-```
-
-2. When Clipboard service is online, also run:
+1. Run validation:
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate '{json}'
 ```
@@ -46,7 +41,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify {ace-id} --plugin {nam
 
 ## References
 
-Validation logic is built into `output.py` and `clipboard_service.py`. No external docs needed — the scripts handle format rules internally.
+Validation logic is built into `clipboard_service.py`. No external docs needed — the script handles format rules internally.
 
 ## Output Format
 

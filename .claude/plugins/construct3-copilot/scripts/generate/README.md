@@ -55,7 +55,7 @@ echo '{"gameplay":["WASD movement"],"assets":["Player"]}' | python3 scripts/gene
 1. `query/rag.py` — confirm all ACE IDs exist
 2. `generate/imagedata.py` — produce placeholder images (if object-types needed)
 3. `generate/layout.py` or direct JSON authoring
-4. `validate/output.py` — validate output; fix and re-validate on failure
+4. `clipboard_service.py validate` — validate output; fix and re-validate on failure
 
 ## Anti-patterns
 

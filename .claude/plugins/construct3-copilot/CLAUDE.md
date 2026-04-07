@@ -38,7 +38,7 @@ DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 0. **Discover**: Run `scripts/infra/health.py --brief` to check service availability
 1. **Query**: `scripts/query/rag.py` for every ACE ID (mandatory)
 2. **Generate**: Pass intent to `scripts/generate/clipboard_service.py generate`
-3. **Validate**: `scripts/validate/output.py '<json>'` + `clipboard_service.py validate` — fail = do not deliver
+3. **Validate**: `clipboard_service.py validate` — fail = do not deliver
 4. **Fix**: On validation failure, fix and re-validate (loop step 3, max 3 retries)
 
 ## Pre-Output Checklist
@@ -52,7 +52,7 @@ Before delivering JSON, all items must pass:
 - [ ] Behavior actions include `behaviorType` (display name, not behaviorId)
 - [ ] Comparison operators are numbers: 0=eq, 1=neq, 2=lt, 3=lte, 4=gt, 5=gte
 - [ ] Key codes are numbers: 32=Space, 87=W, 65=A, 37=Left, 39=Right
-- [ ] `scripts/validate/output.py` exit code = 0
+- [ ] `clipboard_service.py validate` passed
 - [ ] Paste location specified (Event sheet margin / Project Bar / Layout view)
 - [ ] Manual verification step included ("After pasting, run layout and confirm X")
 
@@ -69,7 +69,7 @@ Lookup flow: `scripts/query/rag.py search {keyword}` → output includes bilingu
 
 ## Never Do
 
-- Deliver JSON without running `scripts/validate/output.py`
+- Deliver JSON without running `clipboard_service.py validate`
 - Deliver JSON when validation reports errors
 - Use an ACE ID not confirmed by schema lookup
 - Omit paste instructions from output

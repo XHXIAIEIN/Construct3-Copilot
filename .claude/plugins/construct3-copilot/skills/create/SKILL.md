@@ -75,7 +75,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify {ace-id} --plugin {plu
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate '{intent_ir}'
 
 # 3. Validate (mandatory)
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate/output.py '{json}'
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate '{json}'
 ```
 
@@ -90,4 +89,4 @@ On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{proj
 - Output: Construct 3 clipboard JSON only (events, object-types, layouts, world-instances, event-sheets)
 - Images: Placeholder geometric shapes only — no pixel art, no AI art
 - Engine: Construct 3 only
-- Validation: must pass validate/output.py before delivery
+- Validation: must pass clipboard_service.py validate before delivery

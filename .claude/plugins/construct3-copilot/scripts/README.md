@@ -6,10 +6,9 @@ Atomic CLI scripts for querying, generating, and validating Construct 3 clipboar
 
 | Directory | Purpose | Parallel-safe |
 |-----------|---------|---------------|
-| `query/` | ACE schema lookup, example mining, RAG search | Yes (read-only) |
-| `generate/` | Placeholder images, layout presets, clipboard JSON | Caution |
-| `validate/` | Clipboard JSON format & semantic validation | Yes (read-only) |
-| `infra/` | Health checks, clipboard automation, browser bridge | Caution |
+| `query/` | ACE lookup via RAG service | Yes (read-only) |
+| `generate/` | Placeholder images, layout presets, clipboard service bridge | Caution |
+| `infra/` | Health checks | Yes (read-only) |
 
 ## Mandatory Workflow
 
@@ -19,7 +18,7 @@ QUERY → GENERATE → VALIDATE → FIX
 
 1. **Query** `rag.py` to confirm every ACE ID before generation
 2. **Generate** JSON via scripts or direct authoring
-3. **Validate** with `output.py` — fail means do not deliver
+3. **Validate** with `clipboard_service.py validate` — fail means do not deliver
 4. **Fix** on failure, then re-validate (loop step 3)
 
 ## Calling Convention

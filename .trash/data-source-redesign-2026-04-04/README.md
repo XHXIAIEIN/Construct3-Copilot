@@ -1,24 +1,13 @@
 # validate/ — Validation Scripts
 
-Validates Construct 3 clipboard JSON for format and semantic correctness.
-**Must run after every generation. Fail = do not deliver.**
-
----
-
-## output.py — C3 Clipboard JSON Validator
-
-Three-layer validation + schema cross-check.
-
-**When to use**: After any JSON generation, before delivering to user. No exceptions.
-**When NOT to use**: Never skip.
+Validation of Construct 3 clipboard JSON is handled by `clipboard_service.py validate`.
 
 ```bash
-python3 scripts/validate/output.py '{"is-c3-clipboard-data":true,...}'
-python3 scripts/validate/output.py path/to/output.json
-echo '...' | python3 scripts/validate/output.py
+python3 scripts/generate/clipboard_service.py validate '{json}'
+python3 scripts/generate/clipboard_service.py validate path/to/output.json
 ```
 
-**Exit codes**: 0 = passed, 1 = errors found.
+**Exit codes**: 0 = passed, non-zero = errors found.
 
 ### Validation Layers
 
@@ -34,7 +23,7 @@ echo '...' | python3 scripts/validate/output.py
 - Trigger conditions in sub-events (children)
 - Variable missing `comment` field
 - `effectTypes` / `instanceVariables` not arrays
-- V1 behavior IDs (`Solid` → should be `solid`)
+- V1 behavior IDs (`Solid` -> should be `solid`)
 - Removed behaviors (`DestroyOutsideLayout`)
 
 **Layer 3 — Global Checks**
@@ -46,7 +35,7 @@ echo '...' | python3 scripts/validate/output.py
 
 1. Read error/warning list
 2. Fix JSON
-3. Re-run `validate/output.py`
+3. Re-run `clipboard_service.py validate`
 4. Loop until exit 0
 
 **Never deliver JSON when validation reports errors.** Pasting invalid JSON into C3 fails silently or causes hard-to-debug behavior.
@@ -55,6 +44,6 @@ echo '...' | python3 scripts/validate/output.py
 
 ## Anti-patterns
 
-- "Warnings but no errors — ship it" → warnings must be disclosed in response
-- Manual review instead of script validation → script catches more than memory can
-- Editing JSON without re-validating → any change can introduce new issues
+- "Warnings but no errors -- ship it" -> warnings must be disclosed in response
+- Manual review instead of script validation -> script catches more than memory can
+- Editing JSON without re-validating -> any change can introduce new issues
