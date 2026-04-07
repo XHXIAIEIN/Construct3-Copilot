@@ -39,15 +39,22 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify {ace-id} --plugin {plu
 
 ## Memory Context
 
-On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{project_root}/.claude/memory/memory.md` exists, read it for project context.
+On skill trigger: find `.c3proj` in the working directory or one level up. If not found, skip memory loading. If found, read its `uniqueId` and check `{project_root}/.claude/memory/memory.md` — if it exists, read it for project context.
 
 ## Service Dependencies
 
 Requires RAG service (port 8765). If offline, guide the user:
-`git clone https://github.com/XHXIAIEIN/Construct3-RAG.git && cd Construct3-RAG && python scripts/setup.py`
+- Start: `cd ../Construct3-RAG && python src/api.py`
+- First time? Run `bash .claude/plugins/construct3-copilot/scripts/infra/setup.sh` to clone all deps.
 
 ## Boundaries
 
-- Read-only — does NOT generate clipboard JSON (use c3-create)
+- Read-only — does NOT generate clipboard JSON (use `/c3-create` for that)
 - Does NOT modify any files
 - Returns ACE definitions, parameters, usage examples, and explanations
+
+## Routing
+
+If the user asks "what actions does Sprite have?" → this skill (search/explain).
+If the user asks "create a platformer with Sprite" → `/c3-create` (generation).
+If the query is ambiguous ("I need collision detection"), start here to search, then hand off to `/c3-create` if the user wants to generate JSON.

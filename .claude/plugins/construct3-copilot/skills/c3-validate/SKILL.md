@@ -54,13 +54,14 @@ Fix summary: [what was changed and why]
 
 ## Memory Context
 
-On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{project_root}/.claude/memory/memory.md` exists, read it for project context.
+On skill trigger: find `.c3proj` in the working directory or one level up. If not found, skip memory loading. If found, read its `uniqueId` and check `{project_root}/.claude/memory/memory.md` — if it exists, read it for project context.
 
 ## Service Dependencies
 
 Requires Clipboard service (port 8766) for validation, and RAG (port 8765) for ACE ID verification. If offline:
-- RAG: `git clone https://github.com/XHXIAIEIN/Construct3-RAG.git && cd Construct3-RAG && python scripts/setup.py`
-- Clipboard: `cd Construct3-Clipboard && python -m uvicorn src.api:app --port 8766`
+- RAG: `cd ../Construct3-RAG && python src/api.py`
+- Clipboard: `cd ../Construct3-Clipboard && python src/api.py`
+- First time? Run `bash .claude/plugins/construct3-copilot/scripts/infra/setup.sh` to clone all deps.
 
 ## Boundaries
 

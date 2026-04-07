@@ -82,17 +82,23 @@ Copilot does NOT write clipboard JSON directly. Pass structured intent to the Cl
 
 ## Memory Context
 
-On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{project_root}/.claude/memory/memory.md` exists, read it for project context.
+On skill trigger: find `.c3proj` in the working directory or one level up. If not found, skip memory loading. If found, read its `uniqueId` and check `{project_root}/.claude/memory/memory.md` — if it exists, read it for project context.
 
 ## Service Dependencies
 
 Requires RAG (port 8765) and Clipboard (port 8766) services. If offline, guide the user:
-- RAG: `git clone https://github.com/XHXIAIEIN/Construct3-RAG.git && cd Construct3-RAG && python scripts/setup.py`
-- Clipboard: `cd Construct3-Clipboard && python -m uvicorn src.api:app --port 8766`
+- RAG: `cd ../Construct3-RAG && python src/api.py`
+- Clipboard: `cd ../Construct3-Clipboard && python src/api.py`
+- First time? Run `bash .claude/plugins/construct3-copilot/scripts/infra/setup.sh` to clone all deps.
 
 ## Boundaries
 
 - Output: Construct 3 clipboard JSON only (events, object-types, layouts, world-instances, event-sheets)
 - Images: Placeholder geometric shapes only — no pixel art, no AI art
 - Engine: Construct 3 only
-- Validation: must pass clipboard_service.py validate before delivery
+- Validation: must pass `clipboard_service.py validate` before delivery
+
+## Routing
+
+If the user only wants to look up ACE definitions without generating JSON → use `/c3-search` instead.
+If the user wants to validate existing JSON → use `/c3-validate` instead.
