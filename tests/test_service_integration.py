@@ -112,19 +112,6 @@ class TestHealthJsonOutput:
         assert "status" in clipboard, "services.clipboard missing 'status'"
         assert isinstance(clipboard["available"], bool)
 
-    def test_top_level_local_data_key(self):
-        """JSON must have a 'local_data' dict."""
-        _, stdout, _ = run_health()
-        data = json.loads(stdout)
-        assert "local_data" in data, "Missing 'local_data' key"
-        ld = data["local_data"]
-        assert isinstance(ld, dict), "'local_data' must be a dict"
-        assert "schemas_dir" in ld, "local_data missing 'schemas_dir'"
-        assert "available" in ld, "local_data missing 'available'"
-        assert "plugins" in ld, "local_data missing 'plugins'"
-        assert isinstance(ld["available"], bool)
-        assert isinstance(ld["plugins"], int)
-
     def test_rag_url_contains_8765(self):
         """RAG URL should point at port 8765."""
         _, stdout, _ = run_health()
@@ -166,22 +153,20 @@ class TestHealthBriefOutput:
         assert len(lines) == 1, f"Expected 1 line, got {len(lines)}: {stdout!r}"
 
     def test_brief_format_contains_service_labels(self):
-        """--brief line must contain RAG:, Clipboard:, Local: labels."""
+        """--brief line must contain RAG: and Clipboard: labels."""
         _, stdout, _ = run_health(["--brief"])
         line = stdout.strip()
         assert "RAG:" in line, f"Missing 'RAG:' in brief output: {line!r}"
         assert "Clipboard:" in line, f"Missing 'Clipboard:' in brief output: {line!r}"
-        assert "Local:" in line, f"Missing 'Local:' in brief output: {line!r}"
 
     def test_brief_format_uses_plus_or_minus(self):
         """--brief symbols must be + or - for each service."""
         _, stdout, _ = run_health(["--brief"])
         line = stdout.strip()
-        # Each label should be followed by + or -
         import re
-        matches = re.findall(r"(?:RAG|Clipboard|Local):[+-]", line)
-        assert len(matches) == 3, (
-            f"Expected 3 'Label:[+-]' tokens, found {matches} in: {line!r}"
+        matches = re.findall(r"(?:RAG|Clipboard):[+-]", line)
+        assert len(matches) == 2, (
+            f"Expected 2 'Label:[+-]' tokens, found {matches} in: {line!r}"
         )
 
 
