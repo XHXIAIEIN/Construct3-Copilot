@@ -67,37 +67,20 @@ DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 # 0. Service discovery
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/infra/health.py --brief
 
-# 1. ACE lookup (mandatory)
+# 1. ACE lookup (mandatory — confirm every ACE ID before using it)
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py search {keyword}
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py plugin {name} {ace-id}
-# When RAG online:
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}  # when RAG online
 
-# 2. Generate
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/imagedata.py --color {c} --width {W} --height {H}
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/layout.py --preset {preset} -W {W} -H {H}
-# When Clipboard online:
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate '{ir}'
+# 2. Generate — pass intent to Clipboard service, let it handle format details
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate '{intent_ir}'
 
-# 4. Validate (mandatory)
+# 3. Validate (mandatory)
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate/output.py '{json}'
-# When Clipboard online:
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate '{json}'
 ```
 
-## References
-
-All clipboard format knowledge lives in `Construct3-Clipboard/docs/` (sibling repo):
-
-| When | Read from Construct3-Clipboard |
-|------|------|
-| JSON format | `docs/clipboard-format.md` |
-| Object templates | `docs/object-templates.md` |
-| Layout templates | `docs/layout-templates.md` |
-| End-to-end examples | `docs/examples.md` |
-| Prompt templates | `docs/prompts.md` |
-| Family patterns | `docs/family-patterns.md` |
-| Deprecated features | `docs/deprecated-features.md` |
+Copilot does NOT write clipboard JSON directly. Pass structured intent to the Clipboard service and let it handle format, templates, and deprecated feature migration.
 
 ## Memory Context
 

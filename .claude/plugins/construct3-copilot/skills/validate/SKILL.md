@@ -46,10 +46,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py plugin {name} {ace-id}
 
 ## References
 
-| When | Load |
-|------|------|
-| Always | `Construct3-Clipboard/docs/clipboard-format.md` (sibling repo) |
-| Paste errors | `Construct3-Clipboard/docs/troubleshooting.md` (sibling repo) |
+Validation logic is built into `output.py` and `clipboard_service.py`. No external docs needed — the scripts handle format rules internally.
 
 ## Output Format
 

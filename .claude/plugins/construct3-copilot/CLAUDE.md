@@ -38,7 +38,7 @@ DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 0. **Discover**: Run `scripts/infra/health.py --brief` to check service availability
 1. **Query**: `scripts/query/schema.py` for every ACE ID (mandatory, local)
    - When RAG is online: also run `scripts/query/rag.py search` for semantic context
-2. **Generate**: Author JSON directly, or use `scripts/generate/clipboard_service.py generate` when Clipboard service is online
+2. **Generate**: Pass intent to `scripts/generate/clipboard_service.py generate` — do NOT author clipboard JSON directly
 3. **Validate**: `scripts/validate/output.py '<json>'` — fail = do not deliver
    - When Clipboard service is online: also run `scripts/generate/clipboard_service.py validate`
 4. **Fix**: On validation failure, fix and re-validate (loop step 3, max 3 retries)
