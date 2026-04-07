@@ -42,7 +42,10 @@ SDK documentation is indexed in the RAG `addon_sdk` collection (127 doc chunks +
 
 Sources indexed: Addon SDK manual (guide/, reference/) + Scirra/Construct-Addon-SDK code (plugin-sdk/, behavior-sdk/, effect-sdk/, theme-sdk/).
 
-If RAG is offline, inform the user and suggest starting it.
+If RAG is offline, guide the user:
+1. Clone: `git clone https://github.com/XHXIAIEIN/Construct3-RAG.git`
+2. Setup: `cd Construct3-RAG && python scripts/setup.py`
+3. Start: `python -m uvicorn src.api:app --port 8765`
 
 ## Addon Types
 
