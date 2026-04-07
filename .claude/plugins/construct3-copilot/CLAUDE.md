@@ -9,9 +9,9 @@ Generates paste-ready Construct 3 clipboard JSON. This file defines hard rules t
 **Before using ANY ACE ID, confirm it exists via RAG. Never guess from training data.**
 
 ```bash
-python3 scripts/query/rag.py search {keyword}
-python3 scripts/query/rag.py lookup {ace-id} --plugin {name}
-python3 scripts/query/rag.py list {plugin-or-behavior}
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {keyword}
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py lookup {ace-id} --plugin {name}
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py list {plugin-or-behavior}
 ```
 
 Use an ACE ID that RAG cannot find = instant failure.
@@ -35,10 +35,10 @@ Use an ACE ID that RAG cannot find = instant failure.
 DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 ```
 
-0. **Discover**: Run `scripts/infra/health.py --brief` to check service availability
-1. **Query**: `scripts/query/rag.py` for every ACE ID (mandatory)
-2. **Generate**: Pass intent to `scripts/generate/clipboard_service.py generate`
-3. **Validate**: `clipboard_service.py validate` — fail = do not deliver
+0. **Discover**: Run `${CLAUDE_PLUGIN_ROOT}/scripts/infra/health.py --brief` to check service availability
+1. **Query**: `${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py` for every ACE ID (mandatory)
+2. **Generate**: Pass intent to `${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate`
+3. **Validate**: `${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate` — fail = do not deliver
 4. **Fix**: On validation failure, fix and re-validate (loop step 3, max 3 retries)
 
 ## Pre-Output Checklist
@@ -46,13 +46,13 @@ DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 Before delivering JSON, all items must pass:
 
 - [ ] `"is-c3-clipboard-data": true` present
-- [ ] All ACE IDs confirmed via `scripts/query/rag.py` (0 unverified IDs)
+- [ ] All ACE IDs confirmed via RAG lookup (0 unverified IDs)
 - [ ] Variables include `comment` field (can be `""`)
 - [ ] String params use nested quotes: `"\"value\""`
 - [ ] Behavior actions include `behaviorType` (display name, not behaviorId)
 - [ ] Comparison operators are numbers: 0=eq, 1=neq, 2=lt, 3=lte, 4=gt, 5=gte
 - [ ] Key codes are numbers: 32=Space, 87=W, 65=A, 37=Left, 39=Right
-- [ ] `clipboard_service.py validate` passed
+- [ ] `${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate` passed
 - [ ] Paste location specified (Event sheet margin / Project Bar / Layout view)
 - [ ] Manual verification step included ("After pasting, run layout and confirm X")
 
@@ -65,11 +65,11 @@ When the conversation is in Chinese, **all ACE names shown to the user must use 
 | Explaining to user (Chinese) | `键盘 > 按住按键 > 空格` |
 | Generated clipboard JSON | `"type": "keyboard", "id": "key-is-down"` |
 
-Lookup flow: `scripts/query/rag.py search {keyword}` → output includes bilingual labels (中文 / English). If zh-CN is missing, fall back to English.
+Lookup flow: `${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {keyword}` → output includes bilingual labels (中文 / English). If zh-CN is missing, fall back to English.
 
 ## Never Do
 
-- Deliver JSON without running `clipboard_service.py validate`
+- Deliver JSON without running `${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate`
 - Deliver JSON when validation reports errors
 - Use an ACE ID not confirmed by schema lookup
 - Omit paste instructions from output
