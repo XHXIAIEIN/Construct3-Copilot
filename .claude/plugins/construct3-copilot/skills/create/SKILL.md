@@ -68,9 +68,8 @@ DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/infra/health.py --brief
 
 # 1. ACE lookup (mandatory — confirm every ACE ID before using it)
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py search {keyword}
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py plugin {name} {ace-id}
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}  # when RAG online
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify {ace-id} --plugin {plugin}
 
 # 2. Generate — pass intent to Clipboard service, let it handle format details
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate '{intent_ir}'

@@ -18,7 +18,7 @@ python3 scripts/infra/health.py
 Output: `{"status": "ok"|"degraded", "checks": {...}}`
 
 Checks:
-- Construct3-RAG sibling repo — plugin/behavior schema JSON (required by schema.py)
+- Construct3-RAG sibling repo — plugin/behavior schema JSON (required by RAG service)
 - `references/` — reference doc completeness
 - Required script files present
 - Python >= 3.10

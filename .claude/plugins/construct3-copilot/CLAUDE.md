@@ -6,15 +6,15 @@ Generates paste-ready Construct 3 clipboard JSON. This file defines hard rules t
 
 ## Mandatory ACE Retrieval
 
-**Before using ANY ACE ID in generated JSON, confirm it exists via schema lookup. Never guess from training data.**
+**Before using ANY ACE ID, confirm it exists via RAG. Never guess from training data.**
 
 ```bash
-python3 scripts/query/schema.py search {keyword}
-python3 scripts/query/schema.py plugin {name} {ace-id}
-python3 scripts/query/schema.py behavior {name} {ace-id}
+python3 scripts/query/rag.py search {keyword}
+python3 scripts/query/rag.py lookup {ace-id} --plugin {name}
+python3 scripts/query/rag.py list {plugin-or-behavior}
 ```
 
-Use an ACE ID that `query/schema.py` cannot find = instant failure.
+Use an ACE ID that RAG cannot find = instant failure.
 
 ## Known Hallucination Traps
 
@@ -36,11 +36,9 @@ DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 ```
 
 0. **Discover**: Run `scripts/infra/health.py --brief` to check service availability
-1. **Query**: `scripts/query/schema.py` for every ACE ID (mandatory, local)
-   - When RAG is online: also run `scripts/query/rag.py search` for semantic context
-2. **Generate**: Pass intent to `scripts/generate/clipboard_service.py generate` — do NOT author clipboard JSON directly
-3. **Validate**: `scripts/validate/output.py '<json>'` — fail = do not deliver
-   - When Clipboard service is online: also run `scripts/generate/clipboard_service.py validate`
+1. **Query**: `scripts/query/rag.py` for every ACE ID (mandatory)
+2. **Generate**: Pass intent to `scripts/generate/clipboard_service.py generate`
+3. **Validate**: `scripts/validate/output.py '<json>'` + `clipboard_service.py validate` — fail = do not deliver
 4. **Fix**: On validation failure, fix and re-validate (loop step 3, max 3 retries)
 
 ## Pre-Output Checklist
@@ -48,7 +46,7 @@ DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 Before delivering JSON, all items must pass:
 
 - [ ] `"is-c3-clipboard-data": true` present
-- [ ] All ACE IDs confirmed via `scripts/query/schema.py` (0 unverified IDs)
+- [ ] All ACE IDs confirmed via `scripts/query/rag.py` (0 unverified IDs)
 - [ ] Variables include `comment` field (can be `""`)
 - [ ] String params use nested quotes: `"\"value\""`
 - [ ] Behavior actions include `behaviorType` (display name, not behaviorId)
@@ -67,7 +65,7 @@ When the conversation is in Chinese, **all ACE names shown to the user must use 
 | Explaining to user (Chinese) | `键盘 > 按住按键 > 空格` |
 | Generated clipboard JSON | `"type": "keyboard", "id": "key-is-down"` |
 
-Lookup flow: `scripts/query/schema.py search {keyword}` → output includes bilingual labels (中文 / English). If zh-CN is missing, fall back to English.
+Lookup flow: `scripts/query/rag.py search {keyword}` → output includes bilingual labels (中文 / English). If zh-CN is missing, fall back to English.
 
 ## Never Do
 

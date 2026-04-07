@@ -30,20 +30,12 @@ Read `${CLAUDE_PLUGIN_ROOT}/CLAUDE.md` for known hallucination traps (critical �
 ## Scripts
 
 ```bash
-# Local ACE lookup (always available)
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py search {keyword}
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py plugin {name} {ace-id}
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py behavior {name} {ace-id}
-
-# RAG semantic search (when online — better for fuzzy/Chinese queries)
+# ACE lookup via RAG service
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py list {plugin}
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py lookup {query} --plugin {plugin}
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify {ace-id} --plugin {plugin}
 ```
-
-## References
-
-schema.py outputs bilingual labels (中文 / English) and behavior display names automatically. No extra reference files needed.
 
 ## Memory Context
 

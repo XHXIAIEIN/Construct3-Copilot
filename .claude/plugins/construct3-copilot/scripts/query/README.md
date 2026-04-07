@@ -5,44 +5,32 @@ All scripts are safe to run in parallel.
 
 ---
 
-## schema.py — ACE Schema Lookup
+## rag.py — ACE Schema Lookup & Semantic Search
 
-Confirms plugin/behavior condition, action, and expression IDs and their parameters.
+All ACE queries go through `rag.py`. Confirms plugin/behavior condition, action, and expression IDs and their parameters. Also supports semantic search over Construct 3 documentation.
 
-**When to use**: Before generating any ACE ID; when user asks "is there an action for X"; when unsure about parameter format.
+**When to use**: Before generating any ACE ID; when user asks "is there an action for X"; when unsure about parameter format; open-ended questions ("how to implement enemy AI patrol").
 **When NOT to use**: ACE ID already confirmed in this conversation turn.
 
 ```bash
-python3 scripts/query/schema.py search <keyword>           # fuzzy search
-python3 scripts/query/schema.py plugin <name> [ace-id]     # plugin ACE
-python3 scripts/query/schema.py behavior <name> [ace-id]   # behavior ACE
+python3 scripts/query/rag.py search <keyword>                    # fuzzy search
+python3 scripts/query/rag.py lookup <ace-id> --plugin <name>     # plugin ACE
+python3 scripts/query/rag.py list <plugin-or-behavior>           # list all ACEs
+python3 scripts/query/rag.py verify <ace-id> --plugin <name>     # verify ACE exists
 ```
 
 | User says | Run |
 |-----------|-----|
-| "Is there a set-animation action?" | `schema.py search animation` |
-| "What conditions does Platform have?" | `schema.py behavior platform` |
-| "What params does on-click need?" | `schema.py plugin mouse on-click` |
+| "Is there a set-animation action?" | `rag.py search animation` |
+| "What conditions does Platform have?" | `rag.py list platform` |
+| "What params does on-click need?" | `rag.py lookup on-click --plugin mouse` |
 
-**Not found = does not exist.** Never guess an ACE ID that schema.py cannot find.
-
----
-
-## rag.py — RAG Semantic Search [not ready]
-
-Semantic search over Construct 3 documentation. Requires vector DB backend (not configured).
-
-**When to use**: Open-ended questions ("how to implement enemy AI patrol") that schema.py cannot answer.
-**When NOT to use**: Current version — returns "backend not configured" error.
-
-```bash
-python3 scripts/query/rag.py "how to implement pathfinding"
-```
+**Not found = does not exist.** Never guess an ACE ID that rag.py cannot find.
 
 ---
 
 ## Anti-patterns
 
-- Using an ACE ID after schema.py returns empty results
-- Writing ACE conditions/actions without running schema.py first
+- Using an ACE ID after rag.py returns empty results
+- Writing ACE conditions/actions without running rag.py first
 - Treating RAG search results as the only valid usage (they are reference, not spec)

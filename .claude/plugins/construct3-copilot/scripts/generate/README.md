@@ -1,7 +1,7 @@
 # generate/ — Resource Generation Scripts
 
 Generates Construct 3 assets: placeholder images, layout presets, clipboard JSON.
-Always run `query/schema.py` to confirm ACE IDs before generating.
+Always run `query/rag.py` to confirm ACE IDs before generating.
 
 ---
 
@@ -52,7 +52,7 @@ echo '{"gameplay":["WASD movement"],"assets":["Player"]}' | python3 scripts/gene
 
 ## Generation Workflow (mandatory order)
 
-1. `query/schema.py` — confirm all ACE IDs exist
+1. `query/rag.py` — confirm all ACE IDs exist
 2. `generate/imagedata.py` — produce placeholder images (if object-types needed)
 3. `generate/layout.py` or direct JSON authoring
 4. `validate/output.py` — validate output; fix and re-validate on failure

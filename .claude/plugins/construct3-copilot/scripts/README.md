@@ -17,7 +17,7 @@ Atomic CLI scripts for querying, generating, and validating Construct 3 clipboar
 QUERY → GENERATE → VALIDATE → FIX
 ```
 
-1. **Query** `schema.py` to confirm every ACE ID before generation
+1. **Query** `rag.py` to confirm every ACE ID before generation
 2. **Generate** JSON via scripts or direct authoring
 3. **Validate** with `output.py` — fail means do not deliver
 4. **Fix** on failure, then re-validate (loop step 3)

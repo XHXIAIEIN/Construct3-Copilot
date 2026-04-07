@@ -2,18 +2,17 @@
 """
 Service health check for Construct 3 Copilot.
 
-Probes RAG service, Clipboard service, and local schema data.
+Probes RAG service and Clipboard service.
 Always exits 0 — degraded state is not an error.
 
 Usage:
     python health.py          # full JSON report
-    python health.py --brief  # one-line summary: RAG:+ Clipboard:- Local:+
+    python health.py --brief  # one-line summary: RAG:+ Clipboard:+
 """
 
 import argparse
 import json
 import sys
-from pathlib import Path
 from urllib.error import URLError
 from urllib.request import urlopen
 
@@ -38,44 +37,11 @@ def probe_service(base_url: str) -> dict:
         return {"url": base_url, "available": False, "status": str(exc)}
 
 
-def check_local_data() -> dict:
-    """Check that Construct3-RAG sibling repo and schema data are accessible."""
-    try:
-        import importlib.util
-        scripts_dir = Path(__file__).resolve().parent.parent
-        spec = importlib.util.spec_from_file_location("_resolve", scripts_dir / "_resolve.py")
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        schemas_dir = mod.resolve_rag_schemas("en-US")
-    except (SystemExit, Exception):
-        return {
-            "source": "Construct3-RAG",
-            "available": False,
-            "plugins": 0,
-        }
-
-    plugins_dir = schemas_dir / "plugins"
-    if plugins_dir.exists():
-        plugin_count = len([f for f in plugins_dir.glob("*.json") if f.stem not in ("index", "_common")])
-        available = plugin_count > 0
-    else:
-        plugin_count = 0
-        available = False
-
-    return {
-        "source": "Construct3-RAG",
-        "schemas_dir": str(schemas_dir),
-        "available": available,
-        "plugins": plugin_count,
-    }
-
-
 def build_report() -> dict:
     rag = probe_service(RAG_URL)
     clipboard = probe_service(CLIPBOARD_URL)
-    local = check_local_data()
 
-    all_ok = rag["available"] and clipboard["available"] and local["available"]
+    all_ok = rag["available"] and clipboard["available"]
 
     return {
         "status": "ok" if all_ok else "degraded",
@@ -83,20 +49,18 @@ def build_report() -> dict:
             "rag": rag,
             "clipboard": clipboard,
         },
-        "local_data": local,
     }
 
 
 def brief_line(report: dict) -> str:
-    """Format one-line summary like: RAG:+ Clipboard:- Local:+"""
+    """Format one-line summary like: RAG:+ Clipboard:+"""
 
     def sym(val: bool) -> str:
         return "+" if val else "-"
 
     rag_sym = sym(report["services"]["rag"]["available"])
     cb_sym = sym(report["services"]["clipboard"]["available"])
-    local_sym = sym(report["local_data"]["available"])
-    return f"RAG:{rag_sym} Clipboard:{cb_sym} Local:{local_sym}"
+    return f"RAG:{rag_sym} Clipboard:{cb_sym}"
 
 
 def main():
