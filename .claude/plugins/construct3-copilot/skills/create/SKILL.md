@@ -91,14 +91,11 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate '{j
 |------|------|
 | Always | @${CLAUDE_PLUGIN_ROOT}/references/instructions.md |
 | JSON format | @${CLAUDE_PLUGIN_ROOT}/references/clipboard-format.md |
-| Behavior IDs | @${CLAUDE_PLUGIN_ROOT}/references/behavior-names.md |
 | Object templates | @${CLAUDE_PLUGIN_ROOT}/references/object-templates.md |
 | Layout templates | @${CLAUDE_PLUGIN_ROOT}/references/layout-templates.md |
 | End-to-end examples | @${CLAUDE_PLUGIN_ROOT}/references/examples.md |
 | Prompt templates | @${CLAUDE_PLUGIN_ROOT}/references/prompts.md |
-| Chinese terms | @${CLAUDE_PLUGIN_ROOT}/references/zh-cn.md |
 | Family patterns | @${CLAUDE_PLUGIN_ROOT}/references/family-patterns.md |
-| Effects/shaders | @${CLAUDE_PLUGIN_ROOT}/references/effects-guide.md |
 
 ## Memory Context
 

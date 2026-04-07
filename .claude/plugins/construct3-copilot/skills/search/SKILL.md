@@ -43,10 +43,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py lookup {query} --plugin {plug
 
 ## References
 
-| When | Load |
-|------|------|
-| Always | @${CLAUDE_PLUGIN_ROOT}/references/behavior-names.md |
-| Chinese queries | @${CLAUDE_PLUGIN_ROOT}/references/zh-cn.md |
+schema.py outputs bilingual labels (中文 / English) and behavior display names automatically. No extra reference files needed.
 
 ## Memory Context
 

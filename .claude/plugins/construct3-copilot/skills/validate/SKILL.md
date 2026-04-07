@@ -50,7 +50,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py plugin {name} {ace-id}
 |------|------|
 | Always | @${CLAUDE_PLUGIN_ROOT}/references/clipboard-format.md |
 | Paste errors | @${CLAUDE_PLUGIN_ROOT}/references/troubleshooting.md |
-| Behavior IDs | @${CLAUDE_PLUGIN_ROOT}/references/behavior-names.md |
 
 ## Output Format
 

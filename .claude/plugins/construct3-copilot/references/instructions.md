@@ -47,7 +47,7 @@ On incremental edits: consult and update this list. Reuse existing resources —
 1. **Plan outputs** — Choose clipboard `type` per the table below. Present the plan for confirmation before emitting large payloads (>50 events).
 2. **Schema retrieval** — Confirm every ACE ID via `scripts/query/schema.py`. When RAG is online, also run `scripts/query/rag.py search` for semantic context.
 3. **Modular design** — Organize logic into groups: Input, Movement, Collision, Scoring, UI, Reset. Use `eventType: "group"` blocks.
-4. **Author JSON** — Follow @references/clipboard-format.md. Respect behavior display names (see @references/behavior-names.md).
+4. **Author JSON** — Follow @references/clipboard-format.md. Use behavior display names (run `schema.py behavior {name}` to confirm).
 5. **Validate** — Run `scripts/validate/output.py`. Fix and re-validate on failure (max 3 retries).
 
 ## 5. Output Types
@@ -76,11 +76,9 @@ Every delivery must include:
 
 Match the user's language when presenting ACE information:
 
-- **Chinese conversation**: Use Chinese ACE names (`name_zh` from schema or zh-CN CSV) in explanations, event table descriptions, and step-by-step guides. Example: `键盘 > 按住按键 > 空格` not `Keyboard > Key is down > Space`.
+- **Chinese conversation**: Use Chinese ACE names (from `schema.py` bilingual output) in explanations. Example: `键盘 > 按住按键 > 空格` not `Keyboard > Key is down > Space`.
 - **English conversation**: Use English ACE names as-is.
 - **Generated JSON**: Always English IDs regardless of conversation language.
-
-Reference: `@references/zh-cn.md` for lookup methods.
 
 ## 8. Design Principles
 

@@ -73,7 +73,7 @@ Checklist:
 - [ ] `"is-c3-clipboard-data": true` with correct `type`
 - [ ] All ACE IDs confirmed via scripts/query/schema.py (0 unverified)
 - [ ] Strings quoted ("\"Text\""), comparisons numeric, key codes numeric
-- [ ] Behavior actions use display names (see behavior-names.md)
+- [ ] Behavior actions use display names (confirm via schema.py behavior {name})
 - [ ] Variables include comment/type/initialValue
 - [ ] scripts/validate/output.py exit code: {0 or error details}
 - [ ] Paste location specified
