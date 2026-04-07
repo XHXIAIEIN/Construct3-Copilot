@@ -16,9 +16,13 @@ import sys
 from urllib.error import URLError
 from urllib.request import urlopen
 
-RAG_URL = "http://localhost:8765"
-CLIPBOARD_URL = "http://localhost:8766"
-PROBE_TIMEOUT = 3  # seconds
+import os
+
+RAG_PORT = os.environ.get("C3_RAG_PORT", "8765")
+CLIPBOARD_PORT = os.environ.get("C3_CLIPBOARD_PORT", "8766")
+RAG_URL = f"http://localhost:{RAG_PORT}"
+CLIPBOARD_URL = f"http://localhost:{CLIPBOARD_PORT}"
+PROBE_TIMEOUT = 3  # seconds — fast probe, just checking if service is up
 
 
 def probe_service(base_url: str) -> dict:

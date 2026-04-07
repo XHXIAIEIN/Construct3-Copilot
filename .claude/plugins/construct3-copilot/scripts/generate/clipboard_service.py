@@ -20,8 +20,11 @@ import sys
 import urllib.error
 import urllib.request
 
-CLIPBOARD_BASE_URL = "http://localhost:8766"
-TIMEOUT = 10  # seconds
+import os
+
+CLIPBOARD_PORT = os.environ.get("C3_CLIPBOARD_PORT", "8766")
+CLIPBOARD_BASE_URL = f"http://localhost:{CLIPBOARD_PORT}"
+TIMEOUT = 10  # seconds — validation/generation calls are fast
 
 _START_SUGGESTION = "Start: cd Construct3-Clipboard && python -m uvicorn src.api:app --port 8766"
 

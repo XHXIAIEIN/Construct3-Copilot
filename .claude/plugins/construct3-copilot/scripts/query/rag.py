@@ -26,7 +26,10 @@ import sys
 import urllib.error
 import urllib.request
 
-RAG_URL = "http://localhost:8765/search"
+import os
+
+RAG_PORT = os.environ.get("C3_RAG_PORT", "8765")
+RAG_URL = f"http://localhost:{RAG_PORT}/search"
 TIMEOUT = 120  # seconds — embedding + reranker on CPU can take 30-60s
 
 SUBCOMMANDS = {
