@@ -40,12 +40,9 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query} --collections 
 
 SDK documentation is indexed in the RAG `addon_sdk` collection (127 doc chunks + 144 code samples from 12 addon templates).
 
-Fallback: read directly from sibling repos if RAG is offline.
+Sources indexed: Addon SDK manual (guide/, reference/) + Scirra/Construct-Addon-SDK code (plugin-sdk/, behavior-sdk/, effect-sdk/, theme-sdk/).
 
-| Source | Path |
-|--------|------|
-| SDK manual | `Construct3-Manual/Construct3-Addon-SDK/` (guide/, reference/) |
-| SDK code samples | `Construct-Addon-SDK/` (plugin-sdk/, behavior-sdk/, effect-sdk/, theme-sdk/) |
+If RAG is offline, inform the user and suggest starting it.
 
 ## Addon Types
 
