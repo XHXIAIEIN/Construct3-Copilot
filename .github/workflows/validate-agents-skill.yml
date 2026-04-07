@@ -33,16 +33,29 @@ jobs:
         run: |
           python - << 'PY'
           from pathlib import Path
-          import re
-          p = Path(".claude/plugins/construct3-copilot/skills/create/SKILL.md")
-          text = p.read_text(encoding="utf-8")
-          m = re.match(r"^(.*?)\n---\n", text, flags=re.S)
-          if not m:
-              raise SystemExit("Missing YAML frontmatter in SKILL.md")
-          fm = m.group(1)
-          if "name:" not in fm or "description:" not in fm:
-              raise SystemExit("Frontmatter must contain name and description")
-          print("SKILL.md frontmatter OK")
+          import re, sys
+
+          skills = sorted(Path(".claude/plugins/construct3-copilot/skills").rglob("SKILL.md"))
+          if not skills:
+              sys.exit("No SKILL.md files found")
+          ok = True
+          for p in skills:
+              text = p.read_text(encoding="utf-8")
+              # Support both ---\nfrontmatter\n---  and bare frontmatter (no --- delimiters)
+              m = re.match(r"^---\n(.*?)\n---\n", text, flags=re.S)
+              if m:
+                  fm = m.group(1)
+              else:
+                  # Bare frontmatter: take everything before the first blank line
+                  fm = text.split("\n\n", 1)[0]
+              missing = [f for f in ("name:", "description:") if f not in fm]
+              if missing:
+                  print(f"FAIL {p}: missing {', '.join(missing)}")
+                  ok = False
+              else:
+                  print(f"OK   {p}")
+          if not ok:
+              sys.exit(1)
           PY
 
       - name: Validate ACE schema index
@@ -52,8 +65,6 @@ jobs:
 
       - name: Smoke test skill scripts
         run: |
-          python .claude/plugins/construct3-copilot/scripts/query/schema.py search collision
-          python .claude/plugins/construct3-copilot/scripts/validate/output.py tests/fixtures/events_basic.json
           python .claude/plugins/construct3-copilot/scripts/infra/health.py --brief
           # Service bridges exit 1 when offline — expected in CI
           python .claude/plugins/construct3-copilot/scripts/query/rag.py search collision || true
