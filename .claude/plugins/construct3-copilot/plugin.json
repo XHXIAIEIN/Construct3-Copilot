@@ -3,10 +3,10 @@
   "version": "2.1.0",
   "description": "Construct 3 game development assistant — generates clipboard JSON, validates output, guides addon development, and searches ACE documentation",
   "skills": [
-    "skills/create",
-    "skills/validate",
-    "skills/addon",
-    "skills/search"
+    "skills/c3-create",
+    "skills/c3-validate",
+    "skills/c3-addon",
+    "skills/c3-search"
   ],
   "hooks": {
     "SessionStart": [
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat \"${CLAUDE_PLUGIN_ROOT}/memory/profile.md\" 2>/dev/null || echo '<!-- No C3 Copilot user profile yet. Will be created after first session. -->'"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/infra/welcome.sh\""
           }
         ]
       }
