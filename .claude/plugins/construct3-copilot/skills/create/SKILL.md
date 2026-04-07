@@ -87,15 +87,17 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate '{j
 
 ## References
 
-| When | Load |
+All clipboard format knowledge lives in `Construct3-Clipboard/docs/` (sibling repo):
+
+| When | Read from Construct3-Clipboard |
 |------|------|
-| Always | @${CLAUDE_PLUGIN_ROOT}/references/instructions.md |
-| JSON format | `Construct3-Clipboard/docs/clipboard-format.md` (sibling repo) |
-| Object templates | `Construct3-Clipboard/docs/object-templates.md` (sibling repo) |
-| Layout templates | @${CLAUDE_PLUGIN_ROOT}/references/layout-templates.md |
-| End-to-end examples | @${CLAUDE_PLUGIN_ROOT}/references/examples.md |
-| Prompt templates | @${CLAUDE_PLUGIN_ROOT}/references/prompts.md |
-| Family patterns | @${CLAUDE_PLUGIN_ROOT}/references/family-patterns.md |
+| JSON format | `docs/clipboard-format.md` |
+| Object templates | `docs/object-templates.md` |
+| Layout templates | `docs/layout-templates.md` |
+| End-to-end examples | `docs/examples.md` |
+| Prompt templates | `docs/prompts.md` |
+| Family patterns | `docs/family-patterns.md` |
+| Deprecated features | `docs/deprecated-features.md` |
 
 ## Memory Context
 

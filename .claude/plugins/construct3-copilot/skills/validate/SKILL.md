@@ -49,7 +49,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/schema.py plugin {name} {ace-id}
 | When | Load |
 |------|------|
 | Always | `Construct3-Clipboard/docs/clipboard-format.md` (sibling repo) |
-| Paste errors | @${CLAUDE_PLUGIN_ROOT}/references/troubleshooting.md |
+| Paste errors | `Construct3-Clipboard/docs/troubleshooting.md` (sibling repo) |
 
 ## Output Format
 
