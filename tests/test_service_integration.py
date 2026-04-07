@@ -12,6 +12,7 @@ We therefore cache script results at module level so that each unique
 """
 
 import json
+import os
 import subprocess
 import sys
 from functools import lru_cache
@@ -112,17 +113,19 @@ class TestHealthJsonOutput:
         assert "status" in clipboard, "services.clipboard missing 'status'"
         assert isinstance(clipboard["available"], bool)
 
-    def test_rag_url_contains_8765(self):
-        """RAG URL should point at port 8765."""
+    def test_rag_url_contains_expected_port(self):
+        """RAG URL should point at port from C3_RAG_PORT env or default 8765."""
         _, stdout, _ = run_health()
         data = json.loads(stdout)
-        assert "8765" in data["services"]["rag"]["url"]
+        expected_port = os.environ.get("C3_RAG_PORT", "8765")
+        assert expected_port in data["services"]["rag"]["url"]
 
-    def test_clipboard_url_contains_8766(self):
-        """Clipboard URL should point at port 8766."""
+    def test_clipboard_url_contains_expected_port(self):
+        """Clipboard URL should point at port from C3_CLIPBOARD_PORT env or default 8766."""
         _, stdout, _ = run_health()
         data = json.loads(stdout)
-        assert "8766" in data["services"]["clipboard"]["url"]
+        expected_port = os.environ.get("C3_CLIPBOARD_PORT", "8766")
+        assert expected_port in data["services"]["clipboard"]["url"]
 
     def test_services_unavailable_without_live_services(self):
         """Both services should be unavailable (no live servers in test env)."""
