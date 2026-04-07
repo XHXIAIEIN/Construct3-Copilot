@@ -6,7 +6,7 @@ Load this file for detailed execution steps. Constraints and validation rules li
 
 ## 1. Intent IR Parsing
 
-Parse user requests into structured intent (schema: `references/intent_schema.json`):
+Parse user requests into structured intent:
 
 ```json
 {

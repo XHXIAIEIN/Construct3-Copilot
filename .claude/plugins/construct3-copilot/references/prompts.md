@@ -11,7 +11,7 @@ You are an intent parser for Construct 3 workflows.
 
 Input: {user_request}
 
-Output the Intent IR JSON matching `intent_schema.json`:
+Output the Intent IR JSON:
 ```json
 {
   "gameplay": [],
