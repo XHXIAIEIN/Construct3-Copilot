@@ -7,12 +7,52 @@ Generate Construct 3 clipboard JSON from natural language and paste directly int
 ## Quick Start
 
 ```bash
+# 1. Clone Copilot
 git clone https://github.com/XHXIAIEIN/Construct3-Copilot.git
 cd Construct3-Copilot
-claude
+
+# 2. Auto-clone all dependencies + install pip packages
+bash .claude/plugins/construct3-copilot/scripts/infra/setup.sh
+
+# 3. Start services (each in its own terminal)
+cd ../Construct3-RAG && python src/api.py
+cd ../Construct3-Clipboard && python src/api.py
+
+# 4. Run Copilot
+cd ../Construct3-Copilot && claude
 ```
 
-> Requires [Claude Code CLI](https://claude.ai/download)
+> Requires [Claude Code CLI](https://claude.ai/download) and Python 3.10+
+
+## Ecosystem
+
+Copilot is a Claude Code plugin that depends on two sibling services:
+
+**Services** (need startup):
+
+| Repository | Role | Port |
+|------------|------|------|
+| [Construct3-Copilot](https://github.com/XHXIAIEIN/Construct3-Copilot) | Claude Code plugin (skills, scripts, orchestration) | — |
+| [Construct3-RAG](https://github.com/XHXIAIEIN/Construct3-RAG) | ACE schema search + documentation retrieval | 8765 |
+| [Construct3-Clipboard](https://github.com/XHXIAIEIN/Construct3-Clipboard) | Clipboard JSON generation + validation | 8766 |
+
+**References** (read-only, used by skills):
+
+| Repository | Used by |
+|------------|---------|
+| [Construct-Addon-SDK](https://github.com/Scirra/Construct-Addon-SDK) | `/c3-addon` — official SDK templates |
+| [Construct-Example-Projects](https://github.com/Scirra/Construct-Example-Projects) | `/c3-search` — official game examples |
+| [Construct3-Manual](https://github.com/XHXIAIEIN/Construct3-Manual) | `/c3-addon` — SDK documentation |
+
+```
+../
+├── Construct3-Copilot/           ← Claude Code plugin (you are here)
+├── Construct3-RAG/               ← ACE schema + docs service
+├── Construct3-Clipboard/         ← JSON generation + validation service
+├── Construct-Addon-SDK/          ← Official SDK templates (Scirra)
+├── Construct-Example-Projects/   ← Official examples (Scirra)
+└── Construct3-Manual/            ← SDK documentation
+```
 
 ## Usage Examples
 

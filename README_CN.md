@@ -7,12 +7,52 @@
 ## 快速开始
 
 ```bash
+# 1. 克隆 Copilot
 git clone https://github.com/XHXIAIEIN/Construct3-Copilot.git
 cd Construct3-Copilot
-claude
+
+# 2. 自动克隆所有依赖仓库 + 安装 pip 包
+bash .claude/plugins/construct3-copilot/scripts/infra/setup.sh
+
+# 3. 启动服务（各开一个终端）
+cd ../Construct3-RAG && python src/api.py
+cd ../Construct3-Clipboard && python src/api.py
+
+# 4. 运行 Copilot
+cd ../Construct3-Copilot && claude
 ```
 
-> 需要安装 [Claude Code CLI](https://claude.ai/download)
+> 需要安装 [Claude Code CLI](https://claude.ai/download) 和 Python 3.10+
+
+## 生态系统
+
+Copilot 是一个 Claude Code 插件，依赖两个平级的服务仓库：
+
+**服务**（需要启动）：
+
+| 仓库 | 角色 | 端口 |
+|------|------|------|
+| [Construct3-Copilot](https://github.com/XHXIAIEIN/Construct3-Copilot) | Claude Code 插件（技能、脚本、编排） | — |
+| [Construct3-RAG](https://github.com/XHXIAIEIN/Construct3-RAG) | ACE schema 搜索 + 文档检索 | 8765 |
+| [Construct3-Clipboard](https://github.com/XHXIAIEIN/Construct3-Clipboard) | 剪贴板 JSON 生成 + 验证 | 8766 |
+
+**参考资料**（只读，供 skill 使用）：
+
+| 仓库 | 使用者 |
+|------|--------|
+| [Construct-Addon-SDK](https://github.com/Scirra/Construct-Addon-SDK) | `/c3-addon` — 官方 SDK 模板 |
+| [Construct-Example-Projects](https://github.com/Scirra/Construct-Example-Projects) | `/c3-search` — 官方游戏示例 |
+| [Construct3-Manual](https://github.com/XHXIAIEIN/Construct3-Manual) | `/c3-addon` — SDK 文档 |
+
+```
+../
+├── Construct3-Copilot/           ← Claude Code 插件（当前仓库）
+├── Construct3-RAG/               ← ACE schema + 文档服务
+├── Construct3-Clipboard/         ← JSON 生成 + 验证服务
+├── Construct-Addon-SDK/          ← 官方 SDK 模板 (Scirra)
+├── Construct-Example-Projects/   ← 官方示例项目 (Scirra)
+└── Construct3-Manual/            ← SDK 文档
+```
 
 ## 使用示例
 

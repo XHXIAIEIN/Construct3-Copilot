@@ -5,17 +5,15 @@ on:
     branches: [main, develop]
     paths:
       - ".claude/plugins/**"
-      - "scripts/**"
-      - "data/schemas/**"
       - "tests/**"
+      - "requirements.txt"
       - ".github/workflows/validate-agents-skill.yml"
   pull_request:
     branches: [main, develop]
     paths:
       - ".claude/plugins/**"
-      - "scripts/**"
-      - "data/schemas/**"
       - "tests/**"
+      - "requirements.txt"
 
 jobs:
   validate:
@@ -69,10 +67,14 @@ jobs:
       - name: Smoke test skill scripts
         run: |
           python .claude/plugins/construct3-copilot/scripts/infra/health.py --brief
-          # Service bridges exit 1 when offline — expected in CI
-          python .claude/plugins/construct3-copilot/scripts/query/rag.py search collision || true
-          python .claude/plugins/construct3-copilot/scripts/generate/clipboard_service.py health || true
 
-      - name: Run integration tests
+          # Service bridges must exit 1 with valid JSON when offline (not crash)
+          python .claude/plugins/construct3-copilot/scripts/query/rag.py search collision; RC=$?
+          if [ "$RC" -ne 1 ]; then echo "Expected exit 1 (offline), got $RC"; exit 1; fi
+
+          python .claude/plugins/construct3-copilot/scripts/generate/clipboard_service.py health; RC=$?
+          if [ "$RC" -ne 1 ]; then echo "Expected exit 1 (offline), got $RC"; exit 1; fi
+
+      - name: Run all tests
         run: |
-          python -m pytest tests/test_service_integration.py -v
+          python -m pytest tests/ -v
