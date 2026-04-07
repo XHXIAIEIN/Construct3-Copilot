@@ -41,6 +41,11 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify {ace-id} --plugin {plu
 
 On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{project_root}/.claude/memory/memory.md` exists, read it for project context.
 
+## Service Dependencies
+
+Requires RAG service (port 8765). If offline, guide the user:
+`git clone https://github.com/XHXIAIEIN/Construct3-RAG.git && cd Construct3-RAG && python scripts/setup.py`
+
 ## Boundaries
 
 - Read-only — does NOT generate clipboard JSON (use c3-create)

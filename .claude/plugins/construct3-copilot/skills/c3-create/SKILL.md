@@ -84,6 +84,12 @@ Copilot does NOT write clipboard JSON directly. Pass structured intent to the Cl
 
 On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{project_root}/.claude/memory/memory.md` exists, read it for project context.
 
+## Service Dependencies
+
+Requires RAG (port 8765) and Clipboard (port 8766) services. If offline, guide the user:
+- RAG: `git clone https://github.com/XHXIAIEIN/Construct3-RAG.git && cd Construct3-RAG && python scripts/setup.py`
+- Clipboard: `cd Construct3-Clipboard && python -m uvicorn src.api:app --port 8766`
+
 ## Boundaries
 
 - Output: Construct 3 clipboard JSON only (events, object-types, layouts, world-instances, event-sheets)

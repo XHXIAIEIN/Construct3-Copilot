@@ -56,6 +56,12 @@ Fix summary: [what was changed and why]
 
 On skill trigger: find `.c3proj` in project root, read its `uniqueId`. If `{project_root}/.claude/memory/memory.md` exists, read it for project context.
 
+## Service Dependencies
+
+Requires Clipboard service (port 8766) for validation, and RAG (port 8765) for ACE ID verification. If offline:
+- RAG: `git clone https://github.com/XHXIAIEIN/Construct3-RAG.git && cd Construct3-RAG && python scripts/setup.py`
+- Clipboard: `cd Construct3-Clipboard && python -m uvicorn src.api:app --port 8766`
+
 ## Boundaries
 
 - Does NOT generate new content from scratch (use c3-create for that)
