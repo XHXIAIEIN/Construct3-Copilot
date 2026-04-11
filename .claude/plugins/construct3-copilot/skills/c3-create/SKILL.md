@@ -61,7 +61,10 @@ Read `${CLAUDE_PLUGIN_ROOT}/CLAUDE.md` first — it contains hallucination traps
 
 ## Workflow
 
-DISCOVER → QUERY → GENERATE → VALIDATE → FIX
+### Mode detection
+Parse the user's message for `#lite` or `#strict`. No tag = `#strict`.
+
+### Strict mode (default): DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 
 ```bash
 # 0. Service discovery
@@ -71,12 +74,24 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/infra/health.py --brief
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify {ace-id} --plugin {plugin}
 
-# 2. Generate — pass intent to Clipboard service, let it handle format details
+# 2. Generate — pass intent to Clipboard service
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate '{intent_ir}'
 
 # 3. Validate (mandatory)
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate '{json}'
 ```
+
+### Lite mode (#lite): GENERATE → LOCAL-VALIDATE
+
+```bash
+# 1. Generate — pass intent to Clipboard service (or construct JSON directly if service offline)
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate '{intent_ir}'
+
+# 2. Local pre-validate (no network required)
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/prevalidate.py '{json}'
+```
+
+Output must include: "⚠ Lite mode: ACE IDs not verified via RAG."
 
 Copilot does NOT write clipboard JSON directly. Pass structured intent to the Clipboard service and let it handle format, templates, and deprecated feature migration.
 

@@ -4,6 +4,7 @@ Clipboard HTTP bridge — interacts with the Construct3-Clipboard service at htt
 
 Subcommands:
     validate  — POST /validate   (validate existing clipboard JSON)
+               --local flag: local pre-validation only (no network)
     generate  — POST /generate   (generate clipboard JSON from Intent IR)
     health    — GET  /health     (check service health)
 
@@ -105,15 +106,32 @@ def _http_get(path: str) -> tuple[int, str]:
 
 
 def cmd_validate(args: list[str]) -> tuple[int, str]:
-    if not args:
+    # Check for --local flag
+    local_mode = "--local" in args
+    clean_args = [a for a in args if a != "--local"]
+
+    if not clean_args:
         return 1, _err(
             "Missing clipboard JSON argument",
-            "Usage: clipboard_service.py validate '<json>' | <file.json>",
+            "Usage: clipboard_service.py validate [--local] '<json>' | <file.json>",
         )
 
-    code, err_str, body = _load_json_arg(args[0])
+    code, err_str, body = _load_json_arg(clean_args[0])
     if code != 0:
         return code, err_str
+
+    if local_mode:
+        # Local pre-validation only — no network call
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "prevalidate",
+            os.path.join(os.path.dirname(__file__), "prevalidate.py"),
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        result = mod.prevalidate(body)
+        result["mode"] = "local"
+        return (0 if result["passed"] else 1), json.dumps(result, ensure_ascii=False)
 
     exit_code, response_str = _http_post("/validate", {"clipboard_json": body})
     if exit_code != 0:

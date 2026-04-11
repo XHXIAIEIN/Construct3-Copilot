@@ -29,6 +29,21 @@ Use an ACE ID that RAG cannot find = instant failure.
 | `compare-boolean` | `compare-boolean-eventvar` |
 | `add-to` | `add-to-eventvar` |
 
+## Workflow Modes
+
+Users can append a mode tag to their message to control workflow weight:
+
+| Tag | Name | Workflow | When to use |
+|-----|------|----------|-------------|
+| `#strict` | Strict (default) | DISCOVER → QUERY → GENERATE → VALIDATE → FIX | Production output, unfamiliar ACEs |
+| `#lite` | Lite | GENERATE → LOCAL-VALIDATE | Quick prototyping, known ACEs, services offline |
+
+**Rules:**
+- No tag = `#strict` (safe default)
+- `#lite` skips RAG lookup and remote validation — uses local pre-validation only
+- `#lite` output must include warning: "⚠ Lite mode: ACE IDs not verified via RAG. Paste at your own risk."
+- If Clipboard service is offline and no mode tag given, auto-fallback to `#lite` with notice
+
 ## Mandatory Workflow
 
 ```
@@ -40,6 +55,21 @@ DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 2. **Generate**: Pass intent to `${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate`
 3. **Validate**: `${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate` — fail = do not deliver
 4. **Fix**: On validation failure, fix and re-validate (loop step 3, max 3 retries)
+
+### Lite mode override
+
+When user appends `#lite` or services are offline (health check returns `-`):
+
+```
+GENERATE → LOCAL-VALIDATE
+```
+
+```bash
+# Local validate (no network)
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate --local '{json}'
+```
+
+Lite mode skips RAG lookup and remote validation. Always append warning to output.
 
 ## Pre-Output Checklist
 
@@ -55,6 +85,8 @@ Before delivering JSON, all items must pass:
 - [ ] `${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate` passed
 - [ ] Paste location specified (Event sheet margin / Project Bar / Layout view)
 - [ ] Manual verification step included ("After pasting, run layout and confirm X")
+- [ ] If `#lite` mode: `prevalidate.py` passed (remote validate not required)
+- [ ] If `#lite` mode: output includes "⚠ Lite mode" warning
 
 ## Language-Aware ACE Output
 
