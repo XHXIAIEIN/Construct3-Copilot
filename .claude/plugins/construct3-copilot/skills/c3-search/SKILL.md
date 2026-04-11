@@ -1,3 +1,4 @@
+---
 name: c3-search
 description: >
   Search Construct 3 ACE definitions and explain plugin/behavior capabilities.
@@ -17,15 +18,38 @@ triggers:
     - 有哪些条件
     - 怎么用
     - 什么表达式
+    - can c3 do
+    - does c3 support
+    - c3 feature
+    - 能不能做
+    - 支不支持
+    - 有没有
+    - c3 3d
   intents:
     - search_ace
     - explain_plugin
     - find_usage
+    - check_capability
 ---
 
 # Search — Query Construct 3 ACE Documentation
 
 Read `${CLAUDE_PLUGIN_ROOT}/CLAUDE.md` for known hallucination traps (critical — wrong ACE IDs are the #1 failure mode).
+
+## Capability Questions
+
+Triggered by "C3 能不能做 X", "does C3 support X", or any feature inquiry.
+
+**Hard rule: training data is stale for C3 features. Query first, answer second.**
+
+1. `rag.py search {feature keyword}` — check plugins/behaviors/scripting APIs (≥1 query, max 3)
+2. context7 `query-docs` on `/xhxiaiein/construct3-manual` — check manual for feature docs (≥1 query, max 2)
+3. Answer citing specific plugin names, ACE IDs, or scripting methods found in steps 1-2
+4. If both sources return 0 relevant results → respond "文档中没有找到相关功能，建议查看 construct.net 官方更新日志确认"
+
+**Escalate when:**
+- RAG offline AND context7 returns 0 results → tell user, do not fall back to training data
+- User claims a feature exists but docs don't show it → ask user for a link or example project, do not confirm or deny from memory
 
 ## Scripts
 

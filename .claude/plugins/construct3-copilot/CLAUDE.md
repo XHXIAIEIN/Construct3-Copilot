@@ -105,6 +105,7 @@ Lookup flow: `${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {keyword}` → o
 - Deliver JSON when validation reports errors
 - Use an ACE ID not confirmed by schema lookup
 - Omit paste instructions from output
+- **Answer C3 capability/feature questions from training data.** Query RAG (`rag.py search`) + Manual (context7: `/xhxiaiein/construct3-manual`) before stating what C3 can or cannot do. If both return 0 results, say "文档中没有找到" — do not guess. C3 ships features faster than training data updates.
 
 ---
 
