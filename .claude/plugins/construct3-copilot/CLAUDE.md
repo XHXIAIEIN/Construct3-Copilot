@@ -20,14 +20,13 @@ Use an ACE ID that RAG cannot find = instant failure.
 
 | Wrong (does not exist) | Correct (actual ID) |
 |------------------------|---------------------|
-| `set-angle-toward-position` | `set-angle` + `angle(x1,y1,x2,y2)` expression |
 | `move-toward` | MoveTo behavior or manual displacement |
 | `EightDir` | `8Direction` (use display name for behaviorType) |
-| `set-speed` (8Direction) | `set-max-speed` |
+| `set-speed` used as max speed (8Direction) | both exist: `set-speed` = current speed, `set-max-speed` = maximum speed |
 | `on-click` (no params) | `on-click` requires `mouse-button` parameter |
-| `toggle-boolean` | `toggle-boolean-eventvar` |
+| `toggle-boolean` (System) | `toggle-boolean-eventvar` |
 | `compare-boolean` | `compare-boolean-eventvar` |
-| `add-to` | `add-to-eventvar` |
+| `add-to` (System) | `add-to-eventvar` |
 
 ## Workflow Modes
 
