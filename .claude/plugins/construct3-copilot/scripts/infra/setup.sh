@@ -133,6 +133,6 @@ echo ""
 
 echo "## Done"
 echo "Next steps:"
-echo "  1. Start RAG:       cd $PARENT_DIR/Construct3-RAG && python src/api.py"
+echo "  1. Start RAG:       cd $PARENT_DIR/Construct3-RAG && python -m uvicorn src.api:app --port 8765"
 echo "  2. Start Clipboard: cd $PARENT_DIR/Construct3-Clipboard && python src/api.py"
 echo "  3. Run Copilot:     cd $PROJECT_ROOT && claude"

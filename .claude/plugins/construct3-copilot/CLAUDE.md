@@ -9,12 +9,14 @@ Generates paste-ready Construct 3 clipboard JSON. This file defines hard rules t
 **Before using ANY ACE ID, confirm it exists via RAG. Never guess from training data.**
 
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {keyword}
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py lookup {ace-id} --plugin {name}
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py list {plugin-or-behavior}
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search "{plugin-or-behavior} {keywords}"
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify {plugin-or-behavior}:{ace-id}
 ```
 
-Use an ACE ID that RAG cannot find = instant failure.
+Use an ACE ID that `verify` rejects = instant failure. `verify` compares IDs exactly and answers a near miss with the real IDs under `nearest`.
+
+RAG looks ACEs up and nothing else. A query names the plugin or behavior first; a how-to or concept question comes back without a `lookup` section. That is not a verdict on Construct 3: read the `../Construct3-Manual` clone or `../Construct-Example-Projects` instead of asking RAG again. Details: `${CLAUDE_PLUGIN_ROOT}/scripts/query/README.md`.
 
 ## Known Hallucination Traps
 
@@ -51,7 +53,7 @@ DISCOVER → QUERY → GENERATE → VALIDATE → FIX
 ```
 
 0. **Discover**: Run `${CLAUDE_PLUGIN_ROOT}/scripts/infra/health.py --brief` to check service availability
-1. **Query**: `${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py` for every ACE ID (mandatory)
+1. **Query**: `${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify` for every ACE ID (mandatory)
 2. **Generate**: Pass intent to `${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate`
 3. **Validate**: `${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate` — fail = do not deliver
 4. **Fix**: On validation failure, fix and re-validate (loop step 3, max 3 retries)
@@ -76,7 +78,7 @@ Lite mode skips RAG lookup and remote validation. Always append warning to outpu
 Before delivering JSON, all items must pass:
 
 - [ ] `"is-c3-clipboard-data": true` present
-- [ ] All ACE IDs confirmed via RAG lookup (0 unverified IDs)
+- [ ] All ACE IDs confirmed via `rag.py verify` (0 unverified IDs)
 - [ ] Variables include `comment` field (can be `""`)
 - [ ] String params use nested quotes: `"\"value\""`
 - [ ] Behavior actions include `behaviorType` (display name, not behaviorId)
@@ -97,7 +99,7 @@ When the conversation is in Chinese, **all ACE names shown to the user must use 
 | Explaining to user (Chinese) | `键盘 > 按住按键 > 空格` |
 | Generated clipboard JSON | `"type": "keyboard", "id": "key-is-down"` |
 
-Lookup flow: `${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {keyword}` → output includes bilingual labels (中文 / English). If zh-CN is missing, fall back to English.
+Lookup flow: add `--lang zh` to `${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search` or `verify` → each match carries `name.zh` next to `name.en`. Without the flag an English query returns English names only. If `name.zh` is missing, fall back to English.
 
 ## Never Do
 
@@ -105,7 +107,7 @@ Lookup flow: `${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {keyword}` → o
 - Deliver JSON when validation reports errors
 - Use an ACE ID not confirmed by schema lookup
 - Omit paste instructions from output
-- **Answer C3 capability/feature questions from training data.** Query RAG (`rag.py search`) + Manual (context7: `/xhxiaiein/construct3-manual`) before stating what C3 can or cannot do. If both return 0 results, say "文档中没有找到" — do not guess. C3 ships features faster than training data updates.
+- **Answer C3 capability/feature questions from training data.** Query RAG (`rag.py list` / `search`, for the ACEs of a named plugin or behavior) + Manual (the `../Construct3-Manual` clone, or context7: `/xhxiaiein/construct3-manual`) before stating what C3 can or cannot do. A RAG answer without a `lookup` section counts as 0 results from RAG only; the Manual still has to be read. If both return 0 results, say "文档中没有找到" — do not guess. C3 ships features faster than training data updates.
 
 ---
 

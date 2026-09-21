@@ -25,8 +25,9 @@ QUERY → GENERATE → VALIDATE → FIX
 ## Key Commands
 
 ```bash
-# ACE lookup via RAG (MANDATORY)
-python .claude/plugins/construct3-copilot/scripts/query/rag.py search {keyword}
+# ACE lookup via RAG (MANDATORY) — name the plugin or behavior first
+python .claude/plugins/construct3-copilot/scripts/query/rag.py search "{addon} {keywords}"
+python .claude/plugins/construct3-copilot/scripts/query/rag.py verify {addon}:{ace-id}
 
 # Generate placeholder art
 python .claude/plugins/construct3-copilot/scripts/generate/imagedata.py --color red --width 64 --height 64
@@ -35,6 +36,7 @@ python .claude/plugins/construct3-copilot/scripts/generate/imagedata.py --color 
 ## Conventions
 
 - Do not invent ACE IDs — always query RAG first
+- RAG looks ACEs up and declines how-to questions; read `../Construct3-Manual` or `../Construct-Example-Projects` for those
 - Output clipboard JSON fragments only, not `.c3p` archives
 - Run validation before returning any JSON
 - Produce only Construct 3 output — no other engines

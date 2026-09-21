@@ -228,17 +228,17 @@ class TestRagBridge:
 
     def test_rag_lookup_subcommand_offline(self):
         """lookup subcommand must also exit non-zero when RAG offline."""
-        code, stdout, _ = run_rag(["lookup", "Sprite", "--plugin", "sprite"])
+        code, stdout, _ = run_rag(["lookup", "Sprite collision"])
         assert code != 0
         data = json.loads(stdout)
-        assert "error" in data
+        assert "offline" in data["error"]
 
     def test_rag_verify_subcommand_offline(self):
         """verify subcommand (maps to lookup mode) must exit non-zero when RAG offline."""
-        code, stdout, _ = run_rag(["verify", "set-animation", "--plugin", "sprite"])
+        code, stdout, _ = run_rag(["verify", "sprite:set-animation"])
         assert code != 0
         data = json.loads(stdout)
-        assert "error" in data
+        assert "offline" in data["error"]
 
     def test_rag_default_mode_auto(self):
         """Positional-only query (no subcommand) defaults to mode=auto, exits nonzero offline."""
