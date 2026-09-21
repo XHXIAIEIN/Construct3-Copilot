@@ -103,7 +103,7 @@ On skill trigger: find `.c3proj` in the working directory or one level up. If no
 
 Requires RAG (port 8765) and Clipboard (port 8766) services. If offline, guide the user:
 - RAG: `cd ../Construct3-RAG && python src/api.py`
-- Clipboard: `cd ../Construct3-Clipboard && python src/api.py`
+- Clipboard: `cd ../Construct3-Clipboard && python -m uvicorn src.api:app --host 127.0.0.1 --port 8766`
 - First time? Run `bash .claude/plugins/construct3-copilot/scripts/infra/setup.sh` to clone all deps.
 
 ## Boundaries

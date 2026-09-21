@@ -16,7 +16,7 @@ bash .claude/plugins/construct3-copilot/scripts/infra/setup.sh
 
 # 3. Start services (each in its own terminal)
 cd ../Construct3-RAG && python src/api.py
-cd ../Construct3-Clipboard && python src/api.py
+cd ../Construct3-Clipboard && python -m uvicorn src.api:app --host 127.0.0.1 --port 8766
 
 # 4. Run Copilot
 cd ../Construct3-Copilot && claude

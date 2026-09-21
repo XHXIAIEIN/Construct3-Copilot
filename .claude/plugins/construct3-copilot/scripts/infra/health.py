@@ -20,8 +20,10 @@ import os
 
 RAG_PORT = os.environ.get("C3_RAG_PORT", "8765")
 CLIPBOARD_PORT = os.environ.get("C3_CLIPBOARD_PORT", "8766")
-RAG_URL = f"http://localhost:{RAG_PORT}"
-CLIPBOARD_URL = f"http://localhost:{CLIPBOARD_PORT}"
+# 127.0.0.1, not localhost: Windows tries ::1 first, uvicorn listens on IPv4 only,
+# and the refused IPv6 connect costs ~2 s of the 3 s probe budget.
+RAG_URL = f"http://127.0.0.1:{RAG_PORT}"
+CLIPBOARD_URL = f"http://127.0.0.1:{CLIPBOARD_PORT}"
 PROBE_TIMEOUT = 3  # seconds — fast probe, just checking if service is up
 
 
