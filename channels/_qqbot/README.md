@@ -1,22 +1,41 @@
 # c3-qqbot
 
-QQ bot "Construct 3 Bot": answers Construct 3 questions with the Construct3-RAG tools, edits and makes projects.
+A QQ bot that answers Construct 3 questions, edits a sent project and makes small example projects. It runs a
+tool loop over an OpenAI-compatible model (DeepSeek, Zhipu, SiliconFlow or a local Ollama model) with the tools
+of a knowledge plugin; every reply is checked against the plugin's knowledge before it goes out.
+
+## Layout
 
 | Path | What |
 |------|------|
 | `bot.py` | QQ front end (qq-botpy, WebSocket); `--cli "问题"` asks once in the terminal |
-| `c3bot/` | the bot's code: `agent.py` the model tool loop, `tools.py` the tools and the RAG scripts they run, `acecheck.py` the ACE-name check, `reply.py` the reply's length and phrasing, `usage.py` token counts, `config.py` the settings read from `.env` |
-| `c3bot/newproject.py`, `spec_build.py`, `quick_fix.py` | new projects from a spec |
-| `c3bot/attachments.py`, `edits.py`, `qqfile.py` | sent files, edit snapshots and undo, file upload to QQ (`python -m c3bot.qqfile` sends one by hand) |
-| `c3bot/gpu_yield.py` | unloads the local model while the TTS server generates |
-| `grader.py` | silent grader of every reply, writes `reviews/` |
+| `grader.py` | silent grader of every reply, runs beside the bot, writes `var/reviews/` |
 | `start.ps1` | restart bot and grader detached (`-Stop` stops them, `-Ollama` also starts Ollama when it is down) |
-| `.env` | keys and model settings; `scripts/set-*-key.ps1` write a key into it |
-| `logs/bot/` | `bot.log` (questions, tool calls, replies, warnings), `usage.log` (tokens per answer, QQ and `--cli`), `botpy.log*` (QQ platform connection, rotated daily) |
-| `logs/grader/` | `grader.log`: one verdict line per graded reply |
-| `logs/ollama/` | Ollama server output when `start.ps1 -Ollama` started it; earlier runs keep a time suffix |
-| `sessions/` | one folder per chat; `_edits/` snapshots, `_new/` made projects, `_pending/` deliveries |
-| `reviews/` | grader output: `YYYY-MM-DD.md`, `summary.tsv`, `snap/` |
-| `specs/` | end-to-end test scripts; their outputs go to `archive/` |
-| `backups/<date>/` | `*.bak-*` copies taken before each change until 2026-10-09; since then git history holds the versions |
-| `archive/` | finished test sessions and batch runs, each folder with a README, with the `_new/` marks of its sessions |
+| `c3bot/` | the bot itself: `agent.py` the model tool loop, `reply.py` the reply's length and phrasing, `usage.py` token counts, `config.py` the settings from `.env`, `attachments.py` sent files, `edits.py` edit snapshots and undo, `qqfile.py` file upload to QQ (`python -m c3bot.qqfile` sends one by hand), `gpu_yield.py` yields the GPU to another server |
+| `plugins/construct3/` | the Construct 3 knowledge plugin: the tools and prompts the model gets, the check of its answers (`acecheck.py`), and projects from a spec (`newproject.py`, `spec_build.py`, `quick_fix.py`). It reads a [Construct3-RAG](https://github.com/XHXIAIEIN/Construct3-RAG) clone and runs that repository's scripts |
+| `scripts/` | `set-*-key.ps1` write an API key into `.env`; `e2e/` end-to-end runs that ask the bot for a game and play the result |
+| `.env.example` | every setting the bot reads; copy to `.env` |
+| `var/` | everything the bot writes, not committed: `logs/bot/` (`bot.log`, `usage.log`, `botpy.log*`), `logs/grader/`, `logs/ollama/`, `sessions/` (one folder per chat; `_edits/` snapshots, `_new/` made projects, `_pending/` deliveries), `reviews/`, `archive/` (finished runs, each with a README), `backups/`. `C3BOT_DATA` in `.env` puts it elsewhere |
+
+The plugin interface is the list at the top of `plugins/construct3/__init__.py`; `c3bot/agent.py` reads those
+names and nothing else of the plugin, so another knowledge base is another folder under `plugins/` and
+`C3BOT_PLUGIN` in `.env`.
+
+## Run
+
+1. Clone this repository and, beside it, `Construct3-RAG` and `Construct-Example-Projects` (or point
+   `CONSTRUCT3_RAG` and `C3_EXAMPLES` in `.env` at them).
+2. Make `.venv` and install `qq-botpy`, `openai`, `python-dotenv`, `aiohttp`.
+3. Copy `.env.example` to `.env`, fill in the QQ AppID and secret and a model key.
+4. Ask once in the terminal, then run the bot:
+
+```bash
+.venv/Scripts/python.exe -u bot.py --cli "两个按钮叠在一起，点上面的，下面的也响应了"
+```
+
+```powershell
+.\start.ps1
+```
+
+`var/logs/bot/bot.log` holds every question, tool call and reply; `var/logs/bot/usage.log` one line of token
+counts per answer.

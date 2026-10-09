@@ -16,8 +16,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent.parent
-RAG = Path(r"D:\Users\Administrator\Documents\GitHub\Construct3-RAG")
+from dotenv import load_dotenv  # noqa: E402
+
+HERE = Path(__file__).resolve().parents[2]  # the bot folder
+load_dotenv(HERE / ".env")  # the paths and keys the bot itself reads
+DATA = Path(os.environ.get("C3BOT_DATA") or HERE / "var")
+RAG = Path(os.environ.get("CONSTRUCT3_RAG") or HERE.parent / "Construct3-RAG")
 SCRIPTS = RAG / "skills" / "construct3-agent-plugin" / "scripts"
 TMP = Path(os.environ.get("TEMP", "C:/Temp"))
 # step -> state, turn, pieces, a word the status shows (None: any)
@@ -39,12 +43,12 @@ def names(project: Path) -> tuple[str, str, str, str, str]:
 
 
 def run(n: str, ask: bool = True) -> None:
-    session = HERE / "sessions" / f"e2e{n}"
+    session = DATA / "sessions" / f"e2e{n}"
     if ask:
         shutil.rmtree(session, ignore_errors=True)
-    proc = subprocess.CompletedProcess([], 0, (HERE / "sessions" / f"e2e{n}.out").read_text(encoding="utf-8"), "") if not ask else subprocess.run([sys.executable, "bot.py", "--cli", "做个五子棋", "--session", str(session)], cwd=HERE,
+    proc = subprocess.CompletedProcess([], 0, (DATA / "sessions" / f"e2e{n}.out").read_text(encoding="utf-8"), "") if not ask else subprocess.run([sys.executable, "bot.py", "--cli", "做个五子棋", "--session", str(session)], cwd=HERE,
                           capture_output=True, text=True, encoding="utf-8", timeout=1200)
-    (HERE / "sessions" / f"e2e{n}.out").write_text(proc.stdout, encoding="utf-8")
+    (DATA / "sessions" / f"e2e{n}.out").write_text(proc.stdout, encoding="utf-8")
     lines = proc.stdout.splitlines()
     calls = [l for l in lines if l.startswith("[tool] new_project")]
     print(f"== run {n}: {sum('lookup_ace' in l for l in lines)} lookups, {len(calls)} specs")
@@ -63,7 +67,7 @@ def run(n: str, ask: bool = True) -> None:
     c3proj = json.loads((session / "project.c3proj").read_text(encoding="utf-8"))
     layout = json.loads((session / "layouts" / "Game.json").read_text(encoding="utf-8"))
     side = round(sum(i["type"] == "Cell" for ly in layout["layers"] for i in ly["instances"]) ** 0.5)
-    subprocess.run([sys.executable, str(HERE / "specs" / "make_play.py"), piece, state, str(plan), cv, rv, label,
+    subprocess.run([sys.executable, str(Path(__file__).with_name("make_play.py")), piece, state, str(plan), cv, rv, label,
                     *(str(c3proj[k]) for k in ("viewportWidth", "viewportHeight")), str(side)], check=True)
     copy = TMP / f"e2e{n}"
     shutil.rmtree(copy, ignore_errors=True)
@@ -93,7 +97,7 @@ def judge2(n: str, copy: Path, piece: str, cv: str, rv: str, label: str, vw: str
            cells: str = "Cell") -> None:
     """The second judge: make_play2.py's plan, which fits any board and any state names."""
     plan = TMP / f"e2e{n}-play2.json"
-    subprocess.run([sys.executable, str(HERE / "specs" / "make_play2.py"), piece, str(plan), cv, rv, label, vw, vh,
+    subprocess.run([sys.executable, str(Path(__file__).with_name("make_play2.py")), piece, str(plan), cv, rv, label, vw, vh,
                     str(side), cells], check=True)
     out = TMP / f"e2e{n}-play2-result.json"
     subprocess.run([sys.executable, str(SCRIPTS / "preview_project.py"), str(plan), "--project", str(copy),

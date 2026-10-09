@@ -1,11 +1,13 @@
-"""Construct 3 answer agent: the model's tool loop over a Construct3-RAG clone.
+"""The model's tool loop: one answer from a question, a chat history and the tools of the knowledge plugin.
 
-The tools are in tools.py, the ACE check in acecheck.py, the reply text handling in reply.py, the token count
-in usage.py and the settings in config.py. This module runs one answer: it builds the conversation, hands the
-model its tools, runs each call, checks and shortens the final text, and packs a project that is to be sent."""
+The plugin (plugins/<C3BOT_PLUGIN>/) brings the tools, the prompts and the check of an answer; reply.py handles
+the reply's length and phrasing, usage.py counts tokens, config.py reads the settings. This module builds the
+conversation, hands the model its tools, runs each call, checks and shortens the final text, and packs a
+project that is to be sent."""
 from __future__ import annotations
 
 import html
+import importlib
 import json
 import logging
 import re
@@ -15,45 +17,19 @@ from pathlib import Path
 
 from openai import BadRequestError, OpenAI
 
-from . import edits
-from . import gpu_yield
-from . import newproject
-from . import usage
-from .acecheck import LIST_ACES, missing_aces, project_text
-from .config import BASE_URL, LOCAL, LOCALE, MAX_STEPS, MODEL, NO_THINK, RAG, TIMEOUT, ZHIPU
+from . import edits, gpu_yield, usage
+from .config import BASE_URL, LOCAL, MAX_STEPS, MODEL, NO_THINK, PLUGIN, TIMEOUT, ZHIPU
 from .reply import ASKED_EVENTS, BUILD_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten
-from .tools import GROUP_PROMPT, HANDLERS, PROJECT_PROMPT, PROJECT_TOOLS, TOOLS, project_handlers, run_script
 
 log = logging.getLogger("c3bot.agent")
+kb = importlib.import_module(f"plugins.{PLUGIN}")
 
 MAX_CHECKS = 2
-# the note sent before the reply when a tool starts to make or change a project, so the person knows the bot is
-# busy and not stuck (2026-10-06); a making run takes two to four minutes, an edit about one
-BUSY = {"design_guide": "在做了，要两三分钟，做好发你。", "check_design": "在做了，要两三分钟，做好发你。",
-        "new_project_from_spec": "在做了，要两三分钟，做好发你。", "new_project_from_template": "在做了，做好发你。",
-        "edit_sheet": "在改了，改好发你。"}
-PRESEARCH_MIN = 8  # characters; "在吗" or "做好了吗" asks nothing to search for
-PRESEARCH = (
-    "A Construct 3 user asks:\n{question}\n\nGive 2 to 5 short English search words for the Construct 3 features "
-    "and the problem in this question (e.g. time scale, pause, animation, touch, layer). "
-    'Reply with JSON only: {{"words": ["...", "..."]}}'
-)
-CHECK_FAILED = (
-    "Check failed: {missing}. A name the schema lacks may not exist, or may belong to another plugin or behavior. "
-    "Look each one up with lookup_ace, then rewrite the whole answer for the user using only ACEs the lookups "
-    "printed. Do not mention this check."
-)
 NO_STEPS = "这次没有完成核实，暂时不能给你可直接照做的步骤。"
 NOT_SURE = "这个我没把握写对，先不给步骤，免得你照着做却在编辑器里找不到对应的条件或动作。"
 NOT_MADE = "这个游戏这次没生成出来。把玩法说得再简单具体一点，再让我做一次。"
 NOT_FINISHED = "这次没改完，项目保持原样。分几步来：先说要先改哪一部分。"
 NO_FILE = "这次没有生成可交付的工程文件，尚未完成你要的例子。"
-# the tools whose broken JSON is mended rather than refused: a spec breaks its brackets far from where the
-# parser notices
-MENDED_TOOLS = ("new_project", "check_design", "patch_spec")
-MENDED_NOTE = ("-- the call's JSON had brackets out of order; they were closed where the next closer showed a list "
-               "or object had ended. Check the build below as usual\n")
-DESIGN_LINES = ('tests[', 'rules', 'state', 'inputs', 'design', 'ok:', 'refused', 'win', 'lose', 'reference', 'screen')
 
 
 def add_system(messages: list[dict], text: str) -> None:
@@ -72,7 +48,6 @@ class Run:
                  session: Path | None, notify) -> None:
         self.question = question
         self.project = project  # a new project replaces the one passed in
-        self.sent_project = project  # the one the person sent, for the undo of unsent edits
         self.session = session
         self.notify = notify
         self.trace: list[str] = []
@@ -84,11 +59,11 @@ class Run:
             question += BUILD_NOTE
             self.trace.append("build ask")
         self.messages = [*(history or []), {"role": "user", "content": question}]
-        self.tools = list(TOOLS)
-        self.handlers = dict(HANDLERS)
+        self.tools = list(kb.TOOLS)
+        self.handlers = dict(kb.HANDLERS)
         self.steps = MAX_STEPS
         if group:
-            add_system(self.messages, GROUP_PROMPT)
+            add_system(self.messages, kb.GROUP_PROMPT)
 
     def changed(self, result: tuple[bool, str]) -> str:
         self.send = self.send or result[0]
@@ -97,7 +72,7 @@ class Run:
     def send_project(self) -> str:
         # a model that cannot make the change sent the untouched project and said it had (script-only, 2026-10-04)
         project = self.project
-        if project and newproject.is_new(project):
+        if project and kb.is_new(project):
             self.send = True
             return "the project as it is now is sent as a file after the reply"
         if not (project and edits.edit_count(project)):
@@ -108,11 +83,11 @@ class Run:
         return "the project as it is now is sent as a file after the reply"
 
     def use_project(self, project: Path) -> None:
-        """The project's sheets, layouts, scripts and checker become tools, bound to this project."""
-        if "print_sheet" not in self.handlers:
-            add_system(self.messages, PROJECT_PROMPT)
-            self.tools.extend(PROJECT_TOOLS)
-        self.handlers.update(project_handlers(project, self.changed, self.send_project))
+        """The project's own tools, bound to this project."""
+        if kb.PROJECT_TOOLS[0]["function"]["name"] not in self.handlers:
+            add_system(self.messages, kb.PROJECT_PROMPT)
+            self.tools.extend(kb.PROJECT_TOOLS)
+        self.handlers.update(kb.project_handlers(project, self.changed, self.send_project))
 
     def made(self, result: tuple[Path | None, str]) -> str:
         # a new project is the person's from here on: its tools replace the old project's, and it is sent
@@ -123,46 +98,16 @@ class Run:
         return result[1]
 
     def add_project(self) -> None:
-        self.steps += 6  # a change reads the sheet, looks its ACEs up and may send a plan twice
+        self.steps += kb.PROJECT_STEPS
         self.use_project(self.project)
 
     def add_session(self) -> None:
         """The tools that make a new project in the session folder."""
-        session, trace = self.session, self.trace
-        add_system(self.messages, newproject.prompt())
-        self.tools.extend(newproject.QUICK_TOOLS if newproject.QUICK else newproject.TOOLS)
-        # a new game reads an example, sends its design two or three times, looks up a dozen ACEs and may send
-        # its spec three times
-        self.steps += 20 if newproject.QUICK else 48
-        self.handlers["spec_guide"] = lambda: newproject.QUICK_GUIDE if newproject.QUICK else newproject.SPEC_GUIDE
-        self.handlers["read_example"] = lambda id: newproject.read_example(
-            id, RAG, LOCALE, sum(t.startswith("read_example") for t in trace))
-        self.handlers["design_guide"] = lambda: newproject.design_guide(RAG)
-        self.handlers["check_design"] = lambda design=None, arguments=None: newproject.check_design(
-            design if design is not None else newproject.unwrap(arguments, "design"), session, RAG,
-            any(t.startswith("read_example") for t in trace))
-        # after a JSON error the model sometimes wraps the whole call in {"arguments": "<the call as a string>"}
-        # keys of the spec sent beside it ("viewport", 2026-10-04) go into it
-        self.handlers["new_project_from_spec"] = lambda spec=None, arguments=None, **rest: self.made(newproject.from_spec(
-            newproject.gather(spec if spec is not None or rest else newproject.unwrap(arguments), rest),
-            session, RAG, LOCALE))
-        self.handlers["patch_spec"] = lambda changes=None, arguments=None: self.made(newproject.patch_spec(
-            changes if changes is not None else newproject.unwrap(arguments, "changes"), session, RAG, LOCALE))
-        self.handlers["new_project_from_template"] = lambda template_id, name: self.made(
-            newproject.from_template(template_id, name, session, RAG, LOCALE))
-
-
-def tool_trace(name: str, arguments: str, result: str) -> str:
-    """The trace line of one tool call. The log keeps what an edit or a build did, to find refusals that do not
-    steer the model."""
-    line = f"{name}({arguments})"
-    if name in ("edit_sheet", "undo_edit"):
-        line += f" -> {result.splitlines()[0][:200]}"
-    if name.startswith(("new_project", "patch_spec")):
-        line += f" -> {' / '.join(result.splitlines()[:4])[:600]}"
-    if name == "check_design":
-        line += f" -> {' / '.join(l for l in result.splitlines() if l.startswith(DESIGN_LINES))[:900]}"
-    return line
+        add_system(self.messages, kb.session_prompt())
+        tools, handlers, steps = kb.session_tools(self)
+        self.tools.extend(tools)
+        self.handlers.update(handlers)
+        self.steps += steps
 
 
 def json_error(name: str, exc: json.JSONDecodeError) -> str:
@@ -210,8 +155,8 @@ class Agent:
         text = ""
         try:
             text = self._answer(run)
-            tried = any(t.startswith(("new_project_from_", "check_design", "patch_spec")) for t in run.trace)
-            made = run.send and newproject.is_new(run.project)
+            tried = any(t.startswith(kb.BUILD_TOOLS) for t in run.trace)
+            made = run.send and kb.is_new(run.project)
             # a reply that describes a game and promises its file, with no build tried (quick mode, 2026-10-06)
             if (tried and (not made or "steps ran out" in run.trace)) or (session and not project and not made and PROMISE.search(text)):
                 # the model said the game was made when every build had been refused (2026-10-04)
@@ -238,7 +183,7 @@ class Agent:
     def _finish(self, run: Run, text: str, outbox: list[Path] | None) -> str:
         """Take back the edits of an answer that is not sent, and pack the project of one that is."""
         project, trace = run.project, run.trace
-        if project and newproject.is_new(project) and "steps ran out" in trace:
+        if project and kb.is_new(project) and "steps ran out" in trace:
             run.send = False  # a game the answer did not finish is not sent as if it were
         elif project and "steps ran out" in trace and edits.edit_count(project) > run.edits_before:
             # a change left half done (a sheet with one variable, 2026-10-06) is taken back, not sent
@@ -253,7 +198,7 @@ class Agent:
             trace.append("edits of an unsent build undone")
         if project and run.send and outbox is not None:
             try:
-                outbox.append(newproject.pack(project, RAG) if newproject.is_new(project) else edits.pack(project, RAG))
+                outbox.append(kb.pack(project))
                 trace.append(f"packed {outbox[-1].name}")
             except (OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
                 log.warning("pack failed: %s", exc)
@@ -261,36 +206,22 @@ class Agent:
         return text
 
     def _presearch(self, run: Run) -> None:
-        """Search the pitfalls before the model answers and put the result in as its own search_guides call.
-
-        2026-10-09: asked how to pause a battle while an ultimate animation plays, the model guessed ACE names three
-        times and gave up without one search, though wait-and-time-scale.md holds the answer; a tool result steers
-        a small model where the prompt's "call it for every how-to question" did not."""
-        question, trace = run.question, run.trace
-        if len(question) < PRESEARCH_MIN:
+        """The plugin's search before the model answers, put in as the model's own first tool call: a tool
+        result steers a small model where a prompt rule did not."""
+        found = kb.presearch(run.question, self._json)
+        if isinstance(found, str):
+            if found:
+                run.trace.append(found)
             return
-        try:
-            found = self._json([{"role": "user", "content": PRESEARCH.format(question=question[:1000])}])
-            words = [str(w) for w in found.get("words", [])][:6]
-        except (json.JSONDecodeError, AttributeError, TypeError) as e:
-            trace.append(f"presearch: no words ({type(e).__name__})")
-            return
-        if not words:
-            trace.append("presearch: no words")
-            return
-        try:
-            out = run_script("search_guides", [*words, "--examples", "0", "--pitfalls", "3"], limit=5000)
-        except subprocess.TimeoutExpired:
-            trace.append("presearch: search timed out")
-            return
+        words, out = found
         call = {"id": "presearch", "type": "function",
-                "function": {"name": "search_guides", "arguments": json.dumps({"words": words})}}
+                "function": {"name": kb.PRESEARCH_TOOL, "arguments": json.dumps({"words": words})}}
         run.messages.append({"role": "assistant", "content": "", "tool_calls": [call]})
         run.messages.append({"role": "tool", "tool_call_id": "presearch", "content": out})
-        trace.append(f"presearch {words}")
+        run.trace.append(f"presearch {words}")
 
     def _answer(self, run: Run) -> str:
-        """The tool loop: the model answers or calls tools until it answers, the steps run out or the ACE check
+        """The tool loop: the model answers or calls tools until it answers, the steps run out or the check
         fails twice."""
         self._presearch(run)
         if run.project:
@@ -309,7 +240,7 @@ class Agent:
             msg = resp.choices[0].message
             if not msg.tool_calls:
                 text = html.unescape((msg.content or "").strip())
-                missing = self._check(run.messages, text, run.project)
+                missing = kb.check(run.messages, text, run.project, self._json)
                 if not missing:
                     return self._final(run, text)
                 if checks >= MAX_CHECKS:
@@ -318,21 +249,21 @@ class Agent:
                 checks += 1
                 run.trace.append(f"check: missing {missing}")
                 run.messages.append({"role": "assistant", "content": text})
-                run.messages.append({"role": "user", "content": CHECK_FAILED.format(missing="; ".join(missing))})
+                run.messages.append({"role": "user", "content": kb.CHECK_FAILED.format(missing="; ".join(missing))})
                 continue
             run.messages.append(msg.model_dump(exclude_none=True))
             for call in msg.tool_calls:
                 result = self._call(run, call)
-                run.trace.append(tool_trace(call.function.name, call.function.arguments, result))
+                run.trace.append(kb.tool_trace(call.function.name, call.function.arguments, result))
                 run.messages.append({"role": "tool", "tool_call_id": call.id, "content": result})
         run.trace.append("steps ran out")
         return NO_STEPS
 
     def _final(self, run: Run, text: str) -> str:
-        """The checked answer, shortened. A rewrite for length renames ACEs (2026-10-09: 设置对象速率 came back
+        """The checked answer, shortened. A rewrite for length renames things (2026-10-09: 设置对象速率 came back
         as 设定对象时间速率), so a short version that fails the check is dropped for the checked long one."""
         short = shorten(self._complete, run.messages, text, run.trace, run.asked, sent=run.send)
-        if short == text or not self._check(run.messages, short, run.project):
+        if short == text or not kb.check(run.messages, short, run.project, self._json):
             return short
         run.trace.append("short version failed the check; long one sent")
         return text
@@ -345,14 +276,13 @@ class Agent:
                 args = json.loads(call.function.arguments or "{}")
                 mended = ""
             except json.JSONDecodeError:
-                if not name.startswith(MENDED_TOOLS):
+                fixed = kb.mend_arguments(name, call.function.arguments)
+                if fixed is None:
                     raise
-                # put the brackets in order and let the build check what the spec now says
-                args = json.loads(newproject.mend(newproject.balance(call.function.arguments)))
-                mended = MENDED_NOTE
-            if run.notify and not run.told and name in BUSY:
+                args, mended = fixed
+            if run.notify and not run.told and name in kb.BUSY:
                 run.told = True
-                run.notify(BUSY[name])
+                run.notify(kb.BUSY[name])
             return mended + run.handlers[name](**args)
         except json.JSONDecodeError as exc:
             return json_error(name, exc)
@@ -375,15 +305,3 @@ class Agent:
             resp = self.client.chat.completions.create(**ask)
         text = resp.choices[0].message.content or ""
         return json.loads(text[text.find("{"):text.rfind("}") + 1] or "{}")
-
-    def _check(self, messages: list[dict], text: str, project: Path | None = None) -> list[str]:
-        """The ACEs the text names that no lookup prints; empty when the answer passes."""
-        try:
-            aces = self._json([*messages, {"role": "assistant", "content": text},
-                               {"role": "user", "content": LIST_ACES}]).get("aces", [])
-        except (json.JSONDecodeError, AttributeError) as exc:
-            log.warning("ACE list unreadable: %s", exc)
-            return ["ACE validation result unreadable"]
-        if not isinstance(aces, list):
-            return ["ACE validation result must be a list"]
-        return missing_aces(aces, project, project_text(messages))

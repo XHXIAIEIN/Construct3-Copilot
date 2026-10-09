@@ -9,9 +9,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import edits
+from c3bot import edits
 from . import newproject
-from .config import HOME, LOCALE, RAG
+from c3bot.config import HOME, LOCALE, RAG
 
 TOOLS = [
     {

@@ -31,6 +31,7 @@ load_dotenv(Path(__file__).parent / ".env")
 from c3bot import attachments as attachments_mod  # noqa: E402
 from c3bot import edits, qqfile  # noqa: E402
 from c3bot.agent import Agent  # noqa: E402
+from c3bot.config import DATA  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("c3bot")
@@ -53,7 +54,7 @@ HISTORY_TURNS = 3
 URL = re.compile(r"https?://\S+")
 QUESTION_MAX = 500  # characters passed to the model
 DAILY_LIMIT = 30  # questions per user per day
-SESSIONS = Path(__file__).parent / "sessions"
+SESSIONS = DATA / "sessions"
 DOWNLOAD_MAX = 30 * 1024 * 1024  # bytes of one .c3p
 UNPACK_MAX = 200 * 1024 * 1024  # bytes of its unpacked files
 
@@ -307,7 +308,7 @@ def run_qq(agent: Agent) -> None:
             )
 
     # botpy's own log (botpy.log, rotated daily) goes beside bot.log instead of the working folder
-    file_log = dict(botpy.logging.DEFAULT_FILE_HANDLER, filename=str(Path(__file__).parent / "logs" / "bot" / "%(name)s.log"))
+    file_log = dict(botpy.logging.DEFAULT_FILE_HANDLER, filename=str(DATA / "logs" / "bot" / "%(name)s.log"))
     client = Client(intents=botpy.Intents(public_messages=True), ext_handlers=file_log)
     client.run(appid=os.environ["QQ_APPID"], secret=os.environ["QQ_SECRET"])
 

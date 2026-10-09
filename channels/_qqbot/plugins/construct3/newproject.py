@@ -23,15 +23,15 @@ import tempfile
 import threading
 from pathlib import Path
 
-from . import edits
+from c3bot import edits
 from . import quick_fix
-from .config import HOME
+from c3bot.config import DATA, RAG
 
 log = logging.getLogger("c3bot.newproject")
 
 HERE = Path(__file__).parent
-MARKS = HOME / "sessions" / "_new"
-EXAMPLES = Path(os.environ.get("C3_EXAMPLES", r"D:\Users\Administrator\Documents\GitHub\Construct-Example-Projects"))
+MARKS = DATA / "sessions" / "_new"
+EXAMPLES = Path(os.environ.get("C3_EXAMPLES") or RAG.parent / "Construct-Example-Projects")  # a sibling clone of the RAG
 TEMPLATE_COPY = os.environ.get("C3BOT_TEMPLATE_COPY") == "1"
 SPEC_MAX = 60_000          # characters, as spec_build.py caps it
 BUILD_TIMEOUT = 150        # seconds for one spec_build.py run: the build, edit_sheet.py and check_project.py

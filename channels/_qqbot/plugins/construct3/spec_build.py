@@ -28,7 +28,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-DEFAULT_RAG = Path(r"D:\Users\Administrator\Documents\GitHub\Construct3-RAG")
+DEFAULT_RAG = Path(os.environ.get("CONSTRUCT3_RAG") or Path(__file__).resolve().parents[3] / "Construct3-RAG")
 SPEC_MAX = 60_000          # characters of spec JSON
 OBJECTS_MAX = 40
 LAYOUTS_MAX = 4

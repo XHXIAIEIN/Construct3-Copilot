@@ -1,6 +1,6 @@
 """Gives the GPU to the TTS server while it generates: the local model waits and is unloaded.
 
-The TTS page (D:/Agent/tmp/cambodia-voice) submits POST /api/jobs and then polls GET /api/jobs every 0.4 s until
+The TTS page submits POST /api/jobs and then polls GET /api/jobs every 0.4 s until
 its jobs end, so its uvicorn log is written several times a second exactly while it generates. That log has no
 timestamps; its modification time plus a jobs line in its tail is the signal.
 C3BOT_YIELD_LOGS lists the logs to watch, separated by ";".
@@ -15,7 +15,7 @@ import urllib.request
 from pathlib import Path
 
 LOGS = [Path(p) for p in os.environ.get(
-    "C3BOT_YIELD_LOGS", "D:/Agent/tmp/cambodia-voice/logs/server.log").split(";") if p]
+    "C3BOT_YIELD_LOGS", "").split(";") if p]  # empty: never wait
 FRESH = 5  # seconds since the log's last write that still count as generating
 POLL = 2
 MARKS = (b"/api/jobs", b"/api/tts", b"/api/concat")

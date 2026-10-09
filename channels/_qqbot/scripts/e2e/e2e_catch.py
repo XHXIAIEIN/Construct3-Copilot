@@ -21,8 +21,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent.parent
-RAG = Path(os.environ.get("CONSTRUCT3_RAG", r"D:\Users\Administrator\Documents\GitHub\Construct3-RAG"))
+from dotenv import load_dotenv  # noqa: E402
+
+HERE = Path(__file__).resolve().parents[2]  # the bot folder
+load_dotenv(HERE / ".env")  # the paths and keys the bot itself reads
+DATA = Path(os.environ.get("C3BOT_DATA") or HERE / "var")
+RAG = Path(os.environ.get("CONSTRUCT3_RAG") or HERE.parent / "Construct3-RAG")
 SCRIPTS = RAG / "skills" / "construct3-agent-plugin" / "scripts"
 TMP = Path(os.environ.get("TEMP", "C:/Temp"))
 ASK = os.environ.get("E2E_ASK", "做个接水果的小游戏")
@@ -125,8 +129,8 @@ def judge(result: dict, steps_plan: list[dict]) -> dict[str, tuple[bool, str]]:
 
 
 def run(n: str, ask: bool = True) -> None:
-    session = HERE / "sessions" / f"e2ec{n}"
-    out_file = HERE / "sessions" / f"e2ec{n}.out"
+    session = DATA / "sessions" / f"e2ec{n}"
+    out_file = DATA / "sessions" / f"e2ec{n}.out"
     if ask:
         shutil.rmtree(session, ignore_errors=True)
         proc = subprocess.run([sys.executable, "bot.py", "--cli", ASK, "--session", str(session)], cwd=HERE,

@@ -2,8 +2,5 @@
 .venv/
 __pycache__/
 *.log
-sessions/
-logs/
-backups/
-archive/
-reviews/
+# everything the bot writes while it runs (C3BOT_DATA)
+var/

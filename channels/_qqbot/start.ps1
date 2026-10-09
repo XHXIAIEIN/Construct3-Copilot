@@ -1,4 +1,5 @@
-# Restart the QQ bot and the silent grader as detached processes, logs in logs/bot/ and logs/grader/.
+# Restart the QQ bot and the silent grader as detached processes, logs in var/logs/bot/ and var/logs/grader/
+# (C3BOT_DATA in .env moves var/ elsewhere).
 #   .\start.ps1            restart both
 #   .\start.ps1 -Stop      stop both, start nothing
 #   .\start.ps1 -Ollama    also start the Ollama server (logs in logs/ollama/) when it is not running;
@@ -7,7 +8,10 @@
 param([switch]$Stop, [switch]$Ollama)
 
 $here = $PSScriptRoot
-$logs = Join-Path $here 'logs'
+$data = Join-Path $here 'var'
+$envLine = Select-String -Path (Join-Path $here '.env') -Pattern '^C3BOT_DATA=(.+)$' -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($envLine) { $data = $envLine.Matches[0].Groups[1].Value.Trim() }
+$logs = Join-Path $data 'logs'
 'bot', 'grader' | ForEach-Object { New-Item -ItemType Directory -Force (Join-Path $logs $_) | Out-Null }
 
 # The cmd launchers and their python children; `bot.py --cli` runs (tests) are left alone.
@@ -15,6 +19,11 @@ Get-CimInstance Win32_Process |
     Where-Object { $_.CommandLine -match '(bot|grader)\.py' -and $_.CommandLine -notmatch '--cli' -and $_.Name -match '^(python|cmd)\.exe$' } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 if ($Stop) { return }
+# the log folder of the layout before 2026-10-10 (logs/ beside bot.py) moves under var/ once nothing writes it
+if ((Test-Path (Join-Path $here 'logs')) -and -not (Test-Path (Join-Path $logs 'botot.log'))) {
+    Get-ChildItem (Join-Path $here 'logs') | Move-Item -Destination $logs -Force
+    Remove-Item (Join-Path $here 'logs') -Recurse -Force
+}
 
 if ($Ollama -and -not (Get-Process ollama -ErrorAction SilentlyContinue)) {
     $ol = Join-Path $logs 'ollama'
@@ -30,7 +39,7 @@ if ($Ollama -and -not (Get-Process ollama -ErrorAction SilentlyContinue)) {
 Start-Sleep -Seconds 2
 
 foreach ($name in 'bot', 'grader') {
-    Start-Process cmd -ArgumentList "/c .venv\Scripts\python.exe -u $name.py >> logs\$name\$name.log 2>&1" `
+    Start-Process cmd -ArgumentList "/c .venv\Scripts\python.exe -u $name.py >> `"$logs\$name\$name.log`" 2>&1" `
         -WorkingDirectory $here -WindowStyle Hidden
 }
 Start-Sleep -Seconds 8

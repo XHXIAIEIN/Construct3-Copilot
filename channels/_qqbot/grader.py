@@ -22,12 +22,16 @@ from collections import defaultdict, deque
 from datetime import datetime
 from pathlib import Path
 
+from dotenv import load_dotenv  # noqa: E402
+
 HERE = Path(__file__).parent
-LOG = HERE / "logs" / "bot" / "bot.log"
-SESSIONS = HERE / "sessions"
-REVIEWS = HERE / "reviews"
+load_dotenv(HERE / ".env")  # the paths and keys the bot itself reads
+DATA = Path(os.environ.get("C3BOT_DATA") or HERE / "var")  # as c3bot/config.py reads it
+LOG = DATA / "logs" / "bot" / "bot.log"
+SESSIONS = DATA / "sessions"
+REVIEWS = DATA / "reviews"
 OFFSET = REVIEWS / ".offset"
-REPO = Path("D:/Users/Administrator/Documents/GitHub/Construct3-RAG")
+REPO = Path(os.environ.get("CONSTRUCT3_RAG") or HERE.parent / "Construct3-RAG")
 GRADER = os.environ.get("GRADER", "codex")  # the claude CLI's login expired on 2026-10-09; GRADER=claude after a /login
 CODEX_MODEL = os.environ.get("CODEX_MODEL", "gpt-5.6-sol")  # config.toml's default is refused on a ChatGPT account
 TIMEOUT = 20 * 60  # seconds for one grade; a project question runs scripts in the editor's data

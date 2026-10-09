@@ -6,11 +6,11 @@ import logging
 import threading
 import time
 from pathlib import Path
-from .config import HOME
+from .config import DATA
 
 log = logging.getLogger("c3bot.agent")
 
-USAGE_LOG = HOME / "logs" / "bot" / "usage.log"  # one line an answer, QQ and --cli alike
+USAGE_LOG = DATA / "logs" / "bot" / "usage.log"  # one line an answer, QQ and --cli alike
 _tally = threading.local()  # the token count of the answer this thread is giving
 
 
@@ -40,6 +40,7 @@ def write_usage(session: Path | None, tally: dict, seconds: float) -> None:
             f"(cache hit {tally['cache_hit']}) completion {tally['completion']} in {seconds:.0f} s")
     log.info("usage: %s", line)
     try:
+        USAGE_LOG.parent.mkdir(parents=True, exist_ok=True)
         with USAGE_LOG.open("a", encoding="utf-8") as f:
             f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {line}\n")
     except OSError as exc:
