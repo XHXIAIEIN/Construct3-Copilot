@@ -1,15 +1,11 @@
 """Construct 3 answer agent: DeepSeek with two lookup tools over a Construct3-RAG clone."""
 from __future__ import annotations
 
-import difflib
 import html
 import json
 import logging
-import os
 import re
 import subprocess
-import sys
-import tempfile
 import threading
 import time
 from pathlib import Path
@@ -20,8 +16,9 @@ import edits
 import gpu_yield
 import newproject
 from config import BASE_URL, LOCAL, LOCALE, MAX_STEPS, MODEL, NO_THINK, RAG, TIMEOUT, ZHIPU
-from tools import (GROUP_PROMPT, HANDLERS, PROJECT_PROMPT, PROJECT_READERS, PROJECT_TOOLS, TOOLS, lookup_ace,
-                   project_handlers, run_script)
+from acecheck import LIST_ACES, missing_aces, project_text
+from reply import ASKED_EVENTS, BUILD_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten
+from tools import GROUP_PROMPT, HANDLERS, PROJECT_PROMPT, PROJECT_TOOLS, TOOLS, project_handlers, run_script
 
 log = logging.getLogger("c3bot.agent")
 
@@ -33,158 +30,18 @@ def add_system(messages: list[dict], text: str) -> None:
         messages.insert(0, {"role": "system", "content": text.strip()})
 
 
-LIST_ACES = (
-    "List every event-sheet condition, action or expression your last answer names. Leave out scripting API "
-    "methods and properties (anything called from JavaScript, e.g. isMouseButtonDown, getAllInstances). "
-    "Reply with JSON only: "
-    '{"aces": [{"object": "8Direction", "name": "设置最大速度", "written_as": "action"}]}. object is System, a '
-    "plugin or a behavior as lookup_ace takes it; name is the display name alone, without parameters or the "
-    "object; written_as is how the answer uses it: condition (before the arrow), action (after the arrow) or "
-    "expression (inside a parameter). "
-    'An answer that names none gives {"aces": []}.'
-)
 MAX_CHECKS = 2
-REPLY_MAX = 350  # characters; a longer answer is sent back once to be shortened
 # the note sent before the reply when a tool starts to make or change a project, so the person knows the bot is
 # busy and not stuck (2026-10-06); a making run takes two to four minutes, an edit about one
 BUSY = {"design_guide": "在做了，要两三分钟，做好发你。", "check_design": "在做了，要两三分钟，做好发你。",
         "new_project_from_spec": "在做了，要两三分钟，做好发你。", "new_project_from_template": "在做了，做好发你。",
         "edit_sheet": "在改了，改好发你。"}
-# a request for an example or a project file, in the words people use; the note sent with it routes the model to the
-# project tools, since the prompt's own list of such requests steered it only sometimes (2026-10-06)
-BUILD_ASK = re.compile(r"(?:做|制作|生成|重做|写)[^。！？\n]{0,40}(例子|示例|样例|demo|工程|项目|游戏|小游戏|原型)"
-                       r"|(给我|发我|发给我|给我发|给个|来个|来一个|要个|要一个|整个|弄个|搞个|写个)[^。，\n]{0,12}"
-                       r"(例子|示例|样例|demo|工程|项目|游戏|小游戏|原型)"
-                       r"|example project|make (me )?(a|an) (example|demo|project)", re.I)
-# a bare "c3p" or "工程文件" means the held project when one is held, a new one when none is
-BUILD_ASK_BARE = re.compile(r"c3p|工程文件|项目文件", re.I)
-BUILD_NOTE = ("\n(The person asks for an example or a project file: make it with the project tools (design_guide, "
-              "check_design, new_project_from_spec) and it is sent after your reply. Words alone do not answer it.)")
-PROMISE = re.compile(r"(文件|c3p|工程|项目|例子)[^。！\n]*((发|传)(给|到)?你|发送|发来|发出|稍后|随后)"
-                     r"|(发|传)(给|到)?你[^。！\n]*(文件|c3p|工程|例子)")
-SHORTEN = (
-    "Rewrite your last answer in under {n} characters for the user. Keep the conclusion, the deciding reason and "
-    "the steps the user must do, in everyday words. Keep the approach, not its details. Cut walkthroughs of what the code or events already do, second "
-    "options, side notes, and code names, values and line numbers the person does not have to type. Keep every "
-    "condition and action name the answer uses (e.g. 设置对象速率), copied exactly, since the person finds them "
-    "in the editor by that name. Same language, plain text, no mention of this request."
-)
 PRESEARCH_MIN = 8  # characters; "在吗" or "做好了吗" asks nothing to search for
 PRESEARCH = (
     "A Construct 3 user asks:\n{question}\n\nGive 2 to 5 short English search words for the Construct 3 features "
     "and the problem in this question (e.g. time scale, pause, animation, touch, layer). "
     'Reply with JSON only: {{"words": ["...", "..."]}}'
 )
-SENT_MAX = 100  # characters; the reply that goes out with a project file
-SHORTEN_SENT = (
-    "The project file is sent with this reply. Rewrite your last answer in under {n} characters: what the "
-    "example shows and what to tap or press to see it, in one or two sentences. No explanation of the "
-    "mechanism, the layout, event numbers or object names. Same language, plain text, no mention of this request."
-)
-EVENTS_MAX = 1000  # an answer that writes events the person asked for
-ASKED_EVENTS = re.compile(r"事件|怎么写|写一下|写出来|写法|具体|步骤|example|event")
-SHORTEN_EVENTS = (" Keep every event line (conditions, then → actions) exactly as written; shorten the words "
-                  "around them.")
-
-
-# phrases the prompt bans; a reply that still holds one loses that sentence before it is sent (2026-10-06)
-BANNED = re.compile(r"希望(对你)?有(所)?帮助|很高兴|好问题|简单来说|本质上|值得注意的是|祝你|"
-                    r"欢迎(再|继续|随时)|有(其他|别的|什么|任何)问题(可以|随时|再|欢迎)")
-# a closing offer or question: dropped while it ends the reply and another sentence remains
-OFFER = re.compile(r"需要|要不要|想不想|如果(你)?(需要|想|有)|还(需要|想要|有什么)|可以(帮你|给你|为你)|我可以|"
-                   r"告诉我|说一声|说一句")
-
-
-def scrub(text: str) -> tuple[str, str]:
-    """Return the reply without banned phrases and closing offers, and a note of what was dropped."""
-    parts = [p for p in re.split(r"(?<=[。！？!?\n])", text) if p]
-    # a phrase that opens a sentence ("简单来说，加计时器") goes alone; a sentence built on one goes whole
-    cut = [re.sub(r"^\s*(?:" + BANNED.pattern + r")\s*[，,、：:]\s*", "", p) for p in parts]
-    kept = [p for p in cut if not BANNED.search(p) and re.search(r"[\w一-鿿]", p)]
-    while len(kept) > 1 and OFFER.search(kept[-1]) and not re.search(r"c3p|\.zip|文件|项目|工程", kept[-1]):
-        kept.pop()
-    while kept and not kept[-1].strip():
-        kept.pop()
-    out = "".join(kept).strip()
-    return (out if out else text), ("scrubbed" if out and out != text.strip() else "")
-
-
-def _norm(s: str) -> str:
-    return re.sub(r"[\s\"'“”‘’：:]", "", s).lower()
-
-
-KINDS = ("condition", "action", "expression")
-
-
-def _ace_lines(output: str, common: bool = True) -> dict[str, str]:
-    """The ACE header lines of a lookup ('action wait - 等待 [system]') by kind, so a miss that echoes the word
-    never matches. common=False drops the [_common] lines, which a System lookup prints as a hint although
-    System has none of them."""
-    lines: dict[str, list[str]] = {k: [] for k in KINDS}
-    for line in output.splitlines():
-        m = re.match(r"(condition|action|expression)\s", line)
-        if m and (common or "[_common]" not in line):
-            lines[m.group(1)].append(line)
-    return {k: _norm("\n".join(v)) for k, v in lines.items()}
-
-
-def _join(*parts: dict[str, str]) -> dict[str, str]:
-    return {k: "".join(p[k] for p in parts) for k in KINDS}
-
-
-def project_text(messages: list[dict]) -> str:
-    """What the tools printed from the person's own project, normalised: the names it uses are real there."""
-    names = {c["id"]: c["function"]["name"] for m in messages if m.get("role") == "assistant"
-             for c in m.get("tool_calls") or []}
-    return _norm("\n".join(m.get("content") or "" for m in messages
-                           if m.get("role") == "tool" and names.get(m.get("tool_call_id")) in PROJECT_READERS))
-
-
-def _near(output: str, name: str) -> list[str]:
-    """The display names of a full lookup closest to a guessed one: a Chinese name is one word to lookup_ace, so a
-    near miss (设置时间比例 for 设置时间速率) finds nothing there (2026-10-09: three guesses, no lookup, no answer)."""
-    names = re.findall(r"^(?:condition|action|expression)\s+\S+\s+(.+?)\s+\[", output, re.M)
-    return difflib.get_close_matches(name, list(dict.fromkeys(names)), n=3, cutoff=0.4)
-
-
-def missing_aces(aces: list[dict], project: Path | None = None, seen: str = "") -> list[str]:
-    """Return 'object: name' for each named ACE that the object's full lookup does not print.
-
-    seen is project_text(): a name the project's printed events or scripts hold is not checked, because a
-    summary of a sent project names its variables, its addons' ACEs and actions with their parameters, which
-    the schema lookup does not print (2026-10-04: fifty such names used up every step)."""
-    cache: dict[str, dict[str, str]] = {}
-    raw: dict[str, str] = {}  # the full lookups, for the closest names of a miss
-    missing = []
-    for ace in aces:
-        obj, name = str(ace.get("object", "")), str(ace.get("name", ""))
-        written = str(ace.get("written_as", ""))
-        if not obj or not name:
-            continue
-        if seen and _norm(name) in seen:
-            continue
-        common = obj.lower() != "system"
-        if obj not in cache:
-            # the model may name an ACE in English as well as in the schema locale
-            raw[obj] = (run_script("lookup_ace", [obj], project, limit=0) + "\n"
-                        + run_script("lookup_ace", [obj], project, limit=0, locale="en-US"))
-            cache[obj] = _ace_lines(raw[obj], common)
-        found = cache[obj]
-        if not any(_norm(name) in found[k] for k in KINDS):
-            # a bare lookup leaves out the ACEs every world object shares (_common), so retry with the name as a word
-            found = _join(found, _ace_lines(lookup_ace(obj, [name], project), common),
-                          _ace_lines(run_script("lookup_ace", [obj, name], project, locale="en-US"), common))
-        kinds = [k for k in KINDS if _norm(name) in found[k]]
-        if not kinds:
-            near = _near(raw[obj], name)
-            missing.append(f"{obj}: {name}" + ("" if common else " (System has no such ACE; if every object has it, "
-                                                                 "it belongs to the object itself, so name the object)")
-                           + (f"; closest real names: {', '.join(near)}" if near else ""))
-        elif written in KINDS and written not in kinds:
-            # 2026-10-04: Pick top/bottom, a condition, was written after the arrow as if it were an action
-            missing.append(f"{obj}: {name} is a {' or '.join(kinds)}, but the answer writes it as {'an' if written[0] in 'ae' else 'a'} {written}; "
-                           "a condition goes before the arrow, an action after it")
-    return missing
 
 
 USAGE_LOG = Path(__file__).parent / "logs" / "bot" / "usage.log"  # one line an answer, QQ and --cli alike
@@ -291,14 +148,13 @@ class Agent:
                     trace.append(f"pack failed: {exc}")
             write_usage(session, _tally.now, time.monotonic() - started)
             _tally.now = None
-        if session and (BUILD_ASK.search(question) or (project is None and BUILD_ASK_BARE.search(question))) and not outbox:
+        if session and is_build_ask(question, project is not None) and not outbox:
             text = "这次没有生成可交付的工程文件，尚未完成你要的例子。"
             trace.append("requested file unavailable")
         if not send["project"]:
-            kept = [s for s in re.split(r"(?<=[。！\n])", text) if not PROMISE.search(s)]
-            if len(kept) < len(re.split(r"(?<=[。！\n])", text)):
+            text, dropped = drop_promise(text)
+            if dropped:
                 trace.append("promise of a file dropped")
-                text = "".join(kept).strip()
         text, note = scrub(text)
         if note:
             trace.append(note)
@@ -336,7 +192,7 @@ class Agent:
                 send=None, notify=None) -> str:
         told = []  # the note sent once, at the first tool call that makes or changes a project
         asked = project is not None or bool(ASKED_EVENTS.search(question))  # events may make the reply longer
-        if session is not None and (BUILD_ASK.search(question) or project is None and BUILD_ASK_BARE.search(question)):
+        if session is not None and is_build_ask(question, project is not None):
             question += BUILD_NOTE
             trace.append("build ask")
         tools = list(TOOLS)
@@ -351,16 +207,7 @@ class Agent:
             if "print_sheet" not in handlers:
                 add_system(messages, PROJECT_PROMPT)
                 tools.extend(PROJECT_TOOLS)
-            handlers["lookup_ace"] = lambda object, words=None: lookup_ace(object, words, project)
-            handlers["print_sheet"] = lambda **kw: print_sheet(project, **kw)
-            handlers["print_layout"] = lambda layouts=None, layer=None: run_script(
-                "print_layout", [*(layouts or []), *(["--layer", layer] if layer else [])], project, limit=6000)
-            handlers["check_project"] = lambda **kw: check_project(project, **kw)
-            handlers["read_script"] = lambda path, first=1, last=200: read_script(project, path, first, min(last, first + 199))
-            handlers["edit_sheet"] = lambda sheet=None, plan=None, new=False, arguments=None: changed(
-                edit_sheet(project, **edit_call(sheet, plan, new, arguments)))
-            handlers["undo_edit"] = lambda all=False: changed(undo_edit(project, all))
-            handlers["send_project"] = send_project
+            handlers.update(project_handlers(project, changed, send_project))
 
         def made(result: tuple[Path | None, str]) -> str:
             # a new project is the person's from here on: its tools replace the old project's, and it is sent
@@ -414,7 +261,7 @@ class Agent:
                 draft = text
                 missing = self._check(messages, text, project)
                 if not missing:
-                    short = self._shorten(messages, text, trace, asked, sent=bool(send and send["project"]))
+                    short = shorten(self._complete, messages, text, trace, asked, sent=bool(send and send["project"]))
                     if short == text or not self._check(messages, short, project):
                         return short
                     trace.append("short version failed the check; long one sent")
@@ -482,53 +329,10 @@ class Agent:
         trace.append("steps ran out")
         return "这次没有完成核实，暂时不能给你可直接照做的步骤。"
 
-    def _shorten(self, messages: list[dict], text: str, trace: list[str], asked: bool = False,
-                 sent: bool = False) -> str:
-        # A reply sent with a project only says what to try in it; the person reads the events in the file
-        # (2026-10-09: a 330-character delivery explained the mechanism, the layout and the event numbers).
-        if sent:
-            if len(text) <= SENT_MAX:
-                return text
-            resp = self.client.chat.completions.create(
-                model=MODEL,
-                messages=[*messages, {"role": "assistant", "content": text},
-                          {"role": "user", "content": SHORTEN_SENT.format(n=SENT_MAX)}],
-                extra_body=NO_THINK,
-                timeout=TIMEOUT,
-            )
-            short = html.unescape((resp.choices[0].message.content or "").strip())
-            trace.append(f"shortened {len(text)} -> {len(short)} (sent)")
-            return short if short and len(short) < len(text) else text
-        # Events are what the person copies: an answer that writes them may be longer, and a shortening keeps them
-        # (2026-10-06: a 1414-character answer of events came back as 271 characters of prose without one).
-        # three or more event lines; one arrow in prose does not make an answer of events (2026-10-06)
-        # and only when the person asked for events or sent a project; a how-to question gets the approach
-        events = asked and sum("→" in line for line in text.splitlines()) >= 3
-        limit = EVENTS_MAX if events else REPLY_MAX
-        if len(text) <= limit:
-            return text
-        resp = self.client.chat.completions.create(
-            model=MODEL,
-            messages=[*messages, {"role": "assistant", "content": text},
-                      {"role": "user", "content": SHORTEN.format(n=limit) + (SHORTEN_EVENTS if events else "")}],
-            extra_body=NO_THINK,
-            timeout=TIMEOUT,
-        )
-        short = html.unescape((resp.choices[0].message.content or "").strip())
-        if short and len(short) > limit:  # a first rewrite often stops short of the limit (1017 -> 889 at 350)
-            resp = self.client.chat.completions.create(
-                model=MODEL,
-                messages=[*messages, {"role": "assistant", "content": short},
-                          {"role": "user", "content": f"Still {len(short)} characters. " + SHORTEN.format(n=limit)
-                           + " Drop every detail that is not the approach or a step the person must do."}],
-                extra_body=NO_THINK,
-                timeout=TIMEOUT,
-            )
-            again = html.unescape((resp.choices[0].message.content or "").strip())
-            if again and len(again) < len(short):
-                short = again
-        trace.append(f"shortened {len(text)} -> {len(short)}")
-        return short if short and len(short) < len(text) else text
+    def _complete(self, messages: list[dict]) -> str:
+        """One plain model call; the content it answers."""
+        resp = self.client.chat.completions.create(model=MODEL, messages=messages, extra_body=NO_THINK, timeout=TIMEOUT)
+        return resp.choices[0].message.content or ""
 
     def _json(self, messages: list[dict]) -> dict:
         """One call that answers a JSON object. JSON mode where the model has it; Step-3.5-Flash on SiliconFlow
