@@ -1,0 +1,400 @@
+{
+ "name": "五子棋",
+ "viewport": [
+  544,
+  960
+ ],
+ "palette": {
+  "wood": [
+   222,
+   178,
+   112
+  ],
+  "line": [
+   92,
+   60,
+   30
+  ],
+  "table": [
+   46,
+   52,
+   58
+  ]
+ },
+ "objects": [
+  {
+   "name": "BoardArt",
+   "plugin": "Sprite",
+   "shape": "grid",
+   "size": [
+    15,
+    15
+   ],
+   "frames": [
+    "wood"
+   ],
+   "outline_color": "line",
+   "outline": true,
+   "shadow": 6
+  },
+  {
+   "name": "Cell",
+   "plugin": "Sprite",
+   "shape": "rect",
+   "size": [
+    1,
+    1
+   ],
+   "frames": [
+    "solid"
+   ],
+   "shadow": false,
+   "variables": {
+    "col": 0,
+    "row": 0
+   },
+   "outline": false,
+   "outline_color": "line"
+  },
+  {
+   "name": "Stone",
+   "plugin": "Sprite",
+   "shape": "circle",
+   "size": [
+    1,
+    1
+   ],
+   "frames": [
+    "ink",
+    "flash"
+   ],
+   "shadow": 3,
+   "outline": 1
+  },
+  {
+   "name": "Status",
+   "plugin": "Text"
+  },
+  {
+   "name": "Title",
+   "plugin": "Text"
+  },
+  {
+   "name": "Board",
+   "plugin": "Array",
+   "size": [
+    15,
+    15
+   ]
+  },
+  {
+   "name": "Touch",
+   "plugin": "Touch"
+  }
+ ],
+ "layouts": [
+  {
+   "name": "Game",
+   "sheet": "Game",
+   "layers": [
+    {
+     "name": "Background",
+     "color": "table"
+    },
+    {
+     "name": "Board"
+    },
+    {
+     "name": "UI",
+     "parallax": 0
+    }
+   ],
+   "instances": [
+    {
+     "object": "BoardArt",
+     "layer": "Board",
+     "col": "center",
+     "row": "center"
+    },
+    {
+     "object": "Cell",
+     "layer": "Board",
+     "over": "BoardArt",
+     "index": [
+      "col",
+      "row"
+     ]
+    },
+    {
+     "object": "Title",
+     "layer": "UI",
+     "text": "五子棋",
+     "above": "BoardArt",
+     "size": "title",
+     "color": "flash",
+     "on": "table"
+    },
+    {
+     "object": "Status",
+     "layer": "UI",
+     "text": "黑方先下",
+     "below": "BoardArt",
+     "longest": "白方胜！点一下重新开始",
+     "color": "flash",
+     "on": "table"
+    }
+   ]
+  }
+ ],
+ "sheets": [
+  {
+   "name": "Game",
+   "events": [
+    {
+     "eventType": "comment",
+     "text": "Gomoku. Black and white take turns placing a stone on an empty cell; five in a row in any direction wins, then a tap restarts"
+    },
+    {
+     "eventType": "variable",
+     "name": "turn",
+     "type": "number",
+     "initialValue": "1",
+     "comment": "1 black, 2 white: the side to move and the value it writes into Board"
+    },
+    {
+     "eventType": "variable",
+     "name": "over",
+     "type": "number",
+     "initialValue": "0",
+     "comment": "0 playing, 1 just won, 2 waiting for the tap that restarts"
+    },
+    {
+     "eventType": "comment",
+     "text": "A new game: black moves first"
+    },
+    {
+     "eventType": "block",
+     "conditions": [
+      {
+       "id": "on-start-of-layout",
+       "objectClass": "System"
+      }
+     ],
+     "actions": [
+      {
+       "id": "set-eventvar-value",
+       "objectClass": "System",
+       "parameters": {
+        "variable": "turn",
+        "value": "1"
+       }
+      },
+      {
+       "id": "set-eventvar-value",
+       "objectClass": "System",
+       "parameters": {
+        "variable": "over",
+        "value": "0"
+       }
+      },
+      {
+       "id": "set-text",
+       "objectClass": "Status",
+       "parameters": {
+        "text": "\"黑方先下\""
+       }
+      }
+     ]
+    },
+    {
+     "eventType": "comment",
+     "text": "A tap on an empty cell places the side's stone and records it in Board"
+    },
+    {
+     "eventType": "block",
+     "conditions": [
+      {
+       "id": "on-touched-object",
+       "objectClass": "Touch",
+       "parameters": {
+        "object": "Cell",
+        "type": "start"
+       }
+      },
+      {
+       "id": "compare-eventvar",
+       "objectClass": "System",
+       "parameters": {
+        "variable": "over",
+        "comparison": 0,
+        "value": "0"
+       }
+      },
+      {
+       "id": "compare-two-values",
+       "objectClass": "System",
+       "parameters": {
+        "first-value": "Board.At(Cell.col, Cell.row)",
+        "comparison": 0,
+        "second-value": "0"
+       }
+      }
+     ],
+     "actions": [
+      {
+       "id": "create-object",
+       "objectClass": "System",
+       "parameters": {
+        "object-to-create": "Stone",
+        "layer": "\"Board\"",
+        "x": "Cell.X",
+        "y": "Cell.Y",
+        "create-hierarchy": false,
+        "template-name": "\"\""
+       }
+      },
+      {
+       "id": "set-animation-frame",
+       "objectClass": "Stone",
+       "parameters": {
+        "frame-number": "turn - 1"
+       }
+      },
+      {
+       "id": "set-at-xy",
+       "objectClass": "Board",
+       "parameters": {
+        "x": "Cell.col",
+        "y": "Cell.row",
+        "value": "turn"
+       }
+      }
+     ],
+     "children": [
+      {
+       "eventType": "comment",
+       "text": "Five of the side's stones in a row, across, down or on a diagonal, from any cell ends the game"
+      },
+      {
+       "eventType": "n-in-a-row",
+       "array": "Board",
+       "count": 5,
+       "value": "turn",
+       "actions": [
+        {
+         "id": "set-eventvar-value",
+         "objectClass": "System",
+         "parameters": {
+          "variable": "over",
+          "value": "1"
+         }
+        }
+       ]
+      },
+      {
+       "eventType": "comment",
+       "text": "Won: name the winner, then accept the restart tap after a moment"
+      },
+      {
+       "eventType": "block",
+       "conditions": [
+        {
+         "id": "compare-eventvar",
+         "objectClass": "System",
+         "parameters": {
+          "variable": "over",
+          "comparison": 0,
+          "value": "1"
+         }
+        }
+       ],
+       "actions": [
+        {
+         "id": "set-text",
+         "objectClass": "Status",
+         "parameters": {
+          "text": "(turn = 1 ? \"黑方胜\" : \"白方胜\") & \"！点一下重新开始\""
+         }
+        },
+        {
+         "id": "wait",
+         "objectClass": "System",
+         "parameters": {
+          "seconds": "0.5",
+          "use-timescale": true
+         }
+        },
+        {
+         "id": "set-eventvar-value",
+         "objectClass": "System",
+         "parameters": {
+          "variable": "over",
+          "value": "2"
+         }
+        }
+       ]
+      },
+      {
+       "eventType": "comment",
+       "text": "Otherwise the other side moves"
+      },
+      {
+       "eventType": "block",
+       "conditions": [
+        {
+         "id": "else",
+         "objectClass": "System"
+        }
+       ],
+       "actions": [
+        {
+         "id": "set-eventvar-value",
+         "objectClass": "System",
+         "parameters": {
+          "variable": "turn",
+          "value": "3 - turn"
+         }
+        },
+        {
+         "id": "set-text",
+         "objectClass": "Status",
+         "parameters": {
+          "text": "turn = 1 ? \"黑方落子\" : \"白方落子\""
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "eventType": "comment",
+     "text": "After a win, a tap anywhere starts a new game"
+    },
+    {
+     "eventType": "block",
+     "conditions": [
+      {
+       "id": "on-any-touch-start",
+       "objectClass": "Touch"
+      },
+      {
+       "id": "compare-eventvar",
+       "objectClass": "System",
+       "parameters": {
+        "variable": "over",
+        "comparison": 0,
+        "value": "2"
+       }
+      }
+     ],
+     "actions": [
+      {
+       "id": "restart-layout",
+       "objectClass": "System"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
