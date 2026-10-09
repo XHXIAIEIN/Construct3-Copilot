@@ -6,10 +6,11 @@ import logging
 import threading
 import time
 from pathlib import Path
+from .config import HOME
 
 log = logging.getLogger("c3bot.agent")
 
-USAGE_LOG = Path(__file__).parent / "logs" / "bot" / "usage.log"  # one line an answer, QQ and --cli alike
+USAGE_LOG = HOME / "logs" / "bot" / "usage.log"  # one line an answer, QQ and --cli alike
 _tally = threading.local()  # the token count of the answer this thread is giving
 
 

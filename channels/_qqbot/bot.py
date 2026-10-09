@@ -25,14 +25,12 @@ from dotenv import load_dotenv
 
 import xml.etree.ElementTree as ET
 
-import attachments as attachments_mod
-import edits
-import qqfile
-
-# before agent.py, which reads C3BOT_BASE_URL and C3BOT_MODEL when it is imported (2026-10-06: the .env
-# switch to a local model was read too late and the bot kept calling DeepSeek)
+# before the c3bot package, whose config.py reads C3BOT_BASE_URL and C3BOT_MODEL when it is imported
+# (2026-10-06: the .env switch to a local model was read too late and the bot kept calling DeepSeek)
 load_dotenv(Path(__file__).parent / ".env")
-from agent import Agent  # noqa: E402
+from c3bot import attachments as attachments_mod  # noqa: E402
+from c3bot import edits, qqfile  # noqa: E402
+from c3bot.agent import Agent  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("c3bot")

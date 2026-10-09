@@ -6,7 +6,7 @@ import difflib
 import re
 from pathlib import Path
 
-from tools import PROJECT_READERS, lookup_ace, run_script
+from .tools import PROJECT_READERS, lookup_ace, run_script
 
 LIST_ACES = (
     "List every event-sheet condition, action or expression your last answer names. Leave out scripting API "

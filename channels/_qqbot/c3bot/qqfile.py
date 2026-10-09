@@ -129,7 +129,7 @@ def main() -> None:
     from dotenv import load_dotenv
     from botpy.robot import Token
 
-    load_dotenv(Path(__file__).parent / ".env")
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
     parser = argparse.ArgumentParser(description="send a file as an active message to a user or a group")
     to = parser.add_mutually_exclusive_group(required=True)
     to.add_argument("--user", help="the receiver's user_openid")

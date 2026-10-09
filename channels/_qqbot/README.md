@@ -5,13 +5,13 @@ QQ bot "Construct 3 Bot": answers Construct 3 questions with the Construct3-RAG 
 | Path | What |
 |------|------|
 | `bot.py` | QQ front end (qq-botpy, WebSocket); `--cli "问题"` asks once in the terminal |
-| `agent.py` | model tool loop, voice, reply checks |
-| `newproject.py`, `spec_build.py`, `quick_fix.py` | new projects from a spec |
-| `attachments.py`, `edits.py`, `qqfile.py` | sent files, edit snapshots and undo, file upload to QQ |
-| `gpu_yield.py` | unloads the local model while the TTS server generates |
+| `c3bot/` | the bot's code: `agent.py` the model tool loop, `tools.py` the tools and the RAG scripts they run, `acecheck.py` the ACE-name check, `reply.py` the reply's length and phrasing, `usage.py` token counts, `config.py` the settings read from `.env` |
+| `c3bot/newproject.py`, `spec_build.py`, `quick_fix.py` | new projects from a spec |
+| `c3bot/attachments.py`, `edits.py`, `qqfile.py` | sent files, edit snapshots and undo, file upload to QQ (`python -m c3bot.qqfile` sends one by hand) |
+| `c3bot/gpu_yield.py` | unloads the local model while the TTS server generates |
 | `grader.py` | silent grader of every reply, writes `reviews/` |
 | `start.ps1` | restart bot and grader detached (`-Stop` stops them, `-Ollama` also starts Ollama when it is down) |
-| `.env` | keys and model settings |
+| `.env` | keys and model settings; `scripts/set-*-key.ps1` write a key into it |
 | `logs/bot/` | `bot.log` (questions, tool calls, replies, warnings), `usage.log` (tokens per answer, QQ and `--cli`), `botpy.log*` (QQ platform connection, rotated daily) |
 | `logs/grader/` | `grader.log`: one verdict line per graded reply |
 | `logs/ollama/` | Ollama server output when `start.ps1 -Ollama` started it; earlier runs keep a time suffix |

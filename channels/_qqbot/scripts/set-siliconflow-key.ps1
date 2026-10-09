@@ -2,7 +2,7 @@
 # account endpoint and prints the balance. The key is typed hidden and never printed or logged.
 # Run: right-click > Run with PowerShell, or `pwsh -File set-siliconflow-key.ps1`
 $ErrorActionPreference = 'Stop'
-$envFile = Join-Path $PSScriptRoot '.env'
+$envFile = Join-Path (Split-Path $PSScriptRoot) '.env'
 $secure = Read-Host 'SiliconFlow API key (sk-...)' -AsSecureString
 $key = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)).Trim()
 if (-not $key.StartsWith('sk-')) { Write-Host 'Not a key (it starts with sk-). Nothing written.'; Read-Host 'Enter to close'; exit 1 }

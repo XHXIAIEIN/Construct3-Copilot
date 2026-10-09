@@ -15,14 +15,14 @@ from pathlib import Path
 
 from openai import BadRequestError, OpenAI
 
-import edits
-import gpu_yield
-import newproject
-import usage
-from acecheck import LIST_ACES, missing_aces, project_text
-from config import BASE_URL, LOCAL, LOCALE, MAX_STEPS, MODEL, NO_THINK, RAG, TIMEOUT, ZHIPU
-from reply import ASKED_EVENTS, BUILD_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten
-from tools import GROUP_PROMPT, HANDLERS, PROJECT_PROMPT, PROJECT_TOOLS, TOOLS, project_handlers, run_script
+from . import edits
+from . import gpu_yield
+from . import newproject
+from . import usage
+from .acecheck import LIST_ACES, missing_aces, project_text
+from .config import BASE_URL, LOCAL, LOCALE, MAX_STEPS, MODEL, NO_THINK, RAG, TIMEOUT, ZHIPU
+from .reply import ASKED_EVENTS, BUILD_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten
+from .tools import GROUP_PROMPT, HANDLERS, PROJECT_PROMPT, PROJECT_TOOLS, TOOLS, project_handlers, run_script
 
 log = logging.getLogger("c3bot.agent")
 

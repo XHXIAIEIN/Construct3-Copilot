@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 
+HOME = Path(__file__).resolve().parent.parent  # the bot folder: .env, logs/, sessions/
 RAG = Path(os.environ.get("CONSTRUCT3_RAG", r"D:\Users\Administrator\Documents\GitHub\Construct3-RAG"))
 LOCALE = os.environ.get("C3BOT_LOCALE", "zh-CN")
 # C3BOT_BASE_URL points at any OpenAI-compatible server, e.g. Ollama's http://localhost:11434/v1

@@ -14,8 +14,9 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from .config import HOME
 
-ROOT = Path(__file__).parent / "sessions" / "_edits"
+ROOT = HOME / "sessions" / "_edits"
 SNAPSHOT = ("eventSheets", "layouts", "project.c3proj")  # what edit_sheet.py writes
 
 

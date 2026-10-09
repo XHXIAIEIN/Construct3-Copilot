@@ -2,7 +2,7 @@
 # the free model glm-4.7-flash. The key is typed hidden and never printed or logged.
 # Run: right-click > Run with PowerShell, or `pwsh -File set-zhipu-key.ps1`
 $ErrorActionPreference = 'Stop'
-$envFile = Join-Path $PSScriptRoot '.env'
+$envFile = Join-Path (Split-Path $PSScriptRoot) '.env'
 $secure = Read-Host 'Zhipu API key (from bigmodel.cn, API Keys page)' -AsSecureString
 $key = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)).Trim()
 if ($key.Length -lt 20) { Write-Host 'Too short to be a key. Nothing written.'; Read-Host 'Enter to close'; exit 1 }

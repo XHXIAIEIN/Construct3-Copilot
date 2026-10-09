@@ -9,9 +9,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-import edits
-import newproject
-from config import LOCALE, RAG
+from . import edits
+from . import newproject
+from .config import HOME, LOCALE, RAG
 
 TOOLS = [
     {
@@ -222,7 +222,7 @@ def run_script_code(name: str, args: list[str], project: Path | None = None, lim
     cmd = [sys.executable, str(script), "--rag", str(RAG), "--locale", locale, "--limit", str(limit)]
     if project:
         cmd += ["--project", str(project)]
-    proc = subprocess.run(cmd + args, capture_output=True, text=True, encoding="utf-8", timeout=90, cwd=Path(__file__).parent)
+    proc = subprocess.run(cmd + args, capture_output=True, text=True, encoding="utf-8", timeout=90, cwd=HOME)
     return proc.returncode, (proc.stdout + proc.stderr).strip() or "no output"
 
 

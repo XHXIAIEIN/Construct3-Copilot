@@ -23,13 +23,14 @@ import tempfile
 import threading
 from pathlib import Path
 
-import edits
-import quick_fix
+from . import edits
+from . import quick_fix
+from .config import HOME
 
 log = logging.getLogger("c3bot.newproject")
 
 HERE = Path(__file__).parent
-MARKS = HERE / "sessions" / "_new"
+MARKS = HOME / "sessions" / "_new"
 EXAMPLES = Path(os.environ.get("C3_EXAMPLES", r"D:\Users\Administrator\Documents\GitHub\Construct-Example-Projects"))
 TEMPLATE_COPY = os.environ.get("C3BOT_TEMPLATE_COPY") == "1"
 SPEC_MAX = 60_000          # characters, as spec_build.py caps it
