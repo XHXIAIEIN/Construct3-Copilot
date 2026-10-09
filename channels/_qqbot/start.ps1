@@ -20,7 +20,7 @@ Get-CimInstance Win32_Process |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 if ($Stop) { return }
 # the log folder of the layout before 2026-10-10 (logs/ beside bot.py) moves under var/ once nothing writes it
-if ((Test-Path (Join-Path $here 'logs')) -and -not (Test-Path (Join-Path $logs 'botot.log'))) {
+if ((Test-Path (Join-Path $here 'logs')) -and -not (Test-Path (Join-Path $logs 'bot' 'bot.log'))) {
     Get-ChildItem (Join-Path $here 'logs') | Move-Item -Destination $logs -Force
     Remove-Item (Join-Path $here 'logs') -Recurse -Force
 }
@@ -43,5 +43,5 @@ foreach ($name in 'bot', 'grader') {
         -WorkingDirectory $here -WindowStyle Hidden
 }
 Start-Sleep -Seconds 8
-Get-Content (Join-Path $logs 'botot.log') -Tail 3
+Get-Content (Join-Path $logs 'bot' 'bot.log') -Tail 3
 Get-Content (Join-Path $logs 'grader\grader.log') -Tail 2
