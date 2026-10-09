@@ -43,5 +43,5 @@ foreach ($name in 'bot', 'grader') {
         -WorkingDirectory $here -WindowStyle Hidden
 }
 Start-Sleep -Seconds 8
-Get-Content (Join-Path $logs 'bot\bot.log') -Tail 3
+Get-Content (Join-Path $logs 'botot.log') -Tail 3
 Get-Content (Join-Path $logs 'grader\grader.log') -Tail 2
