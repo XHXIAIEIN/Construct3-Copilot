@@ -1,4 +1,4 @@
-"""A preview plan that plays gomoku on a built project: python specs/make_play.py PIECE STATE OUT.json [COLVAR ROWVAR]"""
+"""A preview plan that plays gomoku on a built project: python plugins/construct3/e2e/make_play.py PIECE STATE OUT.json [COLVAR ROWVAR]"""
 import json, sys
 piece, state, out = sys.argv[1:4]
 vw, vh = (int(sys.argv[7]), int(sys.argv[8])) if len(sys.argv) > 8 else (720, 1280)

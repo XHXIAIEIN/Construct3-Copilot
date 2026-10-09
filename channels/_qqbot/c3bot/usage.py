@@ -35,7 +35,7 @@ def count(resp) -> None:
 
 
 def write_usage(session: Path | None, tally: dict, seconds: float) -> None:
-    """Terminal runs (--cli, specs/e2e.py) do not write bot.log, so every answer also goes to usage.log."""
+    """Terminal runs (--cli, the plugin's e2e runs) do not write bot.log, so every answer also goes to usage.log."""
     line = (f"{session.name if session else '-'} calls {tally['calls']} prompt {tally['prompt']} "
             f"(cache hit {tally['cache_hit']}) completion {tally['completion']} in {seconds:.0f} s")
     log.info("usage: %s", line)

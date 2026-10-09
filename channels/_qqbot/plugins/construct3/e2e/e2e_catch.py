@@ -23,7 +23,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv  # noqa: E402
 
-HERE = Path(__file__).resolve().parents[2]  # the bot folder
+HERE = Path(__file__).resolve().parents[3]  # the bot folder
 load_dotenv(HERE / ".env")  # the paths and keys the bot itself reads
 DATA = Path(os.environ.get("C3BOT_DATA") or HERE / "var")
 RAG = Path(os.environ.get("CONSTRUCT3_RAG") or HERE.parent / "Construct3-RAG")

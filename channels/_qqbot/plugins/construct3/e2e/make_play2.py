@@ -1,5 +1,5 @@
 """A second judge for gomoku, for any board of 7 or more crossings and any state variables:
-python specs/make_play2.py PIECE OUT.json COLVAR ROWVAR LABEL VW VH N [CELLS]
+python plugins/construct3/e2e/make_play2.py PIECE OUT.json COLVAR ROWVAR LABEL VW VH N [CELLS]
 
 It plays: four black blocked by white (no win), a tap on a taken crossing (nothing changes), the fifth black stone
 (black wins, the status says so), a second, a tap that restarts (empty board), then white five on a rising

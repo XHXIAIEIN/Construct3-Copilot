@@ -12,8 +12,8 @@ of a knowledge plugin; every reply is checked against the plugin's knowledge bef
 | `grader.py` | silent grader of every reply, runs beside the bot, writes `var/reviews/` |
 | `start.ps1` | restart bot and grader detached (`-Stop` stops them, `-Ollama` also starts Ollama when it is down) |
 | `c3bot/` | the bot itself: `agent.py` the model tool loop, `reply.py` the reply's length and phrasing, `usage.py` token counts, `config.py` the settings from `.env`, `attachments.py` sent files, `edits.py` edit snapshots and undo, `qqfile.py` file upload to QQ (`python -m c3bot.qqfile` sends one by hand), `gpu_yield.py` yields the GPU to another server |
-| `plugins/construct3/` | the Construct 3 knowledge plugin: the tools and prompts the model gets, the check of its answers (`acecheck.py`), and projects from a spec (`newproject.py`, `spec_build.py`, `quick_fix.py`). It reads a [Construct3-RAG](https://github.com/XHXIAIEIN/Construct3-RAG) clone and runs that repository's scripts |
-| `scripts/` | `set-*-key.ps1` write an API key into `.env`; `e2e/` end-to-end runs that ask the bot for a game and play the result |
+| `plugins/construct3/` | the Construct 3 knowledge plugin: the tools and prompts the model gets, the check of its answers (`acecheck.py`), projects from a spec (`newproject.py`, `spec_build.py`, `quick_fix.py`), and `e2e/`: runs that ask the bot for a game and play the result in the editor. It reads a [Construct3-RAG](https://github.com/XHXIAIEIN/Construct3-RAG) clone and runs that repository's scripts |
+| `scripts/` | `set-*-key.ps1` write an API key into `.env` |
 | `.env.example` | every setting the bot reads; copy to `.env` |
 | `var/` | everything the bot writes, not committed: `logs/bot/` (`bot.log`, `usage.log`, `botpy.log*`), `logs/grader/`, `logs/ollama/`, `sessions/` (one folder per chat; `_edits/` snapshots, `_new/` made projects, `_pending/` deliveries), `reviews/`, `archive/` (finished runs, each with a README), `backups/`. `C3BOT_DATA` in `.env` puts it elsewhere |
 
