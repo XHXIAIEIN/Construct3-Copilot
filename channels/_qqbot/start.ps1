@@ -22,7 +22,7 @@ if ($Stop) { return }
 # the log folder of the layout before 2026-10-10 (logs/ beside bot.py) moves under var/ once nothing writes it
 if ((Test-Path (Join-Path $here 'logs')) -and -not (Test-Path (Join-Path $logs 'bot' 'bot.log'))) {
     Get-ChildItem (Join-Path $here 'logs') | Move-Item -Destination $logs -Force
-    Remove-Item (Join-Path $here 'logs') -Recurse -Force
+    Remove-Item (Join-Path $here 'logs') -Recurse -Force -ErrorAction SilentlyContinue  # a log still open stays
 }
 
 if ($Ollama -and -not (Get-Process ollama -ErrorAction SilentlyContinue)) {
