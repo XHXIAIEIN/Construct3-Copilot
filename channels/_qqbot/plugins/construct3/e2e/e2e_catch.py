@@ -1,6 +1,6 @@
 """Ask the bot for a catch game in the terminal, then judge what it built in the Construct 3 editor.
 
-    .venv/Scripts/python.exe specs/e2e_catch.py RUN [RUN ...] [--replay]
+    .venv/Scripts/python.exe plugins/construct3/e2e/e2e_catch.py RUN [RUN ...] [--replay]
 
 The judge does not read the bot's design. It finds in the running game the objects that fall and the one near the
 bottom that catches, and checks five things with the RAG's preview_project.py:

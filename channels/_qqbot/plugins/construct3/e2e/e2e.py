@@ -1,6 +1,6 @@
 """Ask the bot for a gomoku game in the terminal, then play what it built in the Construct 3 editor.
 
-    .venv/Scripts/python.exe specs/e2e.py RUN [RUN ...]
+    .venv/Scripts/python.exe plugins/construct3/e2e/e2e.py RUN [RUN ...]
 
 Each run: bot.py --cli "做个五子棋" into sessions/e2e<RUN>, then the preview player of the RAG plays the plan of
 make_play.py (a blocked line, a taken cell, a win across, the restart, a win on a diagonal) on a copy under %TEMP%.
