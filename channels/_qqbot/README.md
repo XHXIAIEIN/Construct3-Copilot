@@ -17,6 +17,6 @@ QQ bot "Construct 3 Bot": answers Construct 3 questions with the Construct3-RAG 
 | `logs/ollama/` | Ollama server output when `start.ps1 -Ollama` started it; earlier runs keep a time suffix |
 | `sessions/` | one folder per chat; `_edits/` snapshots, `_new/` made projects, `_pending/` deliveries |
 | `reviews/` | grader output: `YYYY-MM-DD.md`, `summary.tsv`, `snap/` |
-| `specs/` | end-to-end test scripts and their outputs |
-| `backups/<date>/` | `*.bak-*` copies taken before each change |
-| `archive/` | finished test sessions |
+| `specs/` | end-to-end test scripts; their outputs go to `archive/` |
+| `backups/<date>/` | `*.bak-*` copies taken before each change until 2026-10-09; since then git history holds the versions |
+| `archive/` | finished test sessions and batch runs, each folder with a README, with the `_new/` marks of its sessions |
