@@ -4,6 +4,9 @@
 
 Construct 3 的本地任务入口。执行已安装的 Agent-Skills，记录任务结果，并供 QQ 机器人调用。
 
+C3 的工具、提示、生成器与项目编辑实现在 `copilot/providers/construct3/`。
+QQbot 从这里加载同一份实现。代码归属见 [目录说明](docs/layout.md)。
+
 ## 本地运行与 QQ 接入
 
 需要 Python 3.10+，以及同级的 `Construct3-Agent-Skills` 仓库。

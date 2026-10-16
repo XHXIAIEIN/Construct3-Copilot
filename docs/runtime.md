@@ -45,7 +45,7 @@ C3BOT_SKILLS=D:/code/Construct3-Agent-Skills
 
 ```powershell
 .venv/Scripts/python -m unittest discover -s tests -v
-.venv/Scripts/python bot.py
+.venv/Scripts/python -m c3bot.qq
 ```
 
 QQ 的一次对话对应一个父任务，各项工具调用是它的子任务。
@@ -85,3 +85,5 @@ with runtime.session("qqbot", "opaque-session", metadata={"question": "查询 Wa
 会话必须显式提交 completed、failed 或 interrupted 结果。
 工具的 busy、timed_out 等状态应由调用方转换为会话失败，并保留原因。
 交付文件通过 `task.finish(artifacts=[...])` 计算实际字节的摘要。
+
+C3 工具由 `copilot/providers/construct3/` 提供。宿主通过 `load(runtime, data_dir=..., rag=..., options=...)` 绑定运行位置，再使用返回的工具与生成接口。每个进程绑定一个宿主。

@@ -4,6 +4,9 @@
 
 A local task runtime for Construct 3. Execute installed Agent-Skills, persist results, and serve the QQ bot adapter.
 
+Construct tools, prompts, generation and project edits live in `copilot/providers/construct3/`.
+The QQ bot loads that implementation from its configured Copilot checkout. See the [layout guide](docs/layout.md).
+
 ## Local runtime and QQ adapter
 
 Use Python 3.10+ and a sibling `Construct3-Agent-Skills` checkout.
