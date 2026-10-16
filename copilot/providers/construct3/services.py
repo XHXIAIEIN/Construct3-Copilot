@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import hashlib
+import importlib.util
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -61,6 +62,20 @@ def get_runtime():
         data = Path(os.environ.get("COPILOT_DATA") or DATA / "copilot")
         _runtime = Runtime(skills, data, python_executable=sys.executable)
     return _runtime
+
+
+def examples_root():
+    override = OPTIONS.get("examples") or os.environ.get("C3_EXAMPLES")
+    if override:
+        return Path(override)
+    if _runtime is None:
+        return RAG.parent / "Construct-Example-Projects"
+    plugin = _runtime.skills_root
+    path = plugin / "skills/construct3-agent-plugin/scripts/c3project.py"
+    spec = importlib.util.spec_from_file_location("copilot_c3project", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.siblings_folder(plugin) / "Construct-Example-Projects"
 
 
 def temporary_directory():

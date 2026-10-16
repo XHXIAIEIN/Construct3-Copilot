@@ -30,7 +30,7 @@ log = logging.getLogger("copilot.construct3.newproject")
 
 HERE = Path(__file__).parent
 MARKS = DATA / "sessions" / "_new"
-EXAMPLES = Path(copilot.OPTIONS.get("examples") or RAG.parent / "Construct-Example-Projects")  # a sibling clone of the RAG
+EXAMPLES = copilot.examples_root()
 TEMPLATE_COPY = bool(copilot.OPTIONS.get("template_copy"))
 SPEC_MAX = 60_000          # characters, as spec_build.py caps it
 BUILD_TIMEOUT = 150        # seconds for one spec_build.py run: the build, edit_sheet.py and check_project.py

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import re
@@ -12,7 +13,7 @@ from collections import defaultdict, deque
 from datetime import datetime
 from pathlib import Path
 
-from .services import DATA, get_runtime
+from .services import DATA, RAG, get_runtime
 LOG = DATA / "logs" / "bot" / "bot.log"
 SESSIONS = DATA / "sessions"
 REVIEWS = DATA / "reviews"
@@ -76,7 +77,9 @@ def snapshot(key: str, stamp: str) -> Path | None:
 
 
 def grade(item: dict) -> str:
-    prompt = PROMPT.format(**item)
+    prompt = (PROMPT.format(**item) + "\nRead skills/construct3-agent-plugin/SKILL.md. "
+              "Run scripts from skills/construct3-agent-plugin/scripts/ with --rag "
+              + json.dumps(RAG.as_posix()) + ".")
     repo = get_runtime().skills_root
     if GRADER == "codex":
         cmd = ["codex", "exec", "-m", CODEX_MODEL, "--sandbox", "read-only", "-C", str(repo), "-"]
