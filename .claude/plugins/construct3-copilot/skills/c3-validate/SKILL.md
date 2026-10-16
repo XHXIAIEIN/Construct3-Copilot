@@ -1,3 +1,4 @@
+---
 name: c3-validate
 description: >
   Validate Construct 3 clipboard JSON for structural correctness, identify errors, suggest fixes,

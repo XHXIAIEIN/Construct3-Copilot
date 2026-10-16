@@ -1,3 +1,4 @@
+---
 name: c3-create
 description: >
   Generate paste-ready Construct 3 clipboard JSON (event sheets, objects, layouts) from natural
