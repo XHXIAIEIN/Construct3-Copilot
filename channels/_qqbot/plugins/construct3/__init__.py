@@ -11,7 +11,7 @@ The agent loop in c3bot/agent.py reads these names and nothing else of the plugi
 - BUSY: the note sent at the first tool call that makes or changes a project
 - tool_trace(name, arguments, result): the trace line of one tool call
 - mend_arguments(name, arguments): the JSON of a call whose arguments did not parse, or None
-- is_new(project), pack(project): a project this plugin made, and the file that goes to the person
+- is_new(project), runtime_verified(project), pack(project): project origin, editor evidence and prepared archive
 - CHECK_FAILED, PROJECT_STEPS: the message after a failed check, the extra steps a sent project allows
 """
 from __future__ import annotations
@@ -58,6 +58,7 @@ DESIGN_LINES = ('tests[', 'rules', 'state', 'inputs', 'design', 'ok:', 'refused'
 BUILD_TOOLS = ("new_project_from_", "check_design", "patch_spec")  # a trace that holds one tried to make a project
 
 is_new = newproject.is_new
+runtime_verified = newproject.runtime_verified
 
 
 def pack(project: Path) -> Path:

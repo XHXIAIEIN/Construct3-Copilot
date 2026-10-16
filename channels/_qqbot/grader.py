@@ -26,12 +26,12 @@ from dotenv import load_dotenv  # noqa: E402
 
 HERE = Path(__file__).parent
 load_dotenv(HERE / ".env")  # the paths and keys the bot itself reads
+from c3bot.copilot import get_runtime  # noqa: E402
 DATA = Path(os.environ.get("C3BOT_DATA") or HERE / "var")  # as c3bot/config.py reads it
 LOG = DATA / "logs" / "bot" / "bot.log"
 SESSIONS = DATA / "sessions"
 REVIEWS = DATA / "reviews"
 OFFSET = REVIEWS / ".offset"
-REPO = Path(os.environ.get("CONSTRUCT3_RAG") or HERE.parent / "Construct3-RAG")
 GRADER = os.environ.get("GRADER", "codex")  # the claude CLI's login expired on 2026-10-09; GRADER=claude after a /login
 CODEX_MODEL = os.environ.get("CODEX_MODEL", "gpt-5.6-sol")  # config.toml's default is refused on a ChatGPT account
 TIMEOUT = 20 * 60  # seconds for one grade; a project question runs scripts in the editor's data
@@ -43,7 +43,7 @@ SKIP_REPLIES = ("出错了，稍后再试。",)
 log = logging.getLogger("grader")
 
 PROMPT = """You grade one answer of a QQ bot that answers Construct 3 questions in Chinese. The bot runs a small
-local model (qwen 27B) with tools from this repository. Nobody sees your grade but the repository's owner: do not
+configured model with tools from this installation. Nobody sees your grade but the repository's owner: do not
 contact anyone, do not edit any file, do not run the bot.
 
 Question ({key}, {when}):
@@ -60,7 +60,7 @@ Reply it sent (" / " marks a line break):
 
 Snapshot of the chat's session folder (a project the user sent or the bot made, may be absent): {snap}
 
-Check every factual claim of the reply against the data, following AGENTS.md section 2: lookup_ace.py for each
+Check every factual claim of the reply against the installed skill and data: lookup_ace.py for each
 condition, action, expression and addon it names (both zh-CN names and en-US), search_guides.py and
 prompts/pitfalls/ for the approach, data/c3-examples for examples it names, print_sheet.py / print_layout.py /
 check_project.py on the snapshot when the reply describes or changes a project. If the reply describes an approach,
@@ -92,8 +92,9 @@ def snapshot(key: str, stamp: str) -> Path | None:
 
 def grade(item: dict) -> str:
     prompt = PROMPT.format(**item)
+    repo = get_runtime().skills_root
     if GRADER == "codex":
-        cmd = ["codex", "exec", "-m", CODEX_MODEL, "--sandbox", "read-only", "-C", str(REPO), "-"]
+        cmd = ["codex", "exec", "-m", CODEX_MODEL, "--sandbox", "read-only", "-C", str(repo), "-"]
     else:
         cmd = ["claude", "-p", "--output-format", "text",
                "--allowedTools", "Read", "Grep", "Glob", "Bash(python:*)", "Bash(python3:*)",
@@ -101,7 +102,7 @@ def grade(item: dict) -> str:
         if item["snap"] != "none":
             cmd += ["--add-dir", item["snap"]]
     try:
-        done = subprocess.run(cmd, input=prompt, cwd=REPO, capture_output=True, text=True, encoding="utf-8",
+        done = subprocess.run(cmd, input=prompt, cwd=repo, capture_output=True, text=True, encoding="utf-8",
                               timeout=TIMEOUT)
     except subprocess.TimeoutExpired:
         return f"评分：没评完\n问题：{item['question'][:80]}\n错处：\n- 批改超过 {TIMEOUT // 60} 分钟\n根因：无\n建议：无"

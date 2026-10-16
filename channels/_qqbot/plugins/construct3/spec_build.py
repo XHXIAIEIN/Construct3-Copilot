@@ -1,4 +1,4 @@
-"""Build a Construct 3 folder project from a JSON spec, with the helpers of the RAG's generator template.
+"""Build a Construct 3 folder project from a JSON spec, with the installed Agent-Skills generator helpers.
 
     python spec_build.py SPEC.json --out FOLDER [--rag RAG] [--locale zh-CN]
 
@@ -10,7 +10,7 @@ top-level event, and runs check_project.py. Every refusal names the spec path to
 to write there. The project is built in a scratch folder and moved to --out only when the
 checker passes, so a refused spec leaves --out as it was.
 
-exit codes: 0 built and checked; 1 refused, nothing written; 2 the RAG clone is missing or broken
+exit codes: 0 built and checked; 1 refused, nothing written; 2 required tooling or data is missing
 """
 from __future__ import annotations
 
@@ -23,9 +23,7 @@ import random
 import re
 import shutil
 import string
-import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 DEFAULT_RAG = Path(os.environ.get("CONSTRUCT3_RAG") or Path(__file__).resolve().parents[3] / "Construct3-RAG")
@@ -39,6 +37,8 @@ STEP_TIMEOUT = 60          # seconds for one edit_sheet.py or check_project.py r
 
 sys.path.insert(0, str(Path(__file__).parent))
 import quick_fix  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from c3bot import copilot  # noqa: E402
 
 NAME = re.compile(r"[A-Za-z][A-Za-z0-9_]{0,31}$")
 SHEET_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_ ]{0,31}$")
@@ -154,7 +154,7 @@ def count_events(events) -> int:
 
 def load_generator(rag: Path, out: Path):
     """The generator template as a module of its own, writing into out."""
-    path = rag / "skills" / "construct3-agent-plugin" / "assets" / "build_project.py"
+    path = copilot.get_runtime().skills_root / "skills" / "construct3-agent-plugin" / "assets" / "build_project.py"
     loader = importlib.util.spec_from_file_location("c3_generator", path)
     if not loader or not path.exists():
         raise FileNotFoundError(path)
@@ -1109,9 +1109,13 @@ def build(spec: dict, out: Path, rag: Path) -> list[str]:
 
 
 def run(script: str, args: list[str], rag: Path, locale: str, limit: int = 6000) -> tuple[int, str]:
-    path = rag / "skills" / "construct3-agent-plugin" / "scripts" / f"{script}.py"
-    proc = subprocess.run([sys.executable, str(path), "--rag", str(rag), "--locale", locale, "--limit", str(limit), *args],
-                          capture_output=True, text=True, encoding="utf-8", timeout=STEP_TIMEOUT)
+    args = list(args)
+    project = None
+    if "--project" in args:
+        at = args.index("--project")
+        project = Path(args[at + 1])
+        del args[at:at + 2]
+    proc = copilot.run_script(script, args, project, locale=locale, limit=limit, timeout=STEP_TIMEOUT, rag=rag)
     return proc.returncode, (proc.stdout + proc.stderr).strip()
 
 
@@ -1246,7 +1250,7 @@ def add_events(spec: dict, out: Path, rag: Path, locale: str) -> list[str]:
         if not events:
             continue
         ops, spans = operations(events)
-        with tempfile.TemporaryDirectory() as tmp:
+        with copilot.temporary_directory() as tmp:
             plan = Path(tmp) / "plan.json"
             plan.write_text(json.dumps(ops, ensure_ascii=False), encoding="utf-8")
             code, text = run("edit_sheet", [sh["name"], str(plan), "--project", str(out)], rag, locale, limit=8000)
@@ -1290,7 +1294,7 @@ def main() -> int:
             raise Refused(f"spec: not valid JSON, line {e.lineno} column {e.colno}: {e.msg}") from None
         if os.environ.get("C3BOT_QUICK") == "1":
             spec, fixed = quick_fix.tidy(spec)
-        with tempfile.TemporaryDirectory() as tmp:
+        with copilot.temporary_directory() as tmp:
             work = Path(tmp) / "project"
             shutil.copytree(template, work, ignore=shutil.ignore_patterns(".git", "llm-context.md"))
             for stale in ("layouts/Layout 1.json", "eventSheets/Event sheet 1.json"):

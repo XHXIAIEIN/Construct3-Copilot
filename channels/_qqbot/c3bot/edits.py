@@ -11,10 +11,9 @@ import hashlib
 import json
 import re
 import shutil
-import subprocess
-import sys
 from pathlib import Path
 from .config import DATA
+from . import copilot
 
 ROOT = DATA / "sessions" / "_edits"
 SNAPSHOT = ("eventSheets", "layouts", "project.c3proj")  # what edit_sheet.py writes
@@ -88,14 +87,12 @@ def project_name(project: Path) -> str:
 
 
 def pack(project: Path, rag: Path) -> Path:
-    """Pack the project with the RAG's pack_project.py as out/<name>-edited.c3p."""
+    """Pack the project through Copilot as out/<name>-edited.c3p."""
     out = side(project) / "out"
     shutil.rmtree(out, ignore_errors=True)
     out.mkdir(parents=True)
     target = out / f"{project_name(project)}-edited.c3p"
-    script = rag / "skills" / "construct3-agent-plugin" / "scripts" / "pack_project.py"
-    proc = subprocess.run([sys.executable, str(script), "--project", str(project), "--out", str(target)],
-                          capture_output=True, text=True, encoding="utf-8", timeout=120)
+    proc = copilot.run_script("pack_project", ["--out", str(target)], project, timeout=120, rag=rag)
     if proc.returncode != 0 or not target.is_file():
         raise RuntimeError(f"pack_project.py exit {proc.returncode}: {(proc.stdout + proc.stderr).strip()[-500:]}")
     return target

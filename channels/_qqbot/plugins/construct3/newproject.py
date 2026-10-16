@@ -19,11 +19,10 @@ import shutil
 import string
 import subprocess
 import sys
-import tempfile
 import threading
 from pathlib import Path
 
-from c3bot import edits
+from c3bot import copilot, edits
 from . import quick_fix
 from c3bot.config import DATA, RAG
 
@@ -341,9 +340,17 @@ def _unique_id(project: Path) -> str:
         return ""
 
 
-def _mark(project: Path, origin: str) -> None:
+def _project_digest(project: Path) -> str:
+    digest = hashlib.sha256()
+    for path in sorted(p for p in project.rglob("*") if p.is_file() and ".tmp" not in p.relative_to(project).parts):
+        digest.update(path.relative_to(project).as_posix().encode() + b"\0" + path.read_bytes())
+    return digest.hexdigest()
+
+
+def _mark(project: Path, origin: str, verified: bool = False) -> None:
     MARKS.mkdir(parents=True, exist_ok=True)
-    _mark_file(project).write_text(json.dumps({"uniqueId": _unique_id(project), "origin": origin}), encoding="utf-8")
+    _mark_file(project).write_text(json.dumps({"uniqueId": _unique_id(project), "origin": origin,
+                                             "verified_digest": _project_digest(project) if verified else None}), encoding="utf-8")
 
 
 def is_new(project: Path | None) -> bool:
@@ -357,10 +364,18 @@ def is_new(project: Path | None) -> bool:
     return bool(mark.get("uniqueId")) and mark["uniqueId"] == _unique_id(project)
 
 
-def _settle(session: Path, origin: str) -> Path:
+def runtime_verified(project: Path) -> bool:
+    """Whether editor tests passed for these exact project files."""
+    if not is_new(project):
+        return False
+    mark = json.loads(_mark_file(project).read_text(encoding="utf-8"))
+    return bool(mark.get("verified_digest")) and mark["verified_digest"] == _project_digest(project)
+
+
+def _settle(session: Path, origin: str, verified: bool = False) -> Path:
     """The new project is the session's: forget the edits of whatever was there and mark it."""
     edits.reset(session)
-    _mark(session, origin)
+    _mark(session, origin, verified)
     return session
 
 
@@ -437,13 +452,8 @@ def unwrap(arguments, key: str = "spec") -> object:
     return inner.get(key, inner) if isinstance(inner, dict) else inner
 
 
-def _scripts(rag: Path) -> Path:
-    return rag / "skills" / "construct3-agent-plugin" / "scripts"
-
-
 def read_example(example_id: str, rag: Path, locale: str, read_before: int = 0) -> str:
-    """The event sheets of an official example, printed by the RAG's print_sheet.py. An id of the examples' data
-    names the folder, or the folder with -js or -ts after it (tic-tac-toe is tic-tac-toe-js, 2026-10-04)."""
+    """Print an official example's event sheets. Its data id names the folder, optionally with -js or -ts."""
     if read_before >= 2:
         # the model read one example after another, 39 times, and ran out of steps (2026-10-04)
         return ("not read: two examples are enough. Go on: design_guide, then check_design with the game's design")
@@ -453,9 +463,9 @@ def read_example(example_id: str, rag: Path, locale: str, read_before: int = 0) 
     if not folder:
         return (f"no example {example_id!r}; take an id that search_examples printed, before the colon, or go "
                 f"on without one: design_guide, then check_design")
-    proc = subprocess.run([sys.executable, str(_scripts(rag) / "print_sheet.py"), "--rag", str(rag), "--locale", locale,
-                           "--project", str(folder), "--limit", "6000"],
-                          capture_output=True, text=True, encoding="utf-8", timeout=60)
+    proc = copilot.run_script("print_sheet", [], folder, locale=locale, limit=6000, timeout=60, rag=rag)
+    if proc.returncode != 0:
+        return f"example read failed: {(proc.stdout + proc.stderr).strip()}"
     text = "\n".join(l for l in (proc.stdout + proc.stderr).strip().splitlines()
                      if not re.search(r"lines not printed|print_sheet\.py .*--events|--limit 0", l))
     return (text[:6500] + "\n-- that is enough to see how it is built: which object holds what, which trigger does "
@@ -464,8 +474,8 @@ def read_example(example_id: str, rag: Path, locale: str, read_before: int = 0) 
 
 
 def design_guide(rag: Path) -> str:
-    """The RAG's reference on designs, from the format on: the steps there are the bot's tools here."""
-    text = (rag / "skills" / "construct3-agent-plugin" / "references" / "designing-a-game.md").read_text(encoding="utf-8")
+    """The installed design reference, starting at its format."""
+    text = (copilot.get_runtime().skills_root / "skills" / "construct3-agent-plugin" / "references" / "designing-a-game.md").read_text(encoding="utf-8")
     return text[text.index("## The design"):]
 
 
@@ -500,7 +510,7 @@ def _refuse(kind: str, session: Path, payload, text: str) -> str:
 
 
 def check_design(design, session: Path, rag: Path, read_one: bool) -> str:
-    """Run the RAG's check_design.py on the design; keep it for the build when it passes."""
+    """Check the design through Copilot and keep it for the build when it passes."""
     if isinstance(design, str):
         try:
             design = json.loads(design)
@@ -513,11 +523,10 @@ def check_design(design, session: Path, rag: Path, read_one: bool) -> str:
     if again:
         return again
     MARKS.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as tmp:
+    with copilot.temporary_directory() as tmp:
         path = Path(tmp) / "design.json"
         path.write_text(json.dumps(design, ensure_ascii=False), encoding="utf-8")
-        proc = subprocess.run([sys.executable, str(_scripts(rag) / "check_design.py"), str(path), "--rag", str(rag),
-                               "--limit", "6000"], capture_output=True, text=True, encoding="utf-8", timeout=60)
+        proc = copilot.run_script("check_design", [str(path)], limit=6000, timeout=60, rag=rag)
         out = (proc.stdout + proc.stderr).strip()
         if proc.returncode == 0:
             shutil.copyfile(path, _design_file(session))
@@ -528,32 +537,25 @@ def check_design(design, session: Path, rag: Path, read_one: bool) -> str:
                    out + "\n-- refused; fix the design at the paths above and call check_design again with the whole design")
 
 
-def play_tests(project: Path, rag: Path) -> str:
+def play_tests(project: Path, rag: Path, design: Path | None = None) -> str:
     """Play the kept design's tests on the built project in the headless editor; return why it fails, or ""."""
     if not EDITOR_CHECK:
         return ""
-    with _editor, tempfile.TemporaryDirectory() as tmp:
+    with _editor, copilot.temporary_directory() as tmp:
         try:
-            proc = subprocess.run([sys.executable, str(_scripts(rag) / "play_design.py"), str(_design_file(project)),
-                                   "--project", str(project), "--profile", str(PROFILE), "--adopt-starts",
-                                   "--out", str(Path(tmp) / "result.json"), "--limit", "5000"],
-                                  capture_output=True, text=True, encoding="utf-8", timeout=PLAY_TIMEOUT)
+            proc = copilot.run_script("play_design", [str(design or _design_file(project)), "--profile", str(PROFILE),
+                                     "--adopt-starts", "--out", str(Path(tmp) / "result.json")], project,
+                                     limit=5000, timeout=PLAY_TIMEOUT, rag=rag)
         except subprocess.TimeoutExpired:
-            log.warning("play_design ran past %s s; the project is sent unplayed", PLAY_TIMEOUT)
-            return ""
+            return f"refused: editor verification timed out after {PLAY_TIMEOUT} s; nothing was sent"
     out = (proc.stdout + proc.stderr).strip()
-    shutil.rmtree(project / ".tmp", ignore_errors=True)
     if proc.returncode == 0:
         return ""
-    if proc.returncode in (2, 3) and "design" not in out[:200]:
-        log.warning("play_design could not run: %s", out[-300:])
-        return ""
     lines = [l for l in out.splitlines() if not l.startswith(("opened", "ran in", "next:", "  played"))]
-    return ("refused, nothing was sent: the built game does not do what the design's tests expect, played in the "
-            "Construct 3 editor:\n" + "\n".join(lines)[:2500]
-            + "\n-- a test line names the design's test and step; the rules it names are the events to compare with "
-              "the design. 'Game, event N' is event N of sheet Game as the build printed it. Fix the spec there and "
-              "build again")
+    return ("refused, nothing was sent: editor verification did not complete successfully:\n"
+            + "\n".join(lines)[:2500]
+            + "\n-- resolve the reported failure and retry verification. If a failed test names a rule or event, "
+              "compare that event with the design. An unavailable or timed-out editor is not a failed gameplay assertion.")
 
 
 def from_spec(spec, session: Path, rag: Path, locale: str) -> tuple[Path | None, str]:
@@ -578,25 +580,33 @@ def from_spec(spec, session: Path, rag: Path, locale: str) -> tuple[Path | None,
     text = json.dumps(spec, ensure_ascii=False)
     if len(text) > SPEC_MAX:
         return None, f"refused, nothing was built:\nspec: {len(text)} characters, more than {SPEC_MAX}; make the game smaller"
-    with tempfile.TemporaryDirectory() as tmp:
+    with copilot.temporary_directory() as tmp:
         path = Path(tmp) / "spec.json"
+        candidate = Path(tmp) / "project"
         path.write_text(text, encoding="utf-8")
         try:
-            proc = subprocess.run([sys.executable, str(HERE / "spec_build.py"), str(path), "--out", str(session),
+            proc = subprocess.run([sys.executable, str(HERE / "spec_build.py"), str(path), "--out", str(candidate),
                                    "--rag", str(rag), "--locale", locale],
-                                  capture_output=True, text=True, encoding="utf-8", timeout=BUILD_TIMEOUT)
+                                  capture_output=True, text=True, encoding="utf-8", timeout=BUILD_TIMEOUT,
+                                  env=copilot.child_environment())
         except subprocess.TimeoutExpired:
             return None, f"refused, nothing was built: the build ran past {BUILD_TIMEOUT} s; make the game smaller"
-    out = "\n".join([*(f"fixed: {line}" for line in notes), (proc.stdout + proc.stderr).strip()])
-    if proc.returncode != 0:
-        if proc.returncode != 1:
-            log.warning("spec_build exit %s: %s", proc.returncode, out[-500:])
-        return None, _refuse("spec", session, spec, out)
-    refused = "" if QUICK else play_tests(session, rag)
-    if refused:
-        return None, _refuse("spec", session, spec, refused)
-    return _settle(session, "spec"), out + (
-        "\n-- built and checked; it is now the person's project and goes to them as a file after your reply. In the "
+        out = "\n".join([*(f"fixed: {line}" for line in notes), (proc.stdout + proc.stderr).strip()])
+        if proc.returncode != 0:
+            if proc.returncode != 1:
+                log.warning("spec_build exit %s: %s", proc.returncode, out[-500:])
+            return None, _refuse("spec", session, spec, out)
+        refused = "" if QUICK else play_tests(candidate, rag, _design_file(session))
+        if refused:
+            return None, _refuse("spec", session, spec, refused)
+        if session.exists():
+            shutil.rmtree(session)
+        shutil.copytree(candidate, session)
+        out = out.replace(str(candidate), str(session))
+    verified = not QUICK and EDITOR_CHECK
+    evidence = "editor tests passed" if verified else "structural check passed; editor runtime is unverified"
+    return _settle(session, "spec", verified), out + (
+        f"\n-- built; {evidence}. It is the person's project and goes to them as a file after your reply. In the "
         "reply say in plain words what the game is and how to play it, then that the file follows")
 
 
@@ -654,31 +664,32 @@ def from_template(template_id: str, name: str, session: Path, rag: Path, locale:
         ids = sorted(p.name for p in root.glob("template-*") if (p / "project.c3proj").is_file())
         return None, f"no template {template_id!r}; the templates are {', '.join(ids)}"
     name = " ".join(str(name).split())[:40] or template_id
-    if session.exists():
-        shutil.rmtree(session)
-    shutil.copytree(root / template_id, session, ignore=shutil.ignore_patterns(".git", ".tmp", "*.uistate.json"))
-    c3proj = session / "project.c3proj"
-    data = json.loads(c3proj.read_text(encoding="utf-8-sig"))
-    data["name"] = name
-    data["uniqueId"] = "".join(random.choices(string.ascii_lowercase + string.digits, k=11))
-    with c3proj.open("w", encoding="utf-8", newline="\n") as f:     # the editor's own layout
-        f.write(json.dumps(data, indent="\t", ensure_ascii=False))
-    script = rag / "skills" / "construct3-agent-plugin" / "scripts" / "check_project.py"
-    proc = subprocess.run([sys.executable, str(script), "--rag", str(rag), "--locale", locale, "--project", str(session)],
-                          capture_output=True, text=True, encoding="utf-8", timeout=90)
-    checked = re.sub(r"; next, review the design.*", "", (proc.stdout + proc.stderr).strip())
-    return _settle(session, f"template {template_id}"), f"copied {template_id} as {name!r}\n{checked}"
+    with copilot.temporary_directory() as tmp:
+        candidate = Path(tmp) / "project"
+        shutil.copytree(root / template_id, candidate, ignore=shutil.ignore_patterns(".git", ".tmp", "*.uistate.json"))
+        c3proj = candidate / "project.c3proj"
+        data = json.loads(c3proj.read_text(encoding="utf-8-sig"))
+        data["name"] = name
+        data["uniqueId"] = "".join(random.choices(string.ascii_lowercase + string.digits, k=11))
+        with c3proj.open("w", encoding="utf-8", newline="\n") as f:
+            f.write(json.dumps(data, indent="\t", ensure_ascii=False))
+        proc = copilot.run_script("check_project", [], candidate, locale=locale, timeout=90, rag=rag)
+        checked = re.sub(r"; next, review the design.*", "", (proc.stdout + proc.stderr).strip())
+        if proc.returncode != 0:
+            return None, f"refused: copied template failed its structural check\n{checked}"
+        if session.exists():
+            shutil.rmtree(session)
+        shutil.copytree(candidate, session)
+    return _settle(session, f"template {template_id}"), f"copied {template_id} as {name!r}\n{checked}\n-- editor runtime is unverified"
 
 
 def pack(project: Path, rag: Path) -> Path:
-    """The project as sessions/_new/out/<hash>/<name>.c3p, packed by the RAG's pack_project.py."""
+    """The project as sessions/_new/out/<hash>/<name>.c3p, packed through Copilot."""
     out = MARKS / "out" / _mark_file(project).stem
     shutil.rmtree(out, ignore_errors=True)
     out.mkdir(parents=True)
     target = out / f"{edits.project_name(project)}.c3p"
-    script = rag / "skills" / "construct3-agent-plugin" / "scripts" / "pack_project.py"
-    proc = subprocess.run([sys.executable, str(script), "--project", str(project), "--out", str(target)],
-                          capture_output=True, text=True, encoding="utf-8", timeout=120)
+    proc = copilot.run_script("pack_project", ["--out", str(target)], project, timeout=120, rag=rag)
     if proc.returncode != 0 or not target.is_file():
         raise RuntimeError(f"pack_project.py exit {proc.returncode}: {(proc.stdout + proc.stderr).strip()[-500:]}")
     return target

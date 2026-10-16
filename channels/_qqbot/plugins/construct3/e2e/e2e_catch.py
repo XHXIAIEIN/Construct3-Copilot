@@ -3,7 +3,7 @@
     .venv/Scripts/python.exe plugins/construct3/e2e/e2e_catch.py RUN [RUN ...] [--replay]
 
 The judge does not read the bot's design. It finds in the running game the objects that fall and the one near the
-bottom that catches, and checks five things with the RAG's preview_project.py:
+bottom that catches, and checks five things with the installed preview_project.py:
   input    a tap on the left or right of the screen, an arrow key, a drag or a hold moves the catcher
   falls    something falls
   catch    with the catcher held under the lowest falling object, a number in a global or a text goes up
@@ -24,10 +24,11 @@ from pathlib import Path
 from dotenv import load_dotenv  # noqa: E402
 
 HERE = Path(__file__).resolve().parents[3]  # the bot folder
+sys.path.insert(0, str(HERE))
 load_dotenv(HERE / ".env")  # the paths and keys the bot itself reads
+from c3bot import copilot  # noqa: E402
 DATA = Path(os.environ.get("C3BOT_DATA") or HERE / "var")
 RAG = Path(os.environ.get("CONSTRUCT3_RAG") or HERE.parent / "Construct3-RAG")
-SCRIPTS = RAG / "skills" / "construct3-agent-plugin" / "scripts"
 TMP = Path(os.environ.get("TEMP", "C:/Temp"))
 ASK = os.environ.get("E2E_ASK", "做个接水果的小游戏")
 
@@ -155,9 +156,8 @@ def run(n: str, ask: bool = True) -> None:
     shutil.rmtree(copy, ignore_errors=True)
     shutil.copytree(session, copy)
     result_file = TMP / f"e2ec{n}-result.json"
-    played = subprocess.run([sys.executable, str(SCRIPTS / "preview_project.py"), str(plan_file), "--project", str(copy),
-                             "--profile", str(TMP / os.environ.get("E2E_PROFILE", "c3prof-catch")), "--out", str(result_file)],
-                            capture_output=True, text=True, encoding="utf-8", timeout=300)
+    played = copilot.run_script("preview_project", [str(plan_file), "--profile", str(TMP / os.environ.get("E2E_PROFILE", "c3prof-catch")),
+                                                    "--out", str(result_file)], copy, timeout=300, rag=RAG)
     result = json.loads(result_file.read_text(encoding="utf-8")) if result_file.exists() else {}
     verdict = judge(result, p["steps"])
     for k, (ok, why) in verdict.items():

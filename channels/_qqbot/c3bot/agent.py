@@ -17,7 +17,7 @@ from pathlib import Path
 
 from openai import BadRequestError, OpenAI
 
-from . import edits, gpu_yield, usage
+from . import copilot, edits, gpu_yield, usage
 from .config import BASE_URL, LOCAL, MAX_STEPS, MODEL, NO_THINK, PLUGIN, TIMEOUT, ZHIPU
 from .reply import ASKED_EVENTS, BUILD_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten
 
@@ -146,9 +146,18 @@ class Agent:
         self, question: str, history: list[dict] | None = None, project: Path | None = None, group: bool = False,
         outbox: list[Path] | None = None, session: Path | None = None, notify=None,
     ) -> tuple[str, list[str]]:
-        """Return the reply and a trace of tool calls. With a project, its sheets and checker are tools too,
-        and a project the answer changed, or was asked to send, is packed into outbox to go after the reply.
-        With a session folder, a new project can be made there; it replaces the project and is sent."""
+        """Run an answer under the same-session lock and record prepared attachments."""
+        with copilot.session(project, session, group) as task:
+            text, trace = self._answer_in_session(question, history, project, group, outbox, session, notify)
+            failed = text in (NO_FILE, NOT_MADE, NOT_FINISHED, NOT_SURE, NO_STEPS) or any(
+                t.startswith("pack failed:") or t == "steps ran out" for t in trace)
+            task.finish(status="failed" if failed else "completed", summary=text, artifacts=outbox or [])
+            return text, trace
+
+    def _answer_in_session(
+        self, question: str, history: list[dict] | None, project: Path | None, group: bool,
+        outbox: list[Path] | None, session: Path | None, notify,
+    ) -> tuple[str, list[str]]:
         tally = usage.begin()
         started = time.monotonic()
         run = Run(question, history, project, group, session, notify)
@@ -175,6 +184,8 @@ class Agent:
             text, dropped = drop_promise(text)
             if dropped:
                 run.trace.append("promise of a file dropped")
+        if outbox and run.project and kb.is_new(run.project) and not kb.runtime_verified(run.project):
+            text += "\n工程通过结构检查，尚未在编辑器中验证运行。"
         text, note = scrub(text)
         if note:
             run.trace.append(note)
@@ -203,6 +214,11 @@ class Agent:
             except (OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
                 log.warning("pack failed: %s", exc)
                 trace.append(f"pack failed: {exc}")
+                run.send = False
+                text = NO_FILE
+        elif run.send:
+            run.send = False
+            text = NO_FILE
         return text
 
     def _presearch(self, run: Run) -> None:
@@ -286,7 +302,7 @@ class Agent:
             return mended + run.handlers[name](**args)
         except json.JSONDecodeError as exc:
             return json_error(name, exc)
-        except (KeyError, TypeError, OSError, subprocess.TimeoutExpired) as exc:
+        except (KeyError, TypeError, OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
             log.warning("tool %s failed: %s", name, exc)
             return f"tool error: {exc}"
 

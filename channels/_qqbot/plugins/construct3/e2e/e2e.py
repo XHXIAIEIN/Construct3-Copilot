@@ -2,7 +2,7 @@
 
     .venv/Scripts/python.exe plugins/construct3/e2e/e2e.py RUN [RUN ...]
 
-Each run: bot.py --cli "做个五子棋" into sessions/e2e<RUN>, then the preview player of the RAG plays the plan of
+Each run: bot.py --cli "做个五子棋" into sessions/e2e<RUN>, then the installed preview player plays the plan of
 make_play.py (a blocked line, a taken cell, a win across, the restart, a win on a diagonal) on a copy under %TEMP%.
 Prints the bot's tool calls in short, its reply, and each check with the value the game held.
 """
@@ -19,10 +19,11 @@ from pathlib import Path
 from dotenv import load_dotenv  # noqa: E402
 
 HERE = Path(__file__).resolve().parents[3]  # the bot folder
+sys.path.insert(0, str(HERE))
 load_dotenv(HERE / ".env")  # the paths and keys the bot itself reads
+from c3bot import copilot  # noqa: E402
 DATA = Path(os.environ.get("C3BOT_DATA") or HERE / "var")
 RAG = Path(os.environ.get("CONSTRUCT3_RAG") or HERE.parent / "Construct3-RAG")
-SCRIPTS = RAG / "skills" / "construct3-agent-plugin" / "scripts"
 TMP = Path(os.environ.get("TEMP", "C:/Temp"))
 # step -> state, turn, pieces, a word the status shows (None: any)
 EXPECT = {18: (0, 1, 8, None), 21: (0, 1, 8, None), 28: (2, 1, 9, "黑"), 34: (0, 1, 0, None), 55: (None, 2, 10, "白")}
@@ -72,9 +73,8 @@ def run(n: str, ask: bool = True) -> None:
     copy = TMP / f"e2e{n}"
     shutil.rmtree(copy, ignore_errors=True)
     shutil.copytree(session, copy)
-    played = subprocess.run([sys.executable, str(SCRIPTS / "preview_project.py"), str(plan), "--project", str(copy),
-                             "--profile", str(TMP / os.environ.get("E2E_PROFILE", "c3prof"))], capture_output=True, text=True, encoding="utf-8",
-                            timeout=200)
+    played = copilot.run_script("preview_project", [str(plan), "--profile", str(TMP / os.environ.get("E2E_PROFILE", "c3prof"))],
+                                copy, timeout=200, rag=RAG)
     held = {}
     for l in played.stdout.splitlines():
         m = re.match(r"\s+(\d+) js .*: (\[.*\])$", l)
@@ -100,9 +100,8 @@ def judge2(n: str, copy: Path, piece: str, cv: str, rv: str, label: str, vw: str
     subprocess.run([sys.executable, str(Path(__file__).with_name("make_play2.py")), piece, str(plan), cv, rv, label, vw, vh,
                     str(side), cells], check=True)
     out = TMP / f"e2e{n}-play2-result.json"
-    subprocess.run([sys.executable, str(SCRIPTS / "preview_project.py"), str(plan), "--project", str(copy),
-                    "--profile", str(TMP / os.environ.get("E2E_PROFILE", "c3prof")), "--out", str(out)],
-                   capture_output=True, text=True, encoding="utf-8", timeout=200)
+    copilot.run_script("preview_project", [str(plan), "--profile", str(TMP / os.environ.get("E2E_PROFILE", "c3prof")), "--out", str(out)],
+                       copy, timeout=200, rag=RAG)
     ran = json.loads(out.read_text(encoding="utf-8")).get("preview", {}).get("steps", []) if out.exists() else []
     steps = json.loads(plan.read_text(encoding="utf-8"))["steps"]
     got = {s["note"]: d.get("value") for d, s in zip(ran, steps) if s.get("note") and not s["note"].startswith("cell") and d.get("ok")}

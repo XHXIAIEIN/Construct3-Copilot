@@ -13,6 +13,8 @@ DATA = Path(os.environ.get("C3BOT_DATA") or HOME / "var")
 PLUGIN = os.environ.get("C3BOT_PLUGIN", "construct3")
 # the Construct3-RAG clone, the knowledge the construct3 plugin reads; by default a sibling folder of the bot
 RAG = Path(os.environ.get("CONSTRUCT3_RAG") or HOME.parent / "Construct3-RAG")
+COPILOT = Path(os.environ.get("C3BOT_COPILOT") or HOME.parent / "Construct3-Copilot")
+SKILLS = Path(os.environ.get("C3BOT_SKILLS") or HOME.parent / "Construct3-Agent-Skills")
 LOCALE = os.environ.get("C3BOT_LOCALE", "zh-CN")
 # C3BOT_BASE_URL points at any OpenAI-compatible server, e.g. Ollama's http://localhost:11434/v1
 BASE_URL = os.environ.get("C3BOT_BASE_URL", "https://api.deepseek.com")

@@ -1,17 +1,14 @@
 """The model's tools: the schemas it sees and the functions behind them, which run the scripts of the
-construct3-agent-plugin skill over the RAG clone or the person's project."""
+construct3-agent-plugin skill through Copilot over the data clone or the person's project."""
 from __future__ import annotations
 
 import json
 import re
-import subprocess
-import sys
-import tempfile
 from pathlib import Path
 
-from c3bot import edits
+from c3bot import copilot, edits
 from . import newproject
-from c3bot.config import HOME, LOCALE, RAG
+from c3bot.config import LOCALE
 
 TOOLS = [
     {
@@ -218,11 +215,7 @@ PROJECT_READERS = ("print_sheet", "print_layout", "read_script", "check_project"
 def run_script_code(name: str, args: list[str], project: Path | None = None, limit: int = 6000,
                     locale: str = LOCALE) -> tuple[int, str]:
     """Run a script of the construct3-agent-plugin skill; return its exit code and what it printed."""
-    script = RAG / "skills" / "construct3-agent-plugin" / "scripts" / f"{name}.py"
-    cmd = [sys.executable, str(script), "--rag", str(RAG), "--locale", locale, "--limit", str(limit)]
-    if project:
-        cmd += ["--project", str(project)]
-    proc = subprocess.run(cmd + args, capture_output=True, text=True, encoding="utf-8", timeout=90, cwd=HOME)
+    proc = copilot.run_script(name, args, project, locale=locale, limit=limit, timeout=90)
     return proc.returncode, (proc.stdout + proc.stderr).strip() or "no output"
 
 
@@ -236,19 +229,19 @@ def lookup_ace(object: str, words: list[str] | None = None, project: Path | None
 
 
 def lookup_script_api(name: str) -> str:
-    """An interface with its members, or a member with its declaration: the RAG's lookup_script_api.py."""
+    """An interface with its members, or a member with its declaration."""
     return run_script("lookup_script_api", [name])
 
 
 def search_examples(words: list[str]) -> str:
-    """The official examples that hold the words, "id: name. description", from the RAG's search_guides.py.
+    """The official examples that hold the words, "id: name. description", from search_guides.py.
     The commands it prints under each one are left out: the bot reads an example with read_example."""
     out = run_script("search_guides", [*words, "--pitfalls", "0"])
     return "\n".join(line for line in out.splitlines() if line != "examples:" and not line.startswith("  "))
 
 
 def search_guides(words: list[str]) -> str:
-    """The pitfall entries that hold the words, each in full with its file and line: the RAG's search_guides.py."""
+    """The installed pitfall entries that hold the words, each with its file and line."""
     return run_script("search_guides", [*words, "--examples", "0"])
 
 
@@ -281,7 +274,7 @@ def edit_sheet(project: Path, sheet: str, plan: list | str, new: bool = False) -
     """Check the plan with --dry-run, then write it and run the checker; return whether it was written."""
     text = plan if isinstance(plan, str) else json.dumps(plan, ensure_ascii=False)
     flags = ["--new"] if new else []
-    with tempfile.TemporaryDirectory() as tmp:
+    with copilot.temporary_directory() as tmp:
         plan_file = Path(tmp) / "plan.json"
         plan_file.write_text(text, encoding="utf-8")
         code, out = run_script_code("edit_sheet", [sheet, str(plan_file), "--dry-run", *flags], project)
@@ -313,7 +306,7 @@ def undo_edit(project: Path, all: bool = False) -> tuple[bool, str]:
     if not edits.edit_count(project):
         return False, "no edit to undo: the project is as the person sent it"
     left = edits.undo(project, everything=all)
-    return left > 0, (f"undone; {left} edit(s) remain, the project with them is sent after the reply" if left
+    return left > 0, (f"undone; {left} edit(s) remain, the project with them is sent after the reply\n" + check_project(project) if left
                       else "undone; the project is again as the person sent it, so no file is sent")
 
 

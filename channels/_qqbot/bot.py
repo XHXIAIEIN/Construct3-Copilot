@@ -17,6 +17,7 @@ import shutil
 import zipfile
 from collections import defaultdict, deque
 from datetime import date
+from functools import wraps
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -107,6 +108,18 @@ def chunks(text: str) -> list[str]:
     return parts[:MAX_REPLIES]
 
 
+def serialized_sessions(handler):
+    """Keep a chat's attachment, project and reply changes in message order."""
+    locks: dict[str, asyncio.Lock] = {}
+
+    @wraps(handler)
+    async def locked(key: str, *args, **kwargs):
+        async with locks.setdefault(key, asyncio.Lock()):
+            return await handler(key, *args, **kwargs)
+
+    return locked
+
+
 def run_qq(agent: Agent) -> None:
     import botpy
     from botpy.message import C2CMessage, GroupMessage
@@ -115,6 +128,7 @@ def run_qq(agent: Agent) -> None:
     usage: dict[tuple[str, date], int] = defaultdict(int)
     projects: dict[str, Path] = {}
 
+    @serialized_sessions
     async def handle(key: str, question: str, reply, attachments=(), send_file=None) -> None:
         """send_file(path, msg_seq) sends a file as a reply to the same message."""
         log.info("%s asks: %s", key, question)
