@@ -64,6 +64,22 @@ class PanelTests(unittest.TestCase):
             self.request({"action": "shell"})
         self.assertEqual(error.exception.code, 400)
 
+    def test_browser_disconnect_during_headers_or_body_ends_response(self):
+        handler_type = self.server.RequestHandlerClass
+        for phase in ("headers", "body"):
+            for error in (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                with self.subTest(phase=phase, error=error):
+                    handler = handler_type.__new__(handler_type)
+                    handler.send_response = Mock()
+                    handler.send_header = Mock()
+                    handler.end_headers = Mock(side_effect=error() if phase == "headers" else None)
+                    handler.wfile = Mock()
+                    if phase == "body":
+                        handler.wfile.write.side_effect = error()
+                    handler.send(200, {"status": "ready"})
+                    self.assertTrue(handler.close_connection)
+                    handler.send_response.assert_called_once_with(200)
+
 
 if __name__ == "__main__":
     unittest.main()
