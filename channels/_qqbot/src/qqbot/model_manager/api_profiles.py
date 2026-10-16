@@ -100,7 +100,7 @@ class ApiProfiles:
             env = self.control._env()
             profiles = []
             for profile in self._load()["profiles"]:
-                p = {k: profile[k] for k in ("id", "name", "base_url", "model", "balance_mark", "balance") if k in profile}
+                p = {k: profile[k] for k in ("id", "name", "base_url", "model", "balance_mark", "balance", "protocol") if k in profile}
                 p["has_key"] = bool(env.get(profile.get("api_key_env")))
                 p["active"] = env.get("C3BOT_API_PROFILE") == p["id"]
                 p["ready"] = bool(p.get("base_url") and p.get("model") and p["has_key"])
@@ -123,11 +123,14 @@ class ApiProfiles:
                 raise ControlError("填写接口名称，模型名称不能包含换行。")
             if base:
                 base = api_url(base)
+            protocol = values.get("protocol", (old or {}).get("protocol", "auto"))
+            if protocol not in {"auto", "openai", "anthropic"}:
+                raise ControlError("接口协议无效。")
             mark = values.get("balance_mark", "unknown")
             if mark not in MARKS:
                 raise ControlError("余额标记无效。")
             profile = {**(old or {}), "id": ident, "name": name, "base_url": base, "model": model,
-                       "balance_mark": mark, "api_key_env": (old or {}).get("api_key_env") or "QQBOT_API_" + ident.upper()}
+                       "balance_mark": mark, "protocol": protocol, "api_key_env": (old or {}).get("api_key_env") or "QQBOT_API_" + ident.upper()}
             secret = values.get("api_key")
             if secret:
                 if not isinstance(secret, str) or len(secret) > 8192 or any(c in secret for c in "\r\n"):

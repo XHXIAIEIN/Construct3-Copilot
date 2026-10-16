@@ -40,12 +40,13 @@ details{margin-top:24px;color:#616875;font-size:12px}summary{cursor:pointer}code
     <form id="api-form" class="api-form" hidden>
       <div class="fields">
         <label>接口名称<input id="api-name" required maxlength="80"></label>
+        <label>接口协议<select id="api-protocol"><option value="auto">自动识别</option><option value="openai">OpenAI 兼容</option><option value="anthropic">Anthropic 原生</option></select></label>
         <label>模型名称<input id="api-model" maxlength="200" placeholder="填写服务商提供的模型 ID"></label>
         <label class="wide">服务地址<input id="api-base" type="url" placeholder="https://example.com/v1"></label>
         <label class="wide">API 密钥<input id="api-key" type="password" autocomplete="new-password" placeholder="编辑时留空会保留原密钥"></label>
         <label>手动余额标记<select id="api-mark"><option value="unknown">未知</option><option value="available">余额充足</option><option value="low">余额偏低</option><option value="empty">余额耗尽</option></select></label>
       </div>
-      <p class="muted">使用 OpenAI 兼容地址。密钥保存在本机 .env，页面仅显示是否已配置。</p>
+      <p class="muted">填写服务地址；Claude 官方地址会自动使用原生协议。密钥保存在本机 .env。</p>
       <div class="toolbar"><button class="primary" type="submit">保存接口</button><button id="api-cancel" type="button">取消编辑</button></div>
     </form>
     <div class="table-wrap"><table><thead><tr><th></th><th>接口与模型</th><th>配置</th><th>余额状态</th><th>管理</th></tr></thead><tbody id="apis"></tbody></table></div>
@@ -101,7 +102,7 @@ async function act(action,model=selected){
 }
 const marks={unknown:"未知",available:"余额充足",low:"余额偏低",empty:"余额耗尽"};
 function group(name){for(const item of ["local","api"]){$(item+"-group").hidden=item!==name;$(item+"-tab").setAttribute("aria-selected",String(item===name));}$("start").hidden=name!=="local";}
-function editApi(profile=null){editingApi=profile?.id||"";$("api-name").value=profile?.name||"";$("api-model").value=profile?.model||"";$("api-base").value=profile?.base_url||"";$("api-key").value="";$("api-mark").value=profile?.balance_mark||"unknown";$("api-form").hidden=false;$("api-name").focus();}
+function editApi(profile=null){editingApi=profile?.id||"";$("api-name").value=profile?.name||"";$("api-model").value=profile?.model||"";$("api-base").value=profile?.base_url||"";$("api-key").value="";$("api-mark").value=profile?.balance_mark||"unknown";$("api-protocol").value=profile?.protocol||"auto";$("api-form").hidden=false;$("api-name").focus();}
 function renderApis(){
  const profiles=state?.apis||[];$("api-count").textContent=`${profiles.length} 个接口`;const tbody=$("apis");tbody.replaceChildren();
  for(const p of profiles){
@@ -119,7 +120,7 @@ function renderApis(){
 }
 $("local-tab").addEventListener("click",()=>group("local"));$("api-tab").addEventListener("click",()=>group("api"));
 $("api-add").addEventListener("click",()=>editApi());$("api-cancel").addEventListener("click",()=>{$("api-form").hidden=true;$("api-key").value="";});
-$("api-form").addEventListener("submit",async e=>{e.preventDefault();const values={id:editingApi,name:$("api-name").value,model:$("api-model").value,base_url:$("api-base").value,api_key:$("api-key").value,balance_mark:$("api-mark").value};await act("api_save",values);$("api-key").value="";});
+$("api-form").addEventListener("submit",async e=>{e.preventDefault();const values={id:editingApi,name:$("api-name").value,model:$("api-model").value,base_url:$("api-base").value,api_key:$("api-key").value,balance_mark:$("api-mark").value,protocol:$("api-protocol").value};await act("api_save",values);$("api-key").value="";});
 $("api-switch").addEventListener("click",()=>act("api_switch",selectedApi));
 $("search").addEventListener("input",render);$("refresh").addEventListener("click",refresh);
 $("start").addEventListener("click",()=>act("start"));$("warm").addEventListener("click",()=>act("warm"));$("switch").addEventListener("click",()=>act("switch"));

@@ -1,5 +1,6 @@
 """Create the configured model client for applications that request one."""
 import os
+from urllib.parse import urlsplit
 from openai import OpenAI
 
 from . import usage, gpu_yield
@@ -15,7 +16,12 @@ def create_client():
                "ollama" if LOCAL else os.environ.get("DEEPSEEK_API_KEY"))
     if not key:
         raise ValueError("Configure a model API key in .env")
-    client = OpenAI(api_key=key, base_url=BASE_URL, max_retries=10 if ZHIPU else 2)
+    protocol = os.environ.get("C3BOT_API_PROTOCOL", "auto")
+    if protocol == "anthropic" or (protocol == "auto" and urlsplit(BASE_URL).hostname == "api.anthropic.com"):
+        from .anthropic_client import AnthropicClient
+        client = AnthropicClient(api_key=key, base_url=BASE_URL)
+    else:
+        client = OpenAI(api_key=key, base_url=BASE_URL, max_retries=10 if ZHIPU else 2)
     create = client.chat.completions.create
 
     def counted(*args, **kwargs):

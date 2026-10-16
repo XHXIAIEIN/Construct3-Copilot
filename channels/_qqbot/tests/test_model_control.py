@@ -85,11 +85,14 @@ class ModelControlTests(unittest.TestCase):
     def test_api_switch_uses_key_reference_and_preserves_unrelated_settings(self):
         self.prepare_switch()
         result = self.control.switch("remote-placeholder", api={"id": "example", "model": "remote-placeholder",
-            "base_url": "https://example.test/v1", "api_key_env": "PROVIDER_KEY"})
+            "base_url": "https://example.test/v1", "api_key_env": "PROVIDER_KEY", "protocol": "anthropic"})
         self.assertTrue(result["ok"], result)
         values = self.control._env()
         self.assertEqual(values["C3BOT_BASE_URL"], "https://example.test/v1")
         self.assertEqual(values["C3BOT_API_KEY_ENV"], "PROVIDER_KEY")
+        self.assertEqual(values["C3BOT_API_PROTOCOL"], "anthropic")
+        local = self.control._updated_env(self.control.env_path.read_bytes(), self.config, "example:small")
+        self.assertNotIn(b"C3BOT_API_PROTOCOL", local)
         self.assertNotIn("C3BOT_API_KEY", values)
         self.assertEqual(values["QQ_SECRET"], "private-placeholder")
 

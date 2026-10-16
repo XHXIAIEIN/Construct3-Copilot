@@ -13,7 +13,9 @@ QQbot 是 QQ 消息运行环境。它维护 QQ 连接、传递消息与附件，
 DeepSeek 余额从官方接口查询，显示币种、金额、账户状态和查询时间。
 其他接口支持手动标记未知、充足、偏低或耗尽，查询失败会单独显示。
 [硅基流动官方公告](https://docs.siliconflow.cn/docs/release-notes/overview)已停止旧的余额查询接口。
-添加接口时填写 OpenAI 兼容地址及模型名称。Claude 等原生接口的密钥可先保存，补全兼容地址后再使用。
+添加接口时填写服务地址及模型名称。Claude 官方地址自动使用 Anthropic 原生协议。
+自定义服务可在“接口协议”中选择 OpenAI 兼容或 Anthropic 原生。
+原生调用遵循 [Anthropic Messages 接口](https://platform.claude.com/docs/en/api/messages/create)，保留工具回合与签名内容。
 
 ## 安装与启动
 

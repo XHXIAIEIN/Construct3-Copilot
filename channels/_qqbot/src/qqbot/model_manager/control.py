@@ -23,7 +23,7 @@ from pathlib import Path
 from dotenv import dotenv_values
 from dotenv.parser import parse_stream
 
-MANAGED = {"C3BOT_BASE_URL", "C3BOT_MODEL", "C3BOT_API_KEY", "C3BOT_REASONING", "C3BOT_EXTRA_BODY", "C3BOT_API_PROFILE", "C3BOT_API_KEY_ENV"}
+MANAGED = {"C3BOT_BASE_URL", "C3BOT_MODEL", "C3BOT_API_KEY", "C3BOT_REASONING", "C3BOT_EXTRA_BODY", "C3BOT_API_PROFILE", "C3BOT_API_KEY_ENV", "C3BOT_API_PROTOCOL"}
 _locks: dict[str, threading.RLock] = {}
 _locks_guard = threading.Lock()
 
@@ -465,7 +465,8 @@ class ModelControl:
                     if not kept.endswith("\n"):
                         kept += "\n"
                     values = {"C3BOT_BASE_URL": api["base_url"], "C3BOT_MODEL": api["model"],
-                              "C3BOT_API_PROFILE": api["id"], "C3BOT_API_KEY_ENV": api["api_key_env"]}
+                              "C3BOT_API_PROFILE": api["id"], "C3BOT_API_KEY_ENV": api["api_key_env"],
+                              "C3BOT_API_PROTOCOL": api.get("protocol", "auto")}
                     updated = (kept + "".join(k + "=" + json.dumps(v) + "\n" for k, v in values.items())).encode("utf-8")
                 backups = self._data() / "backups" / "models"
                 backups.mkdir(parents=True, exist_ok=True)
