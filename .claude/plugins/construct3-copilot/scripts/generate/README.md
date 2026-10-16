@@ -8,10 +8,14 @@ Always run `query/rag.py` to confirm ACE IDs before generating.
 HTTP bridge to the Clipboard service (default port 8766, override with `C3_CLIPBOARD_PORT`).
 
 ```bash
-python3 scripts/generate/clipboard_service.py generate '{"intent": "..."}'
+python3 scripts/generate/clipboard_service.py generate '{"type":"event_sheet","events":[]}'
 python3 scripts/generate/clipboard_service.py validate '{"is-c3-clipboard-data":true,...}'
 python3 scripts/generate/clipboard_service.py health
 ```
+
+The bridge wraps this intent as `intent_ir` for `POST /generate`. The service
+accepts `event_sheet` and `object_types`; its validator checks clipboard
+structure. Confirm ACE IDs with the RAG lookup service before generation.
 
 ## Generation Workflow (mandatory order)
 

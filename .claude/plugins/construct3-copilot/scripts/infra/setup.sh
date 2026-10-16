@@ -11,7 +11,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # infra -> scripts -> construct3-copilot -> plugins -> .claude -> PROJECT_ROOT
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../../.." && pwd)"
-PARENT_DIR="$(cd "$PROJECT_ROOT/.." && pwd)"
+if COMMON_DIR=$(git -C "$PROJECT_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
+  CLONE_ROOT="$(cd "$COMMON_DIR/.." && pwd)"
+else
+  CLONE_ROOT="$PROJECT_ROOT"
+fi
+PARENT_DIR="$(cd "$CLONE_ROOT/.." && pwd)"
 
 # --- Config ---
 
@@ -23,6 +28,7 @@ SERVICE_REPOS=(
 
 # References: clone only, no install needed
 REFERENCE_REPOS=(
+  "Construct3-Agent-Skills|https://github.com/XHXIAIEIN/Construct3-Agent-Skills.git"
   "Construct-Addon-SDK|https://github.com/Scirra/Construct-Addon-SDK.git"
   "Construct-Example-Projects|https://github.com/Scirra/Construct-Example-Projects.git"
   "Construct3-Manual|https://github.com/XHXIAIEIN/Construct3-Manual.git"
@@ -41,7 +47,7 @@ status_icon() {
 check_repo() {
   local name="$1"
   local path="$PARENT_DIR/$name"
-  if [[ -d "$path/.git" ]]; then
+  if [[ -e "$path/.git" ]]; then
     echo "true"
   else
     echo "false"
@@ -53,7 +59,7 @@ clone_repo() {
   local url="$2"
   local path="$PARENT_DIR/$name"
 
-  if [[ -d "$path/.git" ]]; then
+  if [[ -e "$path/.git" ]]; then
     echo "  [skip] $name already exists"
     return 0
   fi
@@ -67,12 +73,16 @@ install_deps() {
   local path="$PARENT_DIR/$name"
   local req="$path/requirements.txt"
 
+  if [[ ! -f "$req" && -f "$path/src/requirements.txt" ]]; then
+    req="$path/src/requirements.txt"
+  fi
+
   if [[ ! -f "$req" ]]; then
     echo "  [skip] $name has no requirements.txt"
     return 0
   fi
 
-  echo "  [pip] $name/requirements.txt"
+  echo "  [pip] $req"
   python -m pip install -q -r "$req" 2>/dev/null || python3 -m pip install -q -r "$req" 2>/dev/null || {
     echo "  [warn] pip install failed for $name"
     return 0
@@ -133,6 +143,6 @@ echo ""
 
 echo "## Done"
 echo "Next steps:"
-echo "  1. Start RAG:       cd $PARENT_DIR/Construct3-RAG && python src/api.py"
-echo "  2. Start Clipboard: cd $PARENT_DIR/Construct3-Clipboard && python src/api.py"
+echo "  1. Start RAG:       cd $PARENT_DIR/Construct3-RAG && python -m uvicorn src.api:app --host 127.0.0.1 --port 8765"
+echo "  2. Start Clipboard: cd $PARENT_DIR/Construct3-Clipboard && python -m uvicorn src.api:app --host 127.0.0.1 --port 8766"
 echo "  3. Run Copilot:     cd $PROJECT_ROOT && claude"

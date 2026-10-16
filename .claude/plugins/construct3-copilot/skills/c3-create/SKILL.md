@@ -71,8 +71,8 @@ Parse the user's message for `#lite` or `#strict`. No tag = `#strict`.
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/infra/health.py --brief
 
 # 1. ACE lookup (mandatory — confirm every ACE ID before using it)
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search {query}
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify {ace-id} --plugin {plugin}
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py search "{addon} {keywords}"
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/query/rag.py verify {addon}:{ace-id}
 
 # 2. Generate — pass intent to Clipboard service
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate '{intent_ir}'
@@ -80,6 +80,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py generate '{i
 # 3. Validate (mandatory)
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/generate/clipboard_service.py validate '{json}'
 ```
+
+`{addon}` is a plugin or behavior id or its English display name. Query rules and output: `${CLAUDE_PLUGIN_ROOT}/scripts/query/README.md`.
+
+RAG looks ACEs up; it does not plan the logic. How to structure a mechanic ("enemy patrol", "double jump") is read from `../Construct-Example-Projects/example-projects/{id}/eventSheets/` or the `../Construct3-Manual/Construct3-Manual/` clone, and every ACE ID taken from there is then confirmed with `rag.py verify`. A `rag.py` answer without a `lookup` section means RAG declined the question, not that the feature is missing: read those sources instead of asking RAG again.
 
 ### Lite mode (#lite): GENERATE → LOCAL-VALIDATE
 
@@ -102,8 +106,8 @@ On skill trigger: find `.c3proj` in the working directory or one level up. If no
 ## Service Dependencies
 
 Requires RAG (port 8765) and Clipboard (port 8766) services. If offline, guide the user:
-- RAG: `cd ../Construct3-RAG && python src/api.py`
-- Clipboard: `cd ../Construct3-Clipboard && python src/api.py`
+- RAG: `cd ../Construct3-RAG && python -m uvicorn src.api:app --host 127.0.0.1 --port 8765`
+- Clipboard: `cd ../Construct3-Clipboard && python -m uvicorn src.api:app --host 127.0.0.1 --port 8766`
 - First time? Run `bash .claude/plugins/construct3-copilot/scripts/infra/setup.sh` to clone all deps.
 
 ## Boundaries

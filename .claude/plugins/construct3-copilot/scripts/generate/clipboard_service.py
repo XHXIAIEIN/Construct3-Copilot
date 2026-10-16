@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Clipboard HTTP bridge — interacts with the Construct3-Clipboard service at http://localhost:8766.
+Clipboard HTTP bridge — interacts with the Construct3-Clipboard service at http://127.0.0.1:8766.
 
 Subcommands:
     validate  — POST /validate   (validate existing clipboard JSON)
@@ -24,7 +24,7 @@ import urllib.request
 import os
 
 CLIPBOARD_PORT = os.environ.get("C3_CLIPBOARD_PORT", "8766")
-CLIPBOARD_BASE_URL = f"http://localhost:{CLIPBOARD_PORT}"
+CLIPBOARD_BASE_URL = f"http://127.0.0.1:{CLIPBOARD_PORT}"
 TIMEOUT = 10  # seconds — validation/generation calls are fast
 
 _START_SUGGESTION = "Start: cd Construct3-Clipboard && python -m uvicorn src.api:app --port 8766"

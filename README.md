@@ -15,8 +15,8 @@ cd Construct3-Copilot
 bash .claude/plugins/construct3-copilot/scripts/infra/setup.sh
 
 # 3. Start services (each in its own terminal)
-cd ../Construct3-RAG && python src/api.py
-cd ../Construct3-Clipboard && python src/api.py
+cd ../Construct3-RAG && python -m uvicorn src.api:app --host 127.0.0.1 --port 8765
+cd ../Construct3-Clipboard && python -m uvicorn src.api:app --host 127.0.0.1 --port 8766
 
 # 4. Run Copilot
 cd ../Construct3-Copilot && claude
@@ -33,26 +33,34 @@ Copilot is a Claude Code plugin that depends on two sibling services:
 | Repository | Role | Port |
 |------------|------|------|
 | [Construct3-Copilot](https://github.com/XHXIAIEIN/Construct3-Copilot) | Claude Code plugin (skills, scripts, orchestration) | — |
-| [Construct3-RAG](https://github.com/XHXIAIEIN/Construct3-RAG) | ACE schema search + documentation retrieval | 8765 |
+| [Construct3-RAG](https://github.com/XHXIAIEIN/Construct3-RAG) | ACE schema lookup | 8765 |
 | [Construct3-Clipboard](https://github.com/XHXIAIEIN/Construct3-Clipboard) | Clipboard JSON generation + validation | 8766 |
 
 **References** (read-only, used by skills):
 
 | Repository | Used by |
 |------------|---------|
+| [Construct3-Agent-Skills](https://github.com/XHXIAIEIN/Construct3-Agent-Skills) | Construct project tools, authoring prompts, editor previews and input validation |
 | [Construct-Addon-SDK](https://github.com/Scirra/Construct-Addon-SDK) | `/c3-addon` — official SDK templates |
-| [Construct-Example-Projects](https://github.com/Scirra/Construct-Example-Projects) | `/c3-search` — official game examples |
-| [Construct3-Manual](https://github.com/XHXIAIEIN/Construct3-Manual) | `/c3-addon` — SDK documentation |
+| [Construct-Example-Projects](https://github.com/Scirra/Construct-Example-Projects) | `/c3-search`, `/c3-create` — official game examples |
+| [Construct3-Manual](https://github.com/XHXIAIEIN/Construct3-Manual) | `/c3-search`, `/c3-create`, `/c3-addon` — manual and SDK documentation |
 
 ```
 ../
 ├── Construct3-Copilot/           ← Claude Code plugin (you are here)
-├── Construct3-RAG/               ← ACE schema + docs service
+├── Construct3-RAG/               ← ACE schema lookup service
 ├── Construct3-Clipboard/         ← JSON generation + validation service
+├── Construct3-Agent-Skills/      ← Project tools and prompts in plugin/
 ├── Construct-Addon-SDK/          ← Official SDK templates (Scirra)
 ├── Construct-Example-Projects/   ← Official examples (Scirra)
-└── Construct3-Manual/            ← SDK documentation
+└── Construct3-Manual/            ← Manual + SDK documentation
 ```
+
+For folder projects and `.c3p` files, use the
+[Agent-Skills workflow](https://github.com/XHXIAIEIN/Construct3-Agent-Skills).
+It owns the project tools and prompts; RAG owns their source data and the
+optional HTTP lookup service. The skills in this repository produce
+clipboard fragments.
 
 ## Usage Examples
 

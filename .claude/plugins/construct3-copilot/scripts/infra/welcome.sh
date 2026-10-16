@@ -7,7 +7,12 @@ SCRIPTS="$PLUGIN_ROOT/scripts"
 
 # construct3-copilot -> plugins -> .claude -> PROJECT_ROOT
 PROJECT_ROOT="$(cd "$PLUGIN_ROOT/../../.." && pwd)"
-PARENT_DIR="$(cd "$PROJECT_ROOT/.." && pwd)"
+if COMMON_DIR=$(git -C "$PROJECT_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
+  CLONE_ROOT="$(cd "$COMMON_DIR/.." && pwd)"
+else
+  CLONE_ROOT="$PROJECT_ROOT"
+fi
+PARENT_DIR="$(cd "$CLONE_ROOT/.." && pwd)"
 
 echo "=== Construct 3 Copilot ==="
 echo ""
@@ -27,12 +32,12 @@ echo "$HEALTH"
 MISSING_SVC=""
 MISSING_REF=""
 for REPO in Construct3-RAG Construct3-Clipboard; do
-  if ! [ -d "$PARENT_DIR/$REPO/.git" ]; then
+  if ! [ -e "$PARENT_DIR/$REPO/.git" ]; then
     MISSING_SVC="$MISSING_SVC $REPO"
   fi
 done
-for REPO in Construct-Addon-SDK Construct3-Manual; do
-  if ! [ -d "$PARENT_DIR/$REPO/.git" ]; then
+for REPO in Construct3-Agent-Skills Construct-Addon-SDK Construct-Example-Projects Construct3-Manual; do
+  if ! [ -e "$PARENT_DIR/$REPO/.git" ]; then
     MISSING_REF="$MISSING_REF $REPO"
   fi
 done
