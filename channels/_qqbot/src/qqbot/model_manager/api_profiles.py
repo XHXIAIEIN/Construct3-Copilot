@@ -200,4 +200,6 @@ class ApiProfiles:
             raise ControlError("接口尚未配置密钥。")
         if profile.get("balance_mark") == "empty":
             raise ControlError("此接口已标记余额耗尽，请更新标记后再切换。")
+        if profile.get("balance", {}).get("state") == "unavailable" and profile.get("balance_mark") != "available":
+            raise ControlError("余额查询显示账户不可用，请刷新余额，或明确更新手动标记后再切换。")
         return profile

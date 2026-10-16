@@ -88,6 +88,7 @@ async function refresh(){
     $("current").textContent=state.current.model||"尚未配置";$("config").textContent=state.config_path||"var/models.json";
     if(!selected&&(state.models||[]).some(m=>m.name===state.current.model))selected=state.current.model;
     render();renderApis();
+    if(data.job?.action==="api_save"&&data.job.state==="completed"){$("api-form").hidden=true;editingApi="";}
     if(data.job){const signature=JSON.stringify(data.job);if(signature!==lastJob){lastJob=signature;feedback(busy?(data.job.action.startsWith("api_")?"正在处理接口操作…":`${data.job.action==="start"?"正在启动 Ollama":data.job.action==="warm"?"正在加载 ":"正在切换到 "}${data.job.model||""}…`):data.job.message,data.job.state);}}
     else if(!lastJob)feedback(state.ollama.online?"选择一个模型后，可以加载或切换。":"先启动 Ollama，再选择本机模型。");
   }catch(e){feedback(e.message+"。请检查服务并刷新页面。","failed");}
