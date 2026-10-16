@@ -6,6 +6,8 @@ import json
 import subprocess
 import sys
 import tempfile
+import hashlib
+from contextlib import contextmanager
 from pathlib import Path
 
 from ...runtime import Runtime, _active
@@ -18,6 +20,26 @@ SOURCE = os.environ.get("COPILOT_SOURCE", "local")
 OPTIONS = json.loads(os.environ.get("COPILOT_C3_OPTIONS", "{}"))
 _runtime = None
 _binding = None
+
+
+class NullUsage:
+    def begin(self):
+        return {}
+
+    def write_usage(self, *args):
+        pass
+
+    def end(self):
+        pass
+
+
+@contextmanager
+def session(project, folder, group=False):
+    identity = str(Path(folder or project).resolve()) if folder or project else "local"
+    session_id = hashlib.sha256(identity.encode()).hexdigest()
+    with get_runtime().session(source=SOURCE, session_id=session_id, project=project,
+                               metadata={"group": group}) as task:
+        yield task
 
 
 def configure(runtime, *, data_dir, rag, locale="zh-CN", source="local", options=None):

@@ -2,7 +2,7 @@
 
     .venv/Scripts/python.exe tests/e2e/construct3/e2e.py RUN [RUN ...]
 
-Each run: python -m c3bot.qq --cli "做个五子棋" into sessions/e2e<RUN>, then the installed preview player plays the plan of
+Each run: python -m qqbot.qq --cli "做个五子棋" into sessions/e2e<RUN>, then the installed preview player plays the plan of
 make_play.py (a blocked line, a taken cell, a win across, the restart, a win on a diagonal) on a copy under .tmp/construct3-e2e/.
 Prints the bot's tool calls in short, its reply, and each check with the value the game held.
 """
@@ -51,7 +51,7 @@ def run(n: str, ask: bool = True) -> None:
     session = DATA / "sessions" / f"e2e{n}"
     if ask:
         shutil.rmtree(session, ignore_errors=True)
-    proc = subprocess.CompletedProcess([], 0, (DATA / "sessions" / f"e2e{n}.out").read_text(encoding="utf-8"), "") if not ask else subprocess.run([sys.executable, "-m", "c3bot.qq", "--cli", "做个五子棋", "--session", str(session)], cwd=HERE,
+    proc = subprocess.CompletedProcess([], 0, (DATA / "sessions" / f"e2e{n}.out").read_text(encoding="utf-8"), "") if not ask else subprocess.run([sys.executable, "-m", "qqbot.qq", "--cli", "做个五子棋", "--session", str(session)], cwd=HERE,
                           capture_output=True, text=True, encoding="utf-8", timeout=1200)
     (DATA / "sessions" / f"e2e{n}.out").write_text(proc.stdout, encoding="utf-8")
     lines = proc.stdout.splitlines()

@@ -17,9 +17,11 @@ python -m copilot capabilities
 python -m copilot run lookup_ace --locale zh-CN --limit 3000 -- System wait
 ```
 
-The QQ adapter keeps the bot's model configuration and message handling.
+The QQ host keeps model configuration, message delivery and application loading.
+Its Construct adapter connects to the application in this repository.
 Copilot executes its Construct tools and records their results.
-See the [runtime guide](docs/runtime.md) for configuration and verification limits.
+See the [framework guide](docs/framework.md) for the channel and application boundaries.
+The [runtime guide](docs/runtime.md) covers configuration and verification limits.
 
 The following sections describe the existing Claude plugin and its services.
 

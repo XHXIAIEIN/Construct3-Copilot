@@ -138,7 +138,7 @@ def run(n: str, ask: bool = True) -> None:
     out_file = DATA / "sessions" / f"e2ec{n}.out"
     if ask:
         shutil.rmtree(session, ignore_errors=True)
-        proc = subprocess.run([sys.executable, "-m", "c3bot.qq", "--cli", ASK, "--session", str(session)], cwd=HERE,
+        proc = subprocess.run([sys.executable, "-m", "qqbot.qq", "--cli", ASK, "--session", str(session)], cwd=HERE,
                               capture_output=True, text=True, encoding="utf-8", timeout=1200)
         out_file.write_text(proc.stdout + proc.stderr[-3000:], encoding="utf-8")
     lines = out_file.read_text(encoding="utf-8").splitlines()

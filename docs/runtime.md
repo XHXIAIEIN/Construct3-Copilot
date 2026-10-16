@@ -1,7 +1,7 @@
 # 本地任务运行与 QQ 接入
 
 Copilot 执行已安装的 Construct3-Agent-Skills 脚本，并用 SQLite 保存每次调用的请求和结果。
-QQ 机器人负责接收消息、调用模型和回复，Copilot 负责工具执行。
+QQbot 负责接收与发送消息，Copilot 的 Construct 应用负责模型工具循环及工具执行。
 
 ## 运行
 
@@ -41,11 +41,12 @@ C3BOT_COPILOT=D:/code/Construct3-Copilot
 C3BOT_SKILLS=D:/code/Construct3-Agent-Skills
 ```
 
-先在 qqbot 目录运行离线检查，再启动机器人：
+先在 qqbot 目录安装宿主并运行离线检查，再启动机器人：
 
 ```powershell
+.venv/Scripts/python -m pip install -e .
 .venv/Scripts/python -m unittest discover -s tests -v
-.venv/Scripts/python -m c3bot.qq
+.venv/Scripts/python -m qqbot.qq
 ```
 
 QQ 的一次对话对应一个父任务，各项工具调用是它的子任务。
