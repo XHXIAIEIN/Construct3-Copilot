@@ -42,6 +42,9 @@ names and nothing else of the plugin, so another knowledge base is another folde
 `var/logs/bot/bot.log` holds every question, tool call and reply; `var/logs/bot/usage.log` one line of token
 counts per answer.
 
+`var/runtime/gateway.json` records the gateway process PID and UTC startup time. Its `ready` status and
+`ready_at` time record a QQ ready event. Check the process separately to establish whether it is still running.
+
 `C3BOT_COPILOT` selects the trusted Copilot checkout. `C3BOT_SKILLS` selects an Agent-Skills repository, its
 `plugin/` folder or its `construct3-agent-plugin` folder. `CONSTRUCT3_RAG` selects the data clone.
 The configured model and API key still belong to qqbot. Copilot receives named skill calls through its local API.

@@ -15,6 +15,7 @@ from unittest.mock import Mock, patch
 import bot
 from c3bot import copilot
 from c3bot.agent import Agent, NO_FILE
+from c3bot.gateway import GatewayReceipt
 from plugins.construct3 import newproject, tools
 
 
@@ -159,6 +160,34 @@ class AdapterTests(unittest.TestCase):
         self.assertTrue(changed)
         self.assertIn("checked", text)
         check.assert_called_once_with(self.root)
+
+    def test_gateway_receipt_records_current_process_and_utc_events(self):
+        receipt = GatewayReceipt(self.root)
+        with patch("c3bot.gateway.utc_now", side_effect=["2026-01-01T00:00:00Z", "2026-01-01T00:00:01Z"]):
+            receipt.starting()
+            starting = json.loads(receipt.path.read_text(encoding="utf-8"))
+            self.assertEqual(starting, {"status": "starting", "pid": os.getpid(), "started_at": "2026-01-01T00:00:00Z"})
+            receipt.ready()
+        ready = json.loads(receipt.path.read_text(encoding="utf-8"))
+        self.assertEqual(ready, {**starting, "status": "ready", "ready_at": "2026-01-01T00:00:01Z"})
+        self.assertEqual(list(receipt.path.parent.glob("*.tmp")), [])
+
+    def test_gateway_restart_replaces_previous_ready_event(self):
+        first = GatewayReceipt(self.root)
+        first.starting()
+        first.ready()
+        second = GatewayReceipt(self.root)
+        second.starting()
+        record = json.loads(second.path.read_text(encoding="utf-8"))
+        self.assertEqual(record["status"], "starting")
+        self.assertNotIn("ready_at", record)
+
+    def test_invalid_copilot_configuration_fails_before_gateway_start(self):
+        self.runtime = None
+        with patch.object(copilot, "get_runtime", side_effect=ImportError("missing configured checkout")), patch.object(bot, "GatewayReceipt") as receipt:
+            with self.assertRaisesRegex(ImportError, "missing configured checkout"):
+                bot.run_qq(Mock())
+        receipt.assert_not_called()
 
 
 class ChatSerializationTests(unittest.IsolatedAsyncioTestCase):

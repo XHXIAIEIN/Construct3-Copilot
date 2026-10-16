@@ -30,9 +30,10 @@ import xml.etree.ElementTree as ET
 # (2026-10-06: the .env switch to a local model was read too late and the bot kept calling DeepSeek)
 load_dotenv(Path(__file__).parent / ".env")
 from c3bot import attachments as attachments_mod  # noqa: E402
-from c3bot import edits, qqfile  # noqa: E402
+from c3bot import copilot, edits, qqfile  # noqa: E402
 from c3bot.agent import Agent  # noqa: E402
 from c3bot.config import DATA  # noqa: E402
+from c3bot.gateway import GatewayReceipt  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("c3bot")
@@ -121,12 +122,14 @@ def serialized_sessions(handler):
 
 
 def run_qq(agent: Agent) -> None:
+    copilot.get_runtime()
     import botpy
     from botpy.message import C2CMessage, GroupMessage
 
     history: dict[str, deque] = defaultdict(lambda: deque(maxlen=HISTORY_TURNS * 2))
     usage: dict[tuple[str, date], int] = defaultdict(int)
     projects: dict[str, Path] = {}
+    gateway = GatewayReceipt(DATA)
 
     @serialized_sessions
     async def handle(key: str, question: str, reply, attachments=(), send_file=None) -> None:
@@ -284,6 +287,10 @@ def run_qq(agent: Agent) -> None:
         return f"{content}\n（引用的消息：{quoted}）" if quoted else content
 
     class Client(botpy.Client):
+        async def on_ready(self) -> None:
+            gateway.ready()
+            log.info("QQ gateway ready event received")
+
         def file_sender(self, scope: str, target: str, msg_id: str):
             auth = qqfile.token_auth(self.http._token)  # botpy's token, renewed as botpy renews it
             return lambda path, seq: qqfile.send_file(auth, scope, target, path, msg_id=msg_id, msg_seq=seq)
@@ -324,6 +331,8 @@ def run_qq(agent: Agent) -> None:
     # botpy's own log (botpy.log, rotated daily) goes beside bot.log instead of the working folder
     file_log = dict(botpy.logging.DEFAULT_FILE_HANDLER, filename=str(DATA / "logs" / "bot" / "%(name)s.log"))
     client = Client(intents=botpy.Intents(public_messages=True), ext_handlers=file_log)
+    gateway.starting()
+    log.info("QQ gateway connection starting")
     client.run(appid=os.environ["QQ_APPID"], secret=os.environ["QQ_SECRET"])
 
 
