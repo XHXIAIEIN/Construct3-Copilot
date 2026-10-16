@@ -2,7 +2,24 @@
 
 **中文** | [English](README.md)
 
-用自然语言生成 [Construct 3](https://editor.construct.net/)（[推荐链接](https://www.construct.net/a/260259?t=construct3)）剪贴板 JSON，直接粘贴到编辑器。
+Construct 3 的本地任务入口。执行已安装的 Agent-Skills，记录任务结果，并供 QQ 机器人调用。
+
+## 本地运行与 QQ 接入
+
+需要 Python 3.10+，以及同级的 `Construct3-Agent-Skills` 仓库。
+运行所选技能所需的依赖，仍由该技能提供。
+
+```powershell
+python -m copilot capabilities
+python -m copilot run lookup_ace --locale zh-CN --limit 3000 -- System wait
+```
+
+QQ 接入保留机器人的模型配置和消息处理，由 Copilot 执行 Construct 工具。
+CLI 默认将任务记录保存在当前目录下的 `.local/copilot`。
+可用 `--data` 或 `COPILOT_DATA` 覆盖路径。
+配置、任务查询和验证范围见 [运行说明](docs/runtime.md)。
+
+下面是原有 Claude 插件的服务部署方式。
 
 ## 快速开始
 

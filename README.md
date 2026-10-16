@@ -2,7 +2,23 @@
 
 [中文](README_CN.md) | **English**
 
-Generate [Construct 3](https://editor.construct.net/) ([affiliate link](https://www.construct.net/a/260259?t=construct3)) clipboard JSON from natural language and paste directly into the editor.
+A local task runtime for Construct 3. Execute installed Agent-Skills, persist results, and serve the QQ bot adapter.
+
+## Local runtime and QQ adapter
+
+Use Python 3.10+ and a sibling `Construct3-Agent-Skills` checkout.
+Each provider script keeps its own dependencies.
+
+```powershell
+python -m copilot capabilities
+python -m copilot run lookup_ace --locale zh-CN --limit 3000 -- System wait
+```
+
+The QQ adapter keeps the bot's model configuration and message handling.
+Copilot executes its Construct tools and records their results.
+See the [runtime guide](docs/runtime.md) for configuration and verification limits.
+
+The following sections describe the existing Claude plugin and its services.
 
 ## Quick Start
 
