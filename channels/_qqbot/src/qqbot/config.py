@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 
 HOME = Path(__file__).resolve().parents[2]  # the bot checkout: qqbot/, plugins/, .env
 # everything the bot writes while it runs: logs/, sessions/, reviews/, archive/, backups/
@@ -15,7 +16,7 @@ PLUGIN = os.environ.get("QQBOT_APP") or os.environ.get("C3BOT_PLUGIN", "construc
 BASE_URL = os.environ.get("C3BOT_BASE_URL", "https://api.deepseek.com")
 SILICONFLOW = "siliconflow" in BASE_URL  # hosted Chinese models, for comparison runs (2026-10-09)
 ZHIPU = "bigmodel.cn" in BASE_URL  # glm-4.7-flash, free (2026-10-09)
-LOCAL = "api.deepseek.com" not in BASE_URL and not SILICONFLOW and not ZHIPU
+LOCAL = urlsplit(BASE_URL).hostname in {"localhost", "127.0.0.1", "::1"}
 MODEL = os.environ.get("C3BOT_MODEL") or os.environ.get("DEEPSEEK_MODEL", "deepseek-flash")
 TIMEOUT = 600 if LOCAL else 300 if SILICONFLOW or ZHIPU else 120  # a local model reads a long prompt slowly
 # thinking off: DeepSeek reads "thinking", Ollama reads reasoning_effort "none", SiliconFlow reads enable_thinking;
@@ -23,6 +24,6 @@ TIMEOUT = 600 if LOCAL else 300 if SILICONFLOW or ZHIPU else 120  # a local mode
 NO_THINK = ({"reasoning_effort": os.environ.get("C3BOT_REASONING", "none"), "max_tokens": 6000} if LOCAL
             else {"enable_thinking": False, "max_tokens": 6000} if SILICONFLOW
             else {"thinking": {"type": "disabled"}, "max_tokens": 6000} if ZHIPU
-            else {"thinking": {"type": "disabled"}})
+            else {"thinking": {"type": "disabled"}} if "api.deepseek.com" in BASE_URL else {})
 if os.environ.get("C3BOT_EXTRA_BODY"):
     NO_THINK = json.loads(os.environ["C3BOT_EXTRA_BODY"])

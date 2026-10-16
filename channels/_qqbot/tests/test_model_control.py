@@ -82,6 +82,17 @@ class ModelControlTests(unittest.TestCase):
             self.control._stop([self.process, self.parent])
         self.assertEqual(stop.call_count, 2)
 
+    def test_api_switch_uses_key_reference_and_preserves_unrelated_settings(self):
+        self.prepare_switch()
+        result = self.control.switch("remote-placeholder", api={"id": "example", "model": "remote-placeholder",
+            "base_url": "https://example.test/v1", "api_key_env": "PROVIDER_KEY"})
+        self.assertTrue(result["ok"], result)
+        values = self.control._env()
+        self.assertEqual(values["C3BOT_BASE_URL"], "https://example.test/v1")
+        self.assertEqual(values["C3BOT_API_KEY_ENV"], "PROVIDER_KEY")
+        self.assertNotIn("C3BOT_API_KEY", values)
+        self.assertEqual(values["QQ_SECRET"], "private-placeholder")
+
     def test_stop_failure_keeps_a_live_process_as_failure(self):
         with patch.object(self.control, "_process", return_value=self.parent), \
              patch("qqbot.model_manager.control.subprocess.run", return_value=subprocess.CompletedProcess([], 1)):

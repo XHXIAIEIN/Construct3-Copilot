@@ -7,7 +7,8 @@ from .config import BASE_URL, LOCAL, MODEL, ZHIPU
 
 
 def create_client():
-    key = os.environ.get("QQBOT_API_KEY") or os.environ.get("C3BOT_API_KEY")
+    reference = os.environ.get("C3BOT_API_KEY_ENV")
+    key = os.environ.get(reference) if reference else os.environ.get("C3BOT_API_KEY") or os.environ.get("QQBOT_API_KEY")
     if not key:
         key = (os.environ.get("ZHIPU_API_KEY") if ZHIPU else
                os.environ.get("SILICONFLOW_API_KEY") if "siliconflow" in BASE_URL else

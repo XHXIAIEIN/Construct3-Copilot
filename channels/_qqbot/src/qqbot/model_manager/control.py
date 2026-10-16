@@ -23,7 +23,7 @@ from pathlib import Path
 from dotenv import dotenv_values
 from dotenv.parser import parse_stream
 
-MANAGED = {"C3BOT_BASE_URL", "C3BOT_MODEL", "C3BOT_API_KEY", "C3BOT_REASONING", "C3BOT_EXTRA_BODY"}
+MANAGED = {"C3BOT_BASE_URL", "C3BOT_MODEL", "C3BOT_API_KEY", "C3BOT_REASONING", "C3BOT_EXTRA_BODY", "C3BOT_API_PROFILE", "C3BOT_API_KEY_ENV"}
 _locks: dict[str, threading.RLock] = {}
 _locks_guard = threading.Lock()
 
@@ -267,7 +267,8 @@ class ModelControl:
             alive, verified = False, False
         base = urllib.parse.urlsplit(env.get("C3BOT_BASE_URL") or "https://api.deepseek.com")
         public_base = urllib.parse.urlunsplit((base.scheme, base.netloc.rsplit("@", 1)[-1], base.path, "", ""))
-        return {"current": {"base_url": public_base,
+        from .api_profiles import ApiProfiles
+        return {"apis": ApiProfiles(self).public(), "current": {"base_url": public_base,
                             "model": env.get("C3BOT_MODEL") or env.get("DEEPSEEK_MODEL", "deepseek-flash"),
                             "reasoning": env.get("C3BOT_REASONING", "none")},
                 "ollama": {"online": online, "url": self._local_url(config["url"])}, "models": models,
@@ -439,7 +440,7 @@ class ModelControl:
             raise ControlError("启动进程身份无法确认，请检查 QQ 服务。") from None
         self._stop(children + ([identity] if identity else []))
 
-    def switch(self, model: str) -> dict:
+    def switch(self, model: str, *, api=None) -> dict:
         with self._lock:
             original = updated = None
             process = None
@@ -448,14 +449,24 @@ class ModelControl:
             receipt = {}
             try:
                 config = self._config()
-                self._validate(config, model)
+                if api is None:
+                    self._validate(config, model)
                 self._assert_idle()
                 receipt = self._receipt()
                 identities = self._gateway_identity(receipt) if receipt else []
                 if not identities and self._gateway_candidates():
                     raise ControlError("检测到尚未核验的 QQ 启动进程，请先检查其启动收据。")
                 original = self.env_path.read_bytes()
-                updated = self._updated_env(original, config, model)
+                if api is None:
+                    updated = self._updated_env(original, config, model)
+                else:
+                    bindings = parse_stream(io.StringIO(original.decode("utf-8-sig")))
+                    kept = "".join(b.original.string for b in bindings if b.key not in MANAGED)
+                    if not kept.endswith("\n"):
+                        kept += "\n"
+                    values = {"C3BOT_BASE_URL": api["base_url"], "C3BOT_MODEL": api["model"],
+                              "C3BOT_API_PROFILE": api["id"], "C3BOT_API_KEY_ENV": api["api_key_env"]}
+                    updated = (kept + "".join(k + "=" + json.dumps(v) + "\n" for k, v in values.items())).encode("utf-8")
                 backups = self._data() / "backups" / "models"
                 backups.mkdir(parents=True, exist_ok=True)
                 backup = backups / f"env-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}-{uuid.uuid4().hex[:8]}.env"

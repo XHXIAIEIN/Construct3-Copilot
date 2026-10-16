@@ -31,5 +31,5 @@ def get_runtime(*, home, data_dir, settings):
                 sys.path.remove(str(checkout))
             if Path(module.__file__).resolve() != package:
                 raise ImportError(f"Copilot resolved outside {checkout}")
-            _runtime = module.Runtime(skills_root=Path(settings.get("C3BOT_SKILLS") or home.parent / "Construct3-Agent-Skills"), data_dir=data_dir / "copilot", python_executable=sys.executable)
+            _runtime = module.Runtime(skills_root=Path(settings.get("C3BOT_SKILLS") or settings.get("CONSTRUCT3_AGENT_SKILLS") or home.parent / "Construct3-Agent-Skills"), data_dir=data_dir / "copilot", python_executable=sys.executable)
         return _runtime

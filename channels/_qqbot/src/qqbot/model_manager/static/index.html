@@ -20,23 +20,48 @@ input[type=radio]{accent-color:#275dc1}.model-name{font-weight:550}.muted{color:
 #feedback[data-state=failed]{background:#fceceb;color:#91362b}#feedback[data-state=completed]{background:#e9f3ed;color:#285d3a}
 details{margin-top:24px;color:#616875;font-size:12px}summary{cursor:pointer}code{overflow-wrap:anywhere}.empty{text-align:center;padding:28px;color:#737b87}
 @media(max-width:650px){main{padding:20px 14px}.top{align-items:flex-start;flex-direction:column}.states{gap:10px;flex-direction:column}.toolbar{flex-wrap:wrap}.selection{width:100%}.actions button{flex:1}.table-wrap{max-height:45vh}}
+.groups{display:flex;gap:8px;margin-bottom:18px}.groups button[aria-selected=true]{background:#eaf0fc;border-color:#275dc1;color:#204d9c}
+[hidden]{display:none!important}.api-form{padding:18px 0;border-block:1px solid #dce0e6;margin:14px 0}.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fields label{display:flex;flex-direction:column;gap:6px}.fields input,.fields select{font:inherit;padding:9px;border:1px solid #cbd0d8;border-radius:6px;min-width:0;background:white}.fields .wide{grid-column:1/-1}
+.api-tools{display:flex;gap:6px}.api-tools button{font-size:12px;padding:6px 9px}.balance{white-space:normal;min-width:130px}.balance small{display:block;color:#737b87}.api-name strong{display:block}.api-name small{display:block;max-width:280px;overflow:hidden;text-overflow:ellipsis;color:#737b87}
+@media(max-width:650px){.fields{grid-template-columns:1fr}.fields .wide{grid-column:auto}}
 </style>
 <main>
-  <div class="top"><div><h1>QQbot 模型</h1><p>选择本机模型，加载或切换给机器人。</p></div><button id="start">启动 Ollama</button></div>
+  <div class="top"><div><h1>QQbot 模型</h1><p>管理本地模型与 API 接口，选择机器人使用的模型。</p></div><button id="start">启动 Ollama</button></div>
   <div class="states"><span>模型服务 · <strong id="service">读取中…</strong></span><span>QQbot · <strong id="gateway">读取中…</strong></span><span>当前配置 · <strong id="current">读取中…</strong></span></div>
+  <nav class="groups" role="tablist" aria-label="模型分组"><button id="local-tab" role="tab" aria-selected="true" aria-controls="local-group">本地模型</button><button id="api-tab" role="tab" aria-selected="false" aria-controls="api-group">API 接口</button></nav>
+  <section id="local-group" role="tabpanel" aria-labelledby="local-tab">
   <div class="toolbar"><input id="search" type="search" placeholder="搜索本机模型" aria-label="搜索本机模型"><span id="count" class="muted"></span><button id="refresh">刷新列表</button></div>
   <div class="table-wrap"><table><thead><tr><th></th><th>模型</th><th>规模</th><th>量化</th><th>大小</th><th>状态</th></tr></thead><tbody id="models"><tr><td colspan="6" class="empty">正在读取模型列表…</td></tr></tbody></table></div>
   <div class="actions"><div class="selection"><span class="muted">已选择</span><strong id="selected">请选择模型</strong></div><button id="warm" disabled>加载到内存</button><button id="switch" class="primary" disabled>切换并重启 QQbot</button></div>
+  </section>
+  <section id="api-group" role="tabpanel" aria-labelledby="api-tab" hidden>
+    <div class="toolbar"><span id="api-count" class="muted"></span><button id="api-add">添加接口</button></div>
+    <form id="api-form" class="api-form" hidden>
+      <div class="fields">
+        <label>接口名称<input id="api-name" required maxlength="80"></label>
+        <label>模型名称<input id="api-model" maxlength="200" placeholder="填写服务商提供的模型 ID"></label>
+        <label class="wide">服务地址<input id="api-base" type="url" placeholder="https://example.com/v1"></label>
+        <label class="wide">API 密钥<input id="api-key" type="password" autocomplete="new-password" placeholder="编辑时留空会保留原密钥"></label>
+        <label>手动余额标记<select id="api-mark"><option value="unknown">未知</option><option value="available">余额充足</option><option value="low">余额偏低</option><option value="empty">余额耗尽</option></select></label>
+      </div>
+      <p class="muted">使用 OpenAI 兼容地址。密钥保存在本机 .env，页面仅显示是否已配置。</p>
+      <div class="toolbar"><button class="primary" type="submit">保存接口</button><button id="api-cancel" type="button">取消编辑</button></div>
+    </form>
+    <div class="table-wrap"><table><thead><tr><th></th><th>接口与模型</th><th>配置</th><th>余额状态</th><th>管理</th></tr></thead><tbody id="apis"></tbody></table></div>
+    <div class="actions"><div class="selection"><span class="muted">已选择接口</span><strong id="api-selected">请选择接口</strong></div><button id="api-switch" class="primary" disabled>切换到此接口</button></div>
+    <p class="muted">余额查询结果带查询时间；手动标记单独显示。删除接口会保留本地备份与密钥。</p>
+  </section>
   <p class="muted">切换会保存 .env 并重启 QQbot；机器人正在回答时，请等待完成后再切换。模型加载可能需要一两分钟。</p>
   <div id="feedback" role="status" aria-live="polite">正在读取状态…</div>
   <details><summary>配置文件</summary><p>服务地址和模型存储位置保存在 <code id="config"></code>。机器人配置写入 .env，原文件会保留备份。</p><p>列表来自本机 Ollama；切换前会检查模型是否支持对话与工具调用。</p></details>
 </main>
 <script>
 const token="__PANEL_TOKEN__";
-let state=null,selected="",busy=false,refreshing=false,lastJob="";
+let state=null,selected="",selectedApi="",editingApi="",busy=false,refreshing=false,lastJob="";
 const $=id=>document.getElementById(id);
 function feedback(message,kind=""){ $("feedback").textContent=message;$("feedback").dataset.state=kind; }
-function buttons(){ $("warm").disabled=busy||!selected||!state?.ollama?.online;$("switch").disabled=busy||!selected||!state?.ollama?.online;$("start").disabled=busy||!!state?.ollama?.online;$("refresh").disabled=refreshing; }
+function buttons(){ $("warm").disabled=busy||!selected||!state?.ollama?.online;$("switch").disabled=busy||!selected||!state?.ollama?.online;$("start").disabled=busy||!!state?.ollama?.online;$("refresh").disabled=refreshing;$("api-switch").disabled=busy||!(state?.apis||[]).find(p=>p.id===selectedApi&&p.ready);$("api-add").disabled=busy;document.querySelectorAll("#apis button,#api-form button").forEach(b=>b.disabled=busy); }
 function render(){
   const list=state?.models||[], query=$("search").value.toLowerCase();
   const filtered=list.filter(m=>m.name.toLowerCase().includes(query));
@@ -45,7 +70,7 @@ function render(){
   for(const m of filtered){
     const tr=document.createElement("tr");tr.dataset.model=m.name;tr.className=selected===m.name?"selected":"";
     const td=document.createElement("td"),radio=document.createElement("input");radio.type="radio";radio.name="model";radio.checked=selected===m.name;radio.setAttribute("aria-label",`选择 ${m.name}`);td.append(radio);tr.append(td);
-    const current=state.current?.model===m.name;
+    const current=state.current?.model===m.name && ["localhost","127.0.0.1","::1"].includes(new URL(state.current.base_url).hostname);
     const fields=[m.name,m.parameter_size||"—",m.quantization||"—",m.size?(m.size/1e9).toFixed(1)+" GB":"—",[current?"当前配置":"",m.loaded?"已加载":""].filter(Boolean).join(" · ")||"未加载"];
     fields.forEach((v,i)=>{const cell=document.createElement("td");cell.textContent=v;if(i===0)cell.className="model-name";tr.append(cell);});
     tr.addEventListener("click",()=>{selected=m.name;render();});tbody.append(tr);
@@ -62,17 +87,39 @@ async function refresh(){
     $("gateway").textContent=state.gateway?.alive?(state.gateway.status==="ready"?"已就绪":"连接中") :"未运行";
     $("current").textContent=state.current.model||"尚未配置";$("config").textContent=state.config_path||"var/models.json";
     if(!selected&&(state.models||[]).some(m=>m.name===state.current.model))selected=state.current.model;
-    render();
-    if(data.job){const signature=JSON.stringify(data.job);if(signature!==lastJob){lastJob=signature;feedback(busy?`${data.job.action==="start"?"正在启动 Ollama":data.job.action==="warm"?"正在加载 ":"正在切换到 "}${data.job.model||""}…`:data.job.message,data.job.state);}}
+    render();renderApis();
+    if(data.job){const signature=JSON.stringify(data.job);if(signature!==lastJob){lastJob=signature;feedback(busy?(data.job.action.startsWith("api_")?"正在处理接口操作…":`${data.job.action==="start"?"正在启动 Ollama":data.job.action==="warm"?"正在加载 ":"正在切换到 "}${data.job.model||""}…`):data.job.message,data.job.state);}}
     else if(!lastJob)feedback(state.ollama.online?"选择一个模型后，可以加载或切换。":"先启动 Ollama，再选择本机模型。");
   }catch(e){feedback(e.message+"。请检查服务并刷新页面。","failed");}
   finally{refreshing=false;buttons();}
 }
-async function act(action){
+async function act(action,model=selected){
   if(busy)return;busy=true;buttons();feedback("正在提交操作…");
-  try{const r=await fetch("/api/action",{method:"POST",headers:{"Content-Type":"application/json","X-Panel-Token":token},body:JSON.stringify({action,model:selected})});const data=await r.json();if(!r.ok)throw Error(data.error||"提交失败");lastJob="";await refresh();}
+  try{const r=await fetch("/api/action",{method:"POST",headers:{"Content-Type":"application/json","X-Panel-Token":token},body:JSON.stringify({action,model})});const data=await r.json();if(!r.ok)throw Error(data.error||"提交失败");lastJob="";await refresh();}
   catch(e){busy=false;buttons();feedback(e.message,"failed");}
 }
+const marks={unknown:"未知",available:"余额充足",low:"余额偏低",empty:"余额耗尽"};
+function group(name){for(const item of ["local","api"]){$(item+"-group").hidden=item!==name;$(item+"-tab").setAttribute("aria-selected",String(item===name));}$("start").hidden=name!=="local";}
+function editApi(profile=null){editingApi=profile?.id||"";$("api-name").value=profile?.name||"";$("api-model").value=profile?.model||"";$("api-base").value=profile?.base_url||"";$("api-key").value="";$("api-mark").value=profile?.balance_mark||"unknown";$("api-form").hidden=false;$("api-name").focus();}
+function renderApis(){
+ const profiles=state?.apis||[];$("api-count").textContent=`${profiles.length} 个接口`;const tbody=$("apis");tbody.replaceChildren();
+ for(const p of profiles){
+  const tr=document.createElement("tr");tr.className=selectedApi===p.id?"selected":"";
+  const choose=tr.insertCell(),radio=document.createElement("input");radio.type="radio";radio.name="api-profile";radio.checked=selectedApi===p.id;radio.setAttribute("aria-label",`选择接口 ${p.name}`);radio.addEventListener("change",()=>{selectedApi=p.id;renderApis();});choose.append(radio);
+  const title=tr.insertCell();title.className="api-name";const name=document.createElement("strong");name.textContent=p.name+(p.active?" · 当前配置":"");const model=document.createElement("span");model.textContent=p.model||"待填写模型";const base=document.createElement("small");base.textContent=p.base_url||"待填写兼容地址";title.append(name,model,base);
+  const config=tr.insertCell();config.textContent=p.ready?"已配置":p.has_key?"待补全":"缺少密钥";
+  const balance=tr.insertCell();balance.className="balance";const manual=document.createElement("span");manual.textContent="手动 · "+(marks[p.balance_mark]||"未知");balance.append(manual);
+  if(p.balance){const result=document.createElement("span");result.style.display="block";const b=p.balance;result.textContent=b.entries?b.entries.map(e=>`${e.currency} ${e.amount}`).join(" / ")+(b.state==="unavailable"?" · 账户不可用":""):(b.state==="error"?"查询失败":b.state==="unsupported"?"使用手动标记":"未查询");const when=document.createElement("small");when.textContent=b.checked_at?new Date(b.checked_at).toLocaleString():"";when.title=b.message||"";balance.append(result,when);}
+  const actions=tr.insertCell(),tools=document.createElement("div");tools.className="api-tools";
+  for(const [label,fn] of [["编辑",()=>editApi(p)],["查余额",()=>act("api_balance",p.id)],["删除",()=>act("api_delete",p.id)]]){const button=document.createElement("button");button.textContent=label;button.setAttribute("aria-label",`${label} ${p.name}`);button.disabled=busy;button.addEventListener("click",fn);tools.append(button);}actions.append(tools);tbody.append(tr);
+ }
+ if(!profiles.length){const cell=tbody.insertRow().insertCell();cell.colSpan=5;cell.className="empty";cell.textContent="还没有 API 接口，点击“添加接口”。";}
+ $("api-selected").textContent=profiles.find(p=>p.id===selectedApi)?.name||"请选择接口";buttons();
+}
+$("local-tab").addEventListener("click",()=>group("local"));$("api-tab").addEventListener("click",()=>group("api"));
+$("api-add").addEventListener("click",()=>editApi());$("api-cancel").addEventListener("click",()=>{$("api-form").hidden=true;$("api-key").value="";});
+$("api-form").addEventListener("submit",async e=>{e.preventDefault();const values={id:editingApi,name:$("api-name").value,model:$("api-model").value,base_url:$("api-base").value,api_key:$("api-key").value,balance_mark:$("api-mark").value};await act("api_save",values);$("api-key").value="";});
+$("api-switch").addEventListener("click",()=>act("api_switch",selectedApi));
 $("search").addEventListener("input",render);$("refresh").addEventListener("click",refresh);
 $("start").addEventListener("click",()=>act("start"));$("warm").addEventListener("click",()=>act("warm"));$("switch").addEventListener("click",()=>act("switch"));
 refresh();setInterval(refresh,3000);

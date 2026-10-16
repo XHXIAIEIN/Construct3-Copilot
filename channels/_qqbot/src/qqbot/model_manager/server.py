@@ -12,7 +12,8 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from .control import ModelControl
+from .control import ModelControl, ControlError
+from .api_profiles import ApiProfiles
 
 log = logging.getLogger(__name__)
 
@@ -28,26 +29,39 @@ class Jobs:
             return dict(self.job) if self.job else None
 
     def submit(self, action, model):
-        if action not in {"start", "warm", "switch"}:
+        if action not in {"start", "warm", "switch", "api_save", "api_delete", "api_balance", "api_switch"}:
             raise ValueError("请选择启动、加载或切换操作")
-        if action != "start" and (not isinstance(model, str) or not model.strip()):
+        if action == "api_save" and not isinstance(model, dict):
+            raise ValueError("接口配置无效")
+        if action not in {"start", "api_save"} and (not isinstance(model, str) or not model.strip()):
             raise ValueError("请先选择一个模型")
         with self.lock:
             if self.job and self.job["state"] == "running":
                 raise RuntimeError("正在处理上一项操作，请等待结果")
-            self.job = {"action": action, "model": model, "state": "running", "message": "正在处理…"}
+            self.job = {"action": action, "model": model.get("name", "接口") if isinstance(model, dict) else model, "state": "running", "message": "正在处理…"}
         threading.Thread(target=self._run, args=(action, model), daemon=True).start()
         return self.snapshot()
 
     def _run(self, action, model):
         try:
-            fn = getattr(self.control, action)
-            result = fn() if action == "start" else fn(model)
+            if action.startswith("api_"):
+                registry = ApiProfiles(self.control)
+                if action == "api_switch":
+                    with self.control._lock:
+                        profile = registry.selection(model)
+                        result = self.control.switch(profile["model"], api=profile)
+                else:
+                    fn = getattr(registry, action.removeprefix("api_"))
+                    result = fn(model)
+            else:
+                fn = getattr(self.control, action)
+                result = fn() if action == "start" else fn(model)
             state = "completed" if result.get("ok") else "failed"
             message = result.get("message", "操作完成" if state == "completed" else "操作失败")
         except Exception as exc:
-            log.exception("Model operation failed")
-            state, message = "failed", str(exc)
+            state = "failed"
+            message = str(exc) if isinstance(exc, (ControlError, ValueError)) else "操作失败，请检查配置和本地日志。"
+            log.warning("Model operation %s failed: %s", action, type(exc).__name__)
         with self.lock:
             self.job.update(state=state, message=message)
 
@@ -101,7 +115,7 @@ def create_server(control, port=8767):
                 return
             try:
                 size = int(self.headers.get("Content-Length", "0"))
-                if size <= 0 or size > 4096:
+                if size <= 0 or size > 16384:
                     raise ValueError("操作参数无效")
                 body = json.loads(self.rfile.read(size))
                 if not isinstance(body, dict):
