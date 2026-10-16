@@ -2,7 +2,7 @@
 
 [中文](README_CN.md) | **English**
 
-Generate Construct 3 clipboard JSON from natural language and paste directly into the editor.
+Generate [Construct 3](https://editor.construct.net/) ([affiliate link](https://www.construct.net/a/260259?t=construct3)) clipboard JSON from natural language and paste directly into the editor.
 
 ## Quick Start
 

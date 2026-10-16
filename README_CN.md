@@ -2,7 +2,7 @@
 
 **中文** | [English](README.md)
 
-用自然语言生成 Construct 3 剪贴板 JSON，直接粘贴到编辑器。
+用自然语言生成 [Construct 3](https://editor.construct.net/)（[推荐链接](https://www.construct.net/a/260259?t=construct3)）剪贴板 JSON，直接粘贴到编辑器。
 
 ## 快速开始
 
