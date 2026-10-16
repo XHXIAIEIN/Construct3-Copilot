@@ -6,7 +6,7 @@ import unittest
 
 class EntrypointTests(unittest.TestCase):
     def test_qq_and_grader_help(self):
-        for module in ("c3bot.qq", "c3bot.grader"):
+        for module in ("qqbot.qq", "qqbot.grader"):
             with self.subTest(module=module):
                 result = subprocess.run([sys.executable, "-m", module, "--help"],
                                         stdin=subprocess.DEVNULL, capture_output=True, timeout=10)

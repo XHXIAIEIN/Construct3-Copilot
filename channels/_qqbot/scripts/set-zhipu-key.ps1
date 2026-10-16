@@ -1,4 +1,4 @@
-# Asks for the Zhipu (BigModel) API key, writes it into .env as ZHIPU_API_KEY, then checks it with one call to
+﻿# Asks for the Zhipu (BigModel) API key, writes it into .env as ZHIPU_API_KEY, then checks it with one call to
 # the free model glm-4.7-flash. The key is typed hidden and never printed or logged.
 # Run: right-click > Run with PowerShell, or `pwsh -File set-zhipu-key.ps1`
 $ErrorActionPreference = 'Stop'

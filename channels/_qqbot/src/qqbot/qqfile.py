@@ -18,7 +18,7 @@ from typing import Awaitable, Callable
 
 import aiohttp
 
-log = logging.getLogger("c3bot.file")
+log = logging.getLogger("qqbot.file")
 
 API = "https://api.sgroup.qq.com"
 FILE = 4  # file_type: a file card the receiver downloads
@@ -129,7 +129,7 @@ def main() -> None:
     from dotenv import load_dotenv
     from botpy.robot import Token
 
-    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
     parser = argparse.ArgumentParser(description="send a file as an active message to a user or a group")
     to = parser.add_mutually_exclusive_group(required=True)
     to.add_argument("--user", help="the receiver's user_openid")

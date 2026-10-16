@@ -12,7 +12,7 @@ from contextlib import closing
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from c3bot.model_manager.control import ControlError, ModelControl
+from qqbot.model_manager.control import ControlError, ModelControl
 
 
 class ModelControlTests(unittest.TestCase):
@@ -22,8 +22,8 @@ class ModelControlTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(dir=scratch)
         self.addCleanup(self.temp.cleanup)
         self.home = Path(self.temp.name)
-        (self.home / "c3bot").mkdir()
-        (self.home / "c3bot" / "qq.py").write_text("", encoding="utf-8")
+        (self.home / "src" / "qqbot").mkdir(parents=True)
+        (self.home / "src" / "qqbot" / "qq.py").write_text("", encoding="utf-8")
         self.original = (b"# configuration\nQQ_SECRET=private-placeholder\nKEEP=yes\nC3BOT_MODEL=old-model\n"
                          b"C3BOT_BASE_URL=http://127.0.0.1:11434/v1\nC3BOT_API_KEY=old-placeholder\n"
                          b"C3BOT_EXTRA_BODY='{\n  \"thinking\": true\n}'\n")
@@ -82,7 +82,7 @@ class ModelControlTests(unittest.TestCase):
 
     def test_registry_models_directory_overrides_stale_process_environment(self):
         self.control.config_path.unlink()
-        with patch("c3bot.model_manager.control._registry_models", return_value="registry-models"), patch.dict(os.environ, {"OLLAMA_MODELS": "stale-models"}):
+        with patch("qqbot.model_manager.control._registry_models", return_value="registry-models"), patch.dict(os.environ, {"OLLAMA_MODELS": "stale-models"}):
             self.assertEqual(self.control._config()["models_dir"], "registry-models")
 
     def test_remote_or_credentialed_service_urls_are_refused(self):
@@ -193,14 +193,14 @@ class ModelControlTests(unittest.TestCase):
                 self.control._gateway_identity(self.receipt)
 
     def test_module_launcher_is_accepted_and_cli_mode_is_refused(self):
-        self.parent["CommandLine"] = f'"{self.control.python}" -u -m c3bot.qq'
+        self.parent["CommandLine"] = f'"{self.control.python}" -u -m qqbot.qq'
         self.assertTrue(self.control._bot_command(self.parent))
         self.parent["CommandLine"] += ' --cli "placeholder"'
         self.assertFalse(self.control._bot_command(self.parent))
 
     def test_reused_pid_is_not_stopped(self):
         altered = {**self.process, "created_at": "2026-01-02T00:00:00Z"}
-        with patch.object(self.control, "_process", return_value=altered), patch("c3bot.model_manager.control.subprocess.run") as run:
+        with patch.object(self.control, "_process", return_value=altered), patch("qqbot.model_manager.control.subprocess.run") as run:
             with self.assertRaises(ControlError):
                 self.control._stop([self.process])
         run.assert_not_called()
@@ -211,14 +211,14 @@ class ModelControlTests(unittest.TestCase):
         with patch.dict(os.environ, {"C3BOT_EXTRA_BODY": "stale", "C3BOT_MODEL": "stale", "QQ_SECRET": "stale"}), patch.object(self.control, "_detached") as detached:
             self.control._launch_bot()
         argv, env = detached.call_args.args[:2]
-        self.assertEqual(argv, [str(self.control.python), "-u", "-m", "c3bot.qq"])
+        self.assertEqual(argv, [str(self.control.python), "-u", "-m", "qqbot.qq"])
         self.assertNotIn("C3BOT_MODEL", env)
         self.assertNotIn("C3BOT_EXTRA_BODY", env)
         self.assertNotIn("QQ_SECRET", env)
 
     def test_ready_receipt_must_be_fresh_and_match_launched_process(self):
         self.control.READY_TIMEOUT = .01
-        with patch.object(self.control, "_receipt", return_value=self.receipt), patch.object(self.control, "_gateway_identity") as identity, patch("c3bot.model_manager.control.time.sleep"):
+        with patch.object(self.control, "_receipt", return_value=self.receipt), patch.object(self.control, "_gateway_identity") as identity, patch("qqbot.model_manager.control.time.sleep"):
             with self.assertRaises(ControlError):
                 self.control._wait_ready(SimpleNamespace(pid=300, poll=lambda: None), "2026-01-02T00:00:00Z")
         identity.assert_not_called()

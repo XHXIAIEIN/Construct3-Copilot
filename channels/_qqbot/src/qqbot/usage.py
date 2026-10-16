@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from .config import DATA
 
-log = logging.getLogger("c3bot.agent")
+log = logging.getLogger("qqbot.agent")
 
 USAGE_LOG = DATA / "logs" / "bot" / "usage.log"  # one line an answer, QQ and --cli alike
 _tally = threading.local()  # the token count of the answer this thread is giving

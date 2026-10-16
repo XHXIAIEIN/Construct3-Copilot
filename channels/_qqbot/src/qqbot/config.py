@@ -6,16 +6,11 @@ import json
 import os
 from pathlib import Path
 
-HOME = Path(__file__).resolve().parent.parent  # the bot checkout: c3bot/, plugins/, .env
+HOME = Path(__file__).resolve().parents[2]  # the bot checkout: qqbot/, plugins/, .env
 # everything the bot writes while it runs: logs/, sessions/, reviews/, archive/, backups/
-DATA = Path(os.environ.get("C3BOT_DATA") or HOME / "var")
+DATA = Path(os.environ.get("QQBOT_DATA") or os.environ.get("C3BOT_DATA") or HOME / "var")
 # the Copilot domain provider: tools, prompts and checks
-PLUGIN = os.environ.get("C3BOT_PLUGIN", "construct3")
-# the Construct3-RAG clone, the knowledge the construct3 plugin reads; by default a sibling folder of the bot
-RAG = Path(os.environ.get("CONSTRUCT3_RAG") or HOME.parent / "Construct3-RAG")
-COPILOT = Path(os.environ.get("C3BOT_COPILOT") or HOME.parent / "Construct3-Copilot")
-SKILLS = Path(os.environ.get("C3BOT_SKILLS") or HOME.parent / "Construct3-Agent-Skills")
-LOCALE = os.environ.get("C3BOT_LOCALE", "zh-CN")
+PLUGIN = os.environ.get("QQBOT_APP") or os.environ.get("C3BOT_PLUGIN", "construct3")
 # C3BOT_BASE_URL points at any OpenAI-compatible server, e.g. Ollama's http://localhost:11434/v1
 BASE_URL = os.environ.get("C3BOT_BASE_URL", "https://api.deepseek.com")
 SILICONFLOW = "siliconflow" in BASE_URL  # hosted Chinese models, for comparison runs (2026-10-09)
@@ -31,4 +26,3 @@ NO_THINK = ({"reasoning_effort": os.environ.get("C3BOT_REASONING", "none"), "max
             else {"thinking": {"type": "disabled"}})
 if os.environ.get("C3BOT_EXTRA_BODY"):
     NO_THINK = json.loads(os.environ["C3BOT_EXTRA_BODY"])
-MAX_STEPS = 10

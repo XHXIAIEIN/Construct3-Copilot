@@ -118,7 +118,7 @@ def create_server(control, port=8767):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--home", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--home", type=Path, default=Path(__file__).resolve().parents[3])
     parser.add_argument("--port", type=int, default=8767)
     parser.add_argument("--open", action="store_true", help="open the panel in the default browser")
     parser.add_argument("--start-ollama", action="store_true", help="start the configured service and exit")

@@ -1,4 +1,4 @@
-# Asks for the SiliconFlow API key, writes it into .env as SILICONFLOW_API_KEY, then checks it against the
+﻿# Asks for the SiliconFlow API key, writes it into .env as SILICONFLOW_API_KEY, then checks it against the
 # account endpoint and prints the balance. The key is typed hidden and never printed or logged.
 # Run: right-click > Run with PowerShell, or `pwsh -File set-siliconflow-key.ps1`
 $ErrorActionPreference = 'Stop'

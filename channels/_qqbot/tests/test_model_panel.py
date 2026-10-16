@@ -7,7 +7,7 @@ import urllib.request
 from pathlib import Path
 from unittest.mock import Mock
 
-from c3bot.model_manager.server import create_server
+from qqbot.model_manager.server import create_server
 
 
 class PanelTests(unittest.TestCase):

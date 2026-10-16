@@ -6,3 +6,5 @@ __pycache__/
 # everything the bot writes while it runs (C3BOT_DATA); logs/ is the pre-2026-10-10 place, moved by start.ps1
 var/
 logs/
+
+*.egg-info/

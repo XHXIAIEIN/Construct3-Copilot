@@ -20,7 +20,7 @@ FRESH = 5  # seconds since the log's last write that still count as generating
 POLL = 2
 MARKS = (b"/api/jobs", b"/api/tts", b"/api/concat")
 
-log = logging.getLogger("c3bot.yield")
+log = logging.getLogger("qqbot.yield")
 _missing_said: set[Path] = set()
 
 

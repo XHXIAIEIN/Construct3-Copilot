@@ -93,7 +93,7 @@ class ModelControl:
         return dict(dotenv_values(self.env_path, interpolate=False))
 
     def _data(self) -> Path:
-        configured = self._env().get("C3BOT_DATA")
+        configured = self._env().get("QQBOT_DATA") or self._env().get("C3BOT_DATA")
         return (self.home / configured).resolve() if configured else self.home / "var"
 
     def _config(self) -> dict:
@@ -205,7 +205,7 @@ class ModelControl:
         args = _command_args(process.get("CommandLine") or "")[1:]
         if args and args[0] == "-u":
             args = args[1:]
-        if args == ["-m", "c3bot.qq"] or args == ["bot.py"]:
+        if args == ["-m", "qqbot.qq"] or args == ["bot.py"]:
             return True
         return len(args) == 1 and Path(args[0]).is_absolute() and _same_path(args[0], self.home / "bot.py")
 
@@ -394,15 +394,15 @@ class ModelControl:
                 raise ControlError("QQ 进程未能停止，请检查本地服务。")
 
     def _launch_bot(self):
-        if not self.python.is_file() or not (self.home / "c3bot" / "qq.py").is_file():
+        if not self.python.is_file() or not (self.home / "src" / "qqbot" / "qq.py").is_file():
             raise ControlError("QQ 启动文件或项目 Python 不完整。")
         env = os.environ.copy()
-        for key in set(self._env()) | {key for key in env if key.startswith("C3BOT_")}:
+        for key in set(self._env()) | {key for key in env if key.startswith(("C3BOT_", "QQBOT_"))}:
             env.pop(key, None)
-        env.update(PYTHONUNBUFFERED="1", PYTHONUTF8="1")
+        env.update(PYTHONUNBUFFERED="1", PYTHONUTF8="1", PYTHONPATH=str(self.home / "src"))
         logs = self._data() / "logs" / "bot"
         started = _utc()
-        process = self._detached([str(self.python), "-u", "-m", "c3bot.qq"], env,
+        process = self._detached([str(self.python), "-u", "-m", "qqbot.qq"], env,
                                  logs / "model-control.out.log", logs / "model-control.err.log")
         process._control_started_at = started
         return process

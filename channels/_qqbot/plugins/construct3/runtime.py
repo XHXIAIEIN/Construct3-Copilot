@@ -1,26 +1,23 @@
 """Bridge the bot's named skill calls to a trusted local Copilot checkout."""
 from __future__ import annotations
 
-import hashlib
 import importlib
 import os
 import sys
 import threading
-from contextlib import contextmanager
 from pathlib import Path
 
-from .config import COPILOT, DATA, RAG, SKILLS
 
 _runtime = None
 _initializing = threading.Lock()
 
 
-def get_runtime():
+def get_runtime(*, home, data_dir, settings):
     """Load Copilot only from the configured checkout."""
     global _runtime
     with _initializing:
         if _runtime is None:
-            checkout = COPILOT.resolve()
+            checkout = Path(settings.get("C3BOT_COPILOT") or home.parent / "Construct3-Copilot").resolve()
             package = checkout / "copilot" / "__init__.py"
             if not package.is_file():
                 raise ImportError(f"Copilot package missing at {package}; set C3BOT_COPILOT to its checkout")
@@ -34,15 +31,5 @@ def get_runtime():
                 sys.path.remove(str(checkout))
             if Path(module.__file__).resolve() != package:
                 raise ImportError(f"Copilot resolved outside {checkout}")
-            _runtime = module.Runtime(skills_root=SKILLS, data_dir=DATA / "copilot", python_executable=sys.executable)
+            _runtime = module.Runtime(skills_root=Path(settings.get("C3BOT_SKILLS") or home.parent / "Construct3-Agent-Skills"), data_dir=data_dir / "copilot", python_executable=sys.executable)
         return _runtime
-
-
-@contextmanager
-def session(project: Path | None, folder: Path | None, group: bool = False):
-    """Hold a runtime session for one answer and its skill calls."""
-    identity = str((folder or project).resolve()) if folder or project else "cli"
-    session_id = hashlib.sha256(identity.encode()).hexdigest()
-    with get_runtime().session(source="qqbot", session_id=session_id, project=project,
-                               metadata={"group": group}) as task:
-        yield task
