@@ -1,3 +1,4 @@
+---
 name: c3-addon
 description: >
   Guide development of custom Construct 3 plugins and behaviors using the Addon SDK v2.

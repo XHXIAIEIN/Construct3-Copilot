@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/plugins/construct3-copilot/scripts/infra/welcome.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
