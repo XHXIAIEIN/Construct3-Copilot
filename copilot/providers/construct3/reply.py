@@ -28,8 +28,9 @@ SHORTEN_SENT = (
 # a request for an example or a project file, in the words people use; the note sent with it routes the model to the
 # project tools, since the prompt's own list of such requests steered it only sometimes (2026-10-06)
 BUILD_ASK = re.compile(r"(?:做|制作|生成|重做|写)[^。！？\n]{0,40}(例子|示例|样例|demo|工程|项目|游戏|小游戏|原型)"
-                       r"|(给我|发我|发给我|给我发|给个|来个|来一个|要个|要一个|整个|弄个|搞个|写个)[^。，\n]{0,12}"
+                       r"|(给我|发我|发给我|给我发|给个|来个|来一个|要个|要一个|弄个|搞个|写个)[^。，\n]{0,12}"
                        r"(例子|示例|样例|demo|工程|项目|游戏|小游戏|原型)"
+                       r"|^\s*整个[^。，\n]{0,12}(例子|示例|样例|demo|工程|项目|游戏|小游戏|原型)"
                        r"|example project|make (me )?(a|an) (example|demo|project)", re.I)
 # a bare "c3p" or "工程文件" means the held project when one is held, a new one when none is
 BUILD_ASK_BARE = re.compile(r"c3p|工程文件|项目文件", re.I)

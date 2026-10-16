@@ -7,6 +7,14 @@ import zipfile
 import pytest
 
 from copilot.providers.construct3.application import Application, load_archive
+from copilot.providers.construct3.reply import is_build_ask
+
+
+def test_whole_game_question_is_distinct_from_build_request():
+    assert not is_build_ask("System Wait 会阻塞整个游戏吗？", False)
+    assert not is_build_ask("这个设置会影响整个项目吗？", False)
+    assert is_build_ask("整个小游戏", False)
+    assert is_build_ask("给我整个例子", False)
 
 
 def test_request_context_reaches_agent_and_files_survive_late_failure(tmp_path):
