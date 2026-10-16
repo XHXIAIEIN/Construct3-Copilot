@@ -303,11 +303,11 @@
       "id": "behavior-mapping",
       "name": "行为名称映射测试",
       "priority": "P1",
-      "query": "生成使用 EightDir 行为设置速度为 300 的事件",
+      "query": "生成使用 EightDir 行为设置最大速度为 300 的事件",
       "expected_behavior": [
         "警告或自动纠正 EightDir 为 8Direction",
         "使用正确的 behaviorType: 8Direction",
-        "使用 set-max-speed 动作"
+        "使用 set-max-speed 动作（最大速度），而不是 set-speed（当前速度）"
       ],
       "expected_output_contains": [
         "\"behaviorType\":\"8Direction\"",
@@ -323,16 +323,13 @@
       "priority": "P1",
       "query": "生成让 Player 面向鼠标位置旋转的事件",
       "expected_behavior": [
-        "不使用不存在的 set-angle-toward-position",
-        "使用 set-angle 配合 angle() 表达式",
+        "使用 set-angle-toward-position 动作",
         "使用 Mouse.X 和 Mouse.Y 表达式"
       ],
       "expected_output_contains": [
-        "\"set-angle\"",
-        "\"angle("
-      ],
-      "should_not_contain": [
-        "\"set-angle-toward-position\""
+        "\"set-angle-toward-position\"",
+        "Mouse.X",
+        "Mouse.Y"
       ]
     }
   ],
