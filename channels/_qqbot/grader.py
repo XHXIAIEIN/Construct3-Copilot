@@ -1,6 +1,6 @@
 """Silent grader: reads bot.log, has Codex (or Claude Code) check each reply, writes the verdict to reviews/.
 
-Nothing is sent to QQ. The bot exists to find what the Construct3-RAG repo lacks; a grade names the root of each
+Nothing is sent to QQ. The bot uses the Construct3-Agent-Skills tools and data. A grade names the root of each
 wrong claim so a later session can fix it there.
 
     python -u grader.py              # follow bot.log from its end
@@ -31,7 +31,8 @@ LOG = DATA / "logs" / "bot" / "bot.log"
 SESSIONS = DATA / "sessions"
 REVIEWS = DATA / "reviews"
 OFFSET = REVIEWS / ".offset"
-REPO = Path(os.environ.get("CONSTRUCT3_RAG") or HERE.parent / "Construct3-RAG")
+from c3bot.construct3 import PLUGIN_ROOT, RAG  # noqa: E402
+REPO = PLUGIN_ROOT
 GRADER = os.environ.get("GRADER", "codex")  # the claude CLI's login expired on 2026-10-09; GRADER=claude after a /login
 CODEX_MODEL = os.environ.get("CODEX_MODEL", "gpt-5.6-sol")  # config.toml's default is refused on a ChatGPT account
 TIMEOUT = 20 * 60  # seconds for one grade; a project question runs scripts in the editor's data
@@ -60,7 +61,8 @@ Reply it sent (" / " marks a line break):
 
 Snapshot of the chat's session folder (a project the user sent or the bot made, may be absent): {snap}
 
-Check every factual claim of the reply against the data, following AGENTS.md section 2: lookup_ace.py for each
+Check every factual claim of the reply against the plugin skill at skills/construct3-agent-plugin/SKILL.md.
+Run scripts from skills/construct3-agent-plugin/scripts/ with --rag "{data_root}". Use lookup_ace.py for each
 condition, action, expression and addon it names (both zh-CN names and en-US), search_guides.py and
 prompts/pitfalls/ for the approach, data/c3-examples for examples it names, print_sheet.py / print_layout.py /
 check_project.py on the snapshot when the reply describes or changes a project. If the reply describes an approach,
@@ -91,7 +93,7 @@ def snapshot(key: str, stamp: str) -> Path | None:
 
 
 def grade(item: dict) -> str:
-    prompt = PROMPT.format(**item)
+    prompt = PROMPT.format(**item, data_root=RAG.as_posix())
     if GRADER == "codex":
         cmd = ["codex", "exec", "-m", CODEX_MODEL, "--sandbox", "read-only", "-C", str(REPO), "-"]
     else:

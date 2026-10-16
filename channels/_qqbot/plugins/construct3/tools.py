@@ -1,5 +1,5 @@
 """The model's tools: the schemas it sees and the functions behind them, which run the scripts of the
-construct3-agent-plugin skill over the RAG clone or the person's project."""
+construct3-agent-plugin skill over its data or the person's project."""
 from __future__ import annotations
 
 import json
@@ -11,7 +11,7 @@ from pathlib import Path
 
 from c3bot import edits
 from . import newproject
-from c3bot.config import HOME, LOCALE, RAG
+from c3bot.config import HOME, LOCALE, RAG, SKILL_ROOT
 
 TOOLS = [
     {
@@ -218,7 +218,7 @@ PROJECT_READERS = ("print_sheet", "print_layout", "read_script", "check_project"
 def run_script_code(name: str, args: list[str], project: Path | None = None, limit: int = 6000,
                     locale: str = LOCALE) -> tuple[int, str]:
     """Run a script of the construct3-agent-plugin skill; return its exit code and what it printed."""
-    script = RAG / "skills" / "construct3-agent-plugin" / "scripts" / f"{name}.py"
+    script = SKILL_ROOT / "scripts" / f"{name}.py"
     cmd = [sys.executable, str(script), "--rag", str(RAG), "--locale", locale, "--limit", str(limit)]
     if project:
         cmd += ["--project", str(project)]
@@ -236,19 +236,19 @@ def lookup_ace(object: str, words: list[str] | None = None, project: Path | None
 
 
 def lookup_script_api(name: str) -> str:
-    """An interface with its members, or a member with its declaration: the RAG's lookup_script_api.py."""
+    """An interface with its members, or a member with its declaration: Agent-Skills' lookup_script_api.py."""
     return run_script("lookup_script_api", [name])
 
 
 def search_examples(words: list[str]) -> str:
-    """The official examples that hold the words, "id: name. description", from the RAG's search_guides.py.
+    """The official examples that hold the words, "id: name. description", from Agent-Skills' search_guides.py.
     The commands it prints under each one are left out: the bot reads an example with read_example."""
     out = run_script("search_guides", [*words, "--pitfalls", "0"])
     return "\n".join(line for line in out.splitlines() if line != "examples:" and not line.startswith("  "))
 
 
 def search_guides(words: list[str]) -> str:
-    """The pitfall entries that hold the words, each in full with its file and line: the RAG's search_guides.py."""
+    """The pitfall entries that hold the words, each in full with its file and line: Agent-Skills' search_guides.py."""
     return run_script("search_guides", [*words, "--examples", "0"])
 
 

@@ -6,13 +6,13 @@ import json
 import os
 from pathlib import Path
 
+from .construct3 import RAG, SKILL_ROOT  # noqa: F401
+
 HOME = Path(__file__).resolve().parent.parent  # the bot folder: bot.py, c3bot/, plugins/, .env
 # everything the bot writes while it runs: logs/, sessions/, reviews/, archive/, backups/
 DATA = Path(os.environ.get("C3BOT_DATA") or HOME / "var")
 # the knowledge plugin under plugins/: its tools, prompts and checks
 PLUGIN = os.environ.get("C3BOT_PLUGIN", "construct3")
-# the Construct3-RAG clone, the knowledge the construct3 plugin reads; by default a sibling folder of the bot
-RAG = Path(os.environ.get("CONSTRUCT3_RAG") or HOME.parent / "Construct3-RAG")
 LOCALE = os.environ.get("C3BOT_LOCALE", "zh-CN")
 # C3BOT_BASE_URL points at any OpenAI-compatible server, e.g. Ollama's http://localhost:11434/v1
 BASE_URL = os.environ.get("C3BOT_BASE_URL", "https://api.deepseek.com")

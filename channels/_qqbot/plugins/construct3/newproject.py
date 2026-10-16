@@ -25,13 +25,14 @@ from pathlib import Path
 
 from c3bot import edits
 from . import quick_fix
-from c3bot.config import DATA, RAG
+from c3bot.config import DATA, SKILL_ROOT
+from c3bot.construct3 import examples_root
 
 log = logging.getLogger("c3bot.newproject")
 
 HERE = Path(__file__).parent
 MARKS = DATA / "sessions" / "_new"
-EXAMPLES = Path(os.environ.get("C3_EXAMPLES") or RAG.parent / "Construct-Example-Projects")  # a sibling clone of the RAG
+EXAMPLES = examples_root()
 TEMPLATE_COPY = os.environ.get("C3BOT_TEMPLATE_COPY") == "1"
 SPEC_MAX = 60_000          # characters, as spec_build.py caps it
 BUILD_TIMEOUT = 150        # seconds for one spec_build.py run: the build, edit_sheet.py and check_project.py
@@ -437,12 +438,12 @@ def unwrap(arguments, key: str = "spec") -> object:
     return inner.get(key, inner) if isinstance(inner, dict) else inner
 
 
-def _scripts(rag: Path) -> Path:
-    return rag / "skills" / "construct3-agent-plugin" / "scripts"
+def _scripts() -> Path:
+    return SKILL_ROOT / "scripts"
 
 
 def read_example(example_id: str, rag: Path, locale: str, read_before: int = 0) -> str:
-    """The event sheets of an official example, printed by the RAG's print_sheet.py. An id of the examples' data
+    """The event sheets of an official example, printed by Agent-Skills' print_sheet.py. An id of the examples' data
     names the folder, or the folder with -js or -ts after it (tic-tac-toe is tic-tac-toe-js, 2026-10-04)."""
     if read_before >= 2:
         # the model read one example after another, 39 times, and ran out of steps (2026-10-04)
@@ -453,7 +454,7 @@ def read_example(example_id: str, rag: Path, locale: str, read_before: int = 0) 
     if not folder:
         return (f"no example {example_id!r}; take an id that search_examples printed, before the colon, or go "
                 f"on without one: design_guide, then check_design")
-    proc = subprocess.run([sys.executable, str(_scripts(rag) / "print_sheet.py"), "--rag", str(rag), "--locale", locale,
+    proc = subprocess.run([sys.executable, str(_scripts() / "print_sheet.py"), "--rag", str(rag), "--locale", locale,
                            "--project", str(folder), "--limit", "6000"],
                           capture_output=True, text=True, encoding="utf-8", timeout=60)
     text = "\n".join(l for l in (proc.stdout + proc.stderr).strip().splitlines()
@@ -463,9 +464,9 @@ def read_example(example_id: str, rag: Path, locale: str, read_before: int = 0) 
             "design_guide, then check_design")
 
 
-def design_guide(rag: Path) -> str:
-    """The RAG's reference on designs, from the format on: the steps there are the bot's tools here."""
-    text = (rag / "skills" / "construct3-agent-plugin" / "references" / "designing-a-game.md").read_text(encoding="utf-8")
+def design_guide() -> str:
+    """Agent-Skills' reference on designs, from the format on: the steps there are the bot's tools here."""
+    text = (SKILL_ROOT / "references" / "designing-a-game.md").read_text(encoding="utf-8")
     return text[text.index("## The design"):]
 
 
@@ -500,7 +501,7 @@ def _refuse(kind: str, session: Path, payload, text: str) -> str:
 
 
 def check_design(design, session: Path, rag: Path, read_one: bool) -> str:
-    """Run the RAG's check_design.py on the design; keep it for the build when it passes."""
+    """Run Agent-Skills' check_design.py on the design; keep it for the build when it passes."""
     if isinstance(design, str):
         try:
             design = json.loads(design)
@@ -516,7 +517,7 @@ def check_design(design, session: Path, rag: Path, read_one: bool) -> str:
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "design.json"
         path.write_text(json.dumps(design, ensure_ascii=False), encoding="utf-8")
-        proc = subprocess.run([sys.executable, str(_scripts(rag) / "check_design.py"), str(path), "--rag", str(rag),
+        proc = subprocess.run([sys.executable, str(_scripts() / "check_design.py"), str(path), "--rag", str(rag),
                                "--limit", "6000"], capture_output=True, text=True, encoding="utf-8", timeout=60)
         out = (proc.stdout + proc.stderr).strip()
         if proc.returncode == 0:
@@ -534,7 +535,7 @@ def play_tests(project: Path, rag: Path) -> str:
         return ""
     with _editor, tempfile.TemporaryDirectory() as tmp:
         try:
-            proc = subprocess.run([sys.executable, str(_scripts(rag) / "play_design.py"), str(_design_file(project)),
+            proc = subprocess.run([sys.executable, str(_scripts() / "play_design.py"), str(_design_file(project)),
                                    "--project", str(project), "--profile", str(PROFILE), "--adopt-starts",
                                    "--out", str(Path(tmp) / "result.json"), "--limit", "5000"],
                                   capture_output=True, text=True, encoding="utf-8", timeout=PLAY_TIMEOUT)
@@ -663,20 +664,20 @@ def from_template(template_id: str, name: str, session: Path, rag: Path, locale:
     data["uniqueId"] = "".join(random.choices(string.ascii_lowercase + string.digits, k=11))
     with c3proj.open("w", encoding="utf-8", newline="\n") as f:     # the editor's own layout
         f.write(json.dumps(data, indent="\t", ensure_ascii=False))
-    script = rag / "skills" / "construct3-agent-plugin" / "scripts" / "check_project.py"
+    script = SKILL_ROOT / "scripts" / "check_project.py"
     proc = subprocess.run([sys.executable, str(script), "--rag", str(rag), "--locale", locale, "--project", str(session)],
                           capture_output=True, text=True, encoding="utf-8", timeout=90)
     checked = re.sub(r"; next, review the design.*", "", (proc.stdout + proc.stderr).strip())
     return _settle(session, f"template {template_id}"), f"copied {template_id} as {name!r}\n{checked}"
 
 
-def pack(project: Path, rag: Path) -> Path:
-    """The project as sessions/_new/out/<hash>/<name>.c3p, packed by the RAG's pack_project.py."""
+def pack(project: Path) -> Path:
+    """The project as sessions/_new/out/<hash>/<name>.c3p, packed by Agent-Skills' pack_project.py."""
     out = MARKS / "out" / _mark_file(project).stem
     shutil.rmtree(out, ignore_errors=True)
     out.mkdir(parents=True)
     target = out / f"{edits.project_name(project)}.c3p"
-    script = rag / "skills" / "construct3-agent-plugin" / "scripts" / "pack_project.py"
+    script = SKILL_ROOT / "scripts" / "pack_project.py"
     proc = subprocess.run([sys.executable, str(script), "--project", str(project), "--out", str(target)],
                           capture_output=True, text=True, encoding="utf-8", timeout=120)
     if proc.returncode != 0 or not target.is_file():

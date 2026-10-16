@@ -1,16 +1,16 @@
-"""Build a Construct 3 folder project from a JSON spec, with the helpers of the RAG's generator template.
+"""Build a Construct 3 folder project from a JSON spec, with the helpers of the Agent-Skills generator template.
 
     python spec_build.py SPEC.json --out FOLDER [--rag RAG] [--locale zh-CN]
 
 The spec is data a chat model wrote; this file is the only code that runs. It checks the spec,
 draws the placeholder images and writes the object types, layouts and project.c3proj through
-skills/construct3-agent-plugin/assets/build_project.py, starting from the RAG's empty project
+plugin/skills/construct3-agent-plugin/assets/build_project.py, starting from the configured data root's empty project
 (data/c3-new-project), then puts each sheet's events in with edit_sheet.py, one operation per
 top-level event, and runs check_project.py. Every refusal names the spec path to change and what
 to write there. The project is built in a scratch folder and moved to --out only when the
 checker passes, so a refused spec leaves --out as it was.
 
-exit codes: 0 built and checked; 1 refused, nothing written; 2 the RAG clone is missing or broken
+exit codes: 0 built and checked; 1 refused, nothing written; 2 the tool plugin or data root is missing or broken
 """
 from __future__ import annotations
 
@@ -28,7 +28,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-DEFAULT_RAG = Path(os.environ.get("CONSTRUCT3_RAG") or Path(__file__).resolve().parents[3] / "Construct3-RAG")
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from c3bot.construct3 import RAG as DEFAULT_RAG, SKILL_ROOT  # noqa: E402
 SPEC_MAX = 60_000          # characters of spec JSON
 OBJECTS_MAX = 40
 LAYOUTS_MAX = 4
@@ -152,9 +153,9 @@ def count_events(events) -> int:
     return n
 
 
-def load_generator(rag: Path, out: Path):
+def load_generator(out: Path):
     """The generator template as a module of its own, writing into out."""
-    path = rag / "skills" / "construct3-agent-plugin" / "assets" / "build_project.py"
+    path = SKILL_ROOT / "assets" / "build_project.py"
     loader = importlib.util.spec_from_file_location("c3_generator", path)
     if not loader or not path.exists():
         raise FileNotFoundError(path)
@@ -260,13 +261,13 @@ def box_text(b: tuple) -> str:
     return f"({b[0]:g},{b[1]:g})-({b[2]:g},{b[3]:g})"
 
 
-def build(spec: dict, out: Path, rag: Path) -> list[str]:
+def build(spec: dict, out: Path) -> list[str]:
     """Write the project into out, an empty folder; return what it says about what was built."""
     keys_of(spec, "spec", "spec")
     name = spec.get("name")
     if not isinstance(name, str) or not 0 < len(name.strip()) <= 40:
         refuse("spec.name", "the project's name, 1 to 40 characters")
-    gen = load_generator(rag, out)
+    gen = load_generator(out)
     vw, vh = pair(spec.get("viewport", [720, 1280]), "spec.viewport", 160, 1920)
     set_viewport(gen, vw, vh)
     notes: list[str] = []
@@ -1109,7 +1110,7 @@ def build(spec: dict, out: Path, rag: Path) -> list[str]:
 
 
 def run(script: str, args: list[str], rag: Path, locale: str, limit: int = 6000) -> tuple[int, str]:
-    path = rag / "skills" / "construct3-agent-plugin" / "scripts" / f"{script}.py"
+    path = SKILL_ROOT / "scripts" / f"{script}.py"
     proc = subprocess.run([sys.executable, str(path), "--rag", str(rag), "--locale", locale, "--limit", str(limit), *args],
                           capture_output=True, text=True, encoding="utf-8", timeout=STEP_TIMEOUT)
     return proc.returncode, (proc.stdout + proc.stderr).strip()
@@ -1270,14 +1271,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="build a Construct 3 folder project from a JSON spec")
     ap.add_argument("spec", type=Path)
     ap.add_argument("--out", type=Path, required=True, help="the project folder; replaced only when the build passes")
-    ap.add_argument("--rag", type=Path, default=DEFAULT_RAG)
+    ap.add_argument("--rag", type=Path, default=DEFAULT_RAG, help="data root; defaults to the Agent-Skills plugin bundle")
     ap.add_argument("--locale", default="zh-CN")
     args = ap.parse_args()
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8")
     template = args.rag / "data" / "c3-new-project"
     if not (template / "project.c3proj").is_file():
-        print(f"the RAG clone has no empty project at {template}")
+        print(f"the configured data root has no empty project at {template}")
         return 2
     text = args.spec.read_text(encoding="utf-8-sig")
     fixed: list[str] = []
@@ -1295,7 +1296,7 @@ def main() -> int:
             shutil.copytree(template, work, ignore=shutil.ignore_patterns(".git", "llm-context.md"))
             for stale in ("layouts/Layout 1.json", "eventSheets/Event sheet 1.json"):
                 (work / stale).unlink(missing_ok=True)
-            said = [f"fixed: {line}" for line in fixed] + build(spec, work, args.rag)
+            said = [f"fixed: {line}" for line in fixed] + build(spec, work)
             said += add_events(spec, work, args.rag, args.locale)
             code, checked = run("check_project", ["--project", str(work)], args.rag, args.locale)
             if code != 0:

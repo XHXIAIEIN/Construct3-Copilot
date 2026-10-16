@@ -62,7 +62,7 @@ is_new = newproject.is_new
 
 def pack(project: Path) -> Path:
     """The .c3p of the project as it is now: a made project or the person's edited one."""
-    return newproject.pack(project, RAG) if newproject.is_new(project) else edits.pack(project, RAG)
+    return newproject.pack(project) if newproject.is_new(project) else edits.pack(project)
 
 
 def session_tools(run) -> tuple[list[dict], dict, int]:
@@ -73,7 +73,7 @@ def session_tools(run) -> tuple[list[dict], dict, int]:
         "spec_guide": lambda: newproject.QUICK_GUIDE if newproject.QUICK else newproject.SPEC_GUIDE,
         "read_example": lambda id: newproject.read_example(
             id, RAG, LOCALE, sum(t.startswith("read_example") for t in trace)),
-        "design_guide": lambda: newproject.design_guide(RAG),
+        "design_guide": lambda: newproject.design_guide(),
         "check_design": lambda design=None, arguments=None: newproject.check_design(
             design if design is not None else newproject.unwrap(arguments, "design"), session, RAG,
             any(t.startswith("read_example") for t in trace)),

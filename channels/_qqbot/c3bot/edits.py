@@ -14,7 +14,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from .config import DATA
+from .config import DATA, SKILL_ROOT
 
 ROOT = DATA / "sessions" / "_edits"
 SNAPSHOT = ("eventSheets", "layouts", "project.c3proj")  # what edit_sheet.py writes
@@ -87,13 +87,13 @@ def project_name(project: Path) -> str:
     return re.sub(r'[\\/:*?"<>|\s]+', "_", name).strip("._") or project.name
 
 
-def pack(project: Path, rag: Path) -> Path:
-    """Pack the project with the RAG's pack_project.py as out/<name>-edited.c3p."""
+def pack(project: Path) -> Path:
+    """Pack the project with Agent-Skills' pack_project.py as out/<name>-edited.c3p."""
     out = side(project) / "out"
     shutil.rmtree(out, ignore_errors=True)
     out.mkdir(parents=True)
     target = out / f"{project_name(project)}-edited.c3p"
-    script = rag / "skills" / "construct3-agent-plugin" / "scripts" / "pack_project.py"
+    script = SKILL_ROOT / "scripts" / "pack_project.py"
     proc = subprocess.run([sys.executable, str(script), "--project", str(project), "--out", str(target)],
                           capture_output=True, text=True, encoding="utf-8", timeout=120)
     if proc.returncode != 0 or not target.is_file():
