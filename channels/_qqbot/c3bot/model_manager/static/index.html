@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QQbot · 模型</title>
+<style>
+:root{font-family:system-ui,"Microsoft YaHei",sans-serif;color:#202329;background:#f7f8fa;font-size:14px}*{box-sizing:border-box}
+body{margin:0}main{max-width:1080px;margin:auto;padding:32px 28px}h1{font-size:24px;margin:0 0 8px;font-weight:650}
+p{line-height:1.6;margin:6px 0;color:#616875}.top{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.states{display:flex;gap:24px;padding:18px 0;border-bottom:1px solid #dce0e6;margin-bottom:22px;flex-wrap:wrap}.states strong{color:#202329}
+button,input{font:inherit}button{border:1px solid #cbd0d8;border-radius:6px;background:white;color:#202329;padding:9px 14px;cursor:pointer}
+button:hover:enabled{background:#eef1f6}button:disabled{opacity:.45;cursor:default}button.primary{background:#275dc1;color:white;border-color:#275dc1}
+button.primary:hover:enabled{background:#1c4d9f}.toolbar{display:flex;gap:10px;align-items:center;margin:14px 0}
+input[type=search]{border:1px solid #cbd0d8;border-radius:6px;padding:10px 12px;flex:1;min-width:120px;background:white}
+.table-wrap{overflow:auto;max-height:52vh;border-block:1px solid #dce0e6}table{border-collapse:collapse;width:100%;background:white;text-align:left}
+th{position:sticky;top:0;background:#f0f2f5;font-weight:500;color:#616875}th,td{padding:11px 12px;border-bottom:1px solid #edf0f3;white-space:nowrap}
+th:first-child,td:first-child{width:38px}tr[data-model]{cursor:pointer}tr.selected{background:#eaf0fc}tr[data-model]:hover{background:#f1f5fc}
+input[type=radio]{accent-color:#275dc1}.model-name{font-weight:550}.muted{color:#737b87;font-size:12px}.actions{padding:20px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.selection{flex:1;min-width:220px}.selection strong{display:block;margin-top:4px;overflow-wrap:anywhere}#feedback{padding:12px 14px;background:#e9edf3;border-radius:6px;min-height:44px;white-space:pre-wrap}
+#feedback[data-state=failed]{background:#fceceb;color:#91362b}#feedback[data-state=completed]{background:#e9f3ed;color:#285d3a}
+details{margin-top:24px;color:#616875;font-size:12px}summary{cursor:pointer}code{overflow-wrap:anywhere}.empty{text-align:center;padding:28px;color:#737b87}
+@media(max-width:650px){main{padding:20px 14px}.top{align-items:flex-start;flex-direction:column}.states{gap:10px;flex-direction:column}.toolbar{flex-wrap:wrap}.selection{width:100%}.actions button{flex:1}.table-wrap{max-height:45vh}}
+</style>
+<main>
+  <div class="top"><div><h1>QQbot 模型</h1><p>选择本机模型，加载或切换给机器人。</p></div><button id="start">启动 Ollama</button></div>
+  <div class="states"><span>模型服务 · <strong id="service">读取中…</strong></span><span>QQbot · <strong id="gateway">读取中…</strong></span><span>当前配置 · <strong id="current">读取中…</strong></span></div>
+  <div class="toolbar"><input id="search" type="search" placeholder="搜索本机模型" aria-label="搜索本机模型"><span id="count" class="muted"></span><button id="refresh">刷新列表</button></div>
+  <div class="table-wrap"><table><thead><tr><th></th><th>模型</th><th>规模</th><th>量化</th><th>大小</th><th>状态</th></tr></thead><tbody id="models"><tr><td colspan="6" class="empty">正在读取模型列表…</td></tr></tbody></table></div>
+  <div class="actions"><div class="selection"><span class="muted">已选择</span><strong id="selected">请选择模型</strong></div><button id="warm" disabled>加载到内存</button><button id="switch" class="primary" disabled>切换并重启 QQbot</button></div>
+  <p class="muted">切换会保存 .env 并重启 QQbot；机器人正在回答时，请等待完成后再切换。模型加载可能需要一两分钟。</p>
+  <div id="feedback" role="status" aria-live="polite">正在读取状态…</div>
+  <details><summary>配置文件</summary><p>服务地址和模型存储位置保存在 <code id="config"></code>。机器人配置写入 .env，原文件会保留备份。</p><p>列表来自本机 Ollama；切换前会检查模型是否支持对话与工具调用。</p></details>
+</main>
+<script>
+const token="__PANEL_TOKEN__";
+let state=null,selected="",busy=false,refreshing=false,lastJob="";
+const $=id=>document.getElementById(id);
+function feedback(message,kind=""){ $("feedback").textContent=message;$("feedback").dataset.state=kind; }
+function buttons(){ $("warm").disabled=busy||!selected||!state?.ollama?.online;$("switch").disabled=busy||!selected||!state?.ollama?.online;$("start").disabled=busy||!!state?.ollama?.online;$("refresh").disabled=refreshing; }
+function render(){
+  const list=state?.models||[], query=$("search").value.toLowerCase();
+  const filtered=list.filter(m=>m.name.toLowerCase().includes(query));
+  $("count").textContent=query?`${filtered.length} / ${list.length} 个`:`${list.length} 个模型`;
+  const tbody=$("models");tbody.replaceChildren();
+  for(const m of filtered){
+    const tr=document.createElement("tr");tr.dataset.model=m.name;tr.className=selected===m.name?"selected":"";
+    const td=document.createElement("td"),radio=document.createElement("input");radio.type="radio";radio.name="model";radio.checked=selected===m.name;radio.setAttribute("aria-label",`选择 ${m.name}`);td.append(radio);tr.append(td);
+    const current=state.current?.model===m.name;
+    const fields=[m.name,m.parameter_size||"—",m.quantization||"—",m.size?(m.size/1e9).toFixed(1)+" GB":"—",[current?"当前配置":"",m.loaded?"已加载":""].filter(Boolean).join(" · ")||"未加载"];
+    fields.forEach((v,i)=>{const cell=document.createElement("td");cell.textContent=v;if(i===0)cell.className="model-name";tr.append(cell);});
+    tr.addEventListener("click",()=>{selected=m.name;render();});tbody.append(tr);
+  }
+  if(!filtered.length){const row=tbody.insertRow(),cell=row.insertCell();cell.colSpan=6;cell.className="empty";cell.textContent=!state?.ollama?.online?"模型服务未启动。点击“启动 Ollama”后刷新列表。":query?"没有匹配的模型。":"本机模型目录中没有已安装模型，请检查配置文件中的存储位置。";}
+  $("selected").textContent=selected||"请选择模型";buttons();
+}
+async function refresh(){
+  if(refreshing)return;refreshing=true;buttons();
+  try{
+    const r=await fetch("/api/status"),data=await r.json();if(!r.ok)throw Error(data.error||"读取状态失败");
+    state=data.status;busy=data.job?.state==="running";
+    $("service").textContent=state.ollama.online?"运行中":"未启动";
+    $("gateway").textContent=state.gateway?.alive?(state.gateway.status==="ready"?"已就绪":"连接中") :"未运行";
+    $("current").textContent=state.current.model||"尚未配置";$("config").textContent=state.config_path||"var/models.json";
+    if(!selected&&(state.models||[]).some(m=>m.name===state.current.model))selected=state.current.model;
+    render();
+    if(data.job){const signature=JSON.stringify(data.job);if(signature!==lastJob){lastJob=signature;feedback(busy?`${data.job.action==="start"?"正在启动 Ollama":data.job.action==="warm"?"正在加载 ":"正在切换到 "}${data.job.model||""}…`:data.job.message,data.job.state);}}
+    else if(!lastJob)feedback(state.ollama.online?"选择一个模型后，可以加载或切换。":"先启动 Ollama，再选择本机模型。");
+  }catch(e){feedback(e.message+"。请检查服务并刷新页面。","failed");}
+  finally{refreshing=false;buttons();}
+}
+async function act(action){
+  if(busy)return;busy=true;buttons();feedback("正在提交操作…");
+  try{const r=await fetch("/api/action",{method:"POST",headers:{"Content-Type":"application/json","X-Panel-Token":token},body:JSON.stringify({action,model:selected})});const data=await r.json();if(!r.ok)throw Error(data.error||"提交失败");lastJob="";await refresh();}
+  catch(e){busy=false;buttons();feedback(e.message,"failed");}
+}
+$("search").addEventListener("input",render);$("refresh").addEventListener("click",refresh);
+$("start").addEventListener("click",()=>act("start"));$("warm").addEventListener("click",()=>act("warm"));$("switch").addEventListener("click",()=>act("switch"));
+refresh();setInterval(refresh,3000);
+</script>
+</html>

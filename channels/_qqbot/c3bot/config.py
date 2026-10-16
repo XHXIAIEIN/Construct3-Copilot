@@ -1,15 +1,15 @@
 """Settings read from the environment once, when the bot starts: where the bot keeps its data, which knowledge
-plugin answers, which model is called and how. bot.py loads .env before it imports this module."""
+plugin answers, which model is called and how. qq.py loads .env before it imports this module."""
 from __future__ import annotations
 
 import json
 import os
 from pathlib import Path
 
-HOME = Path(__file__).resolve().parent.parent  # the bot folder: bot.py, c3bot/, plugins/, .env
+HOME = Path(__file__).resolve().parent.parent  # the bot checkout: c3bot/, plugins/, .env
 # everything the bot writes while it runs: logs/, sessions/, reviews/, archive/, backups/
 DATA = Path(os.environ.get("C3BOT_DATA") or HOME / "var")
-# the knowledge plugin under plugins/: its tools, prompts and checks
+# the Copilot domain provider: tools, prompts and checks
 PLUGIN = os.environ.get("C3BOT_PLUGIN", "construct3")
 # the Construct3-RAG clone, the knowledge the construct3 plugin reads; by default a sibling folder of the bot
 RAG = Path(os.environ.get("CONSTRUCT3_RAG") or HOME.parent / "Construct3-RAG")

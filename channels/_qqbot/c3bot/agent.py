@@ -1,13 +1,12 @@
 """The model's tool loop: one answer from a question, a chat history and the tools of the knowledge plugin.
 
-The plugin (plugins/<C3BOT_PLUGIN>/) brings the tools, the prompts and the check of an answer; reply.py handles
+The configured Copilot provider supplies the tools, prompts and answer checks; reply.py handles
 the reply's length and phrasing, usage.py counts tokens, config.py reads the settings. This module builds the
 conversation, hands the model its tools, runs each call, checks and shortens the final text, and packs a
 project that is to be sent."""
 from __future__ import annotations
 
 import html
-import importlib
 import json
 import logging
 import re
@@ -17,12 +16,14 @@ from pathlib import Path
 
 from openai import BadRequestError, OpenAI
 
-from . import copilot, edits, gpu_yield, usage
+from . import copilot, gpu_yield, usage
 from .config import BASE_URL, LOCAL, MAX_STEPS, MODEL, NO_THINK, PLUGIN, TIMEOUT, ZHIPU
 from .reply import ASKED_EVENTS, BUILD_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten
 
 log = logging.getLogger("c3bot.agent")
-kb = importlib.import_module(f"plugins.{PLUGIN}")
+from .knowledge import get_plugin
+
+kb = get_plugin()
 
 MAX_CHECKS = 2
 NO_STEPS = "这次没有完成核实，暂时不能给你可直接照做的步骤。"
@@ -54,7 +55,7 @@ class Run:
         self.send = False  # set by a written edit, an undo that leaves edits, send_project or a new project
         self.told = False  # the busy note went out, at the first tool call that makes or changes a project
         self.asked = project is not None or bool(ASKED_EVENTS.search(question))  # events may make the reply longer
-        self.edits_before = edits.edit_count(project) if project else 0
+        self.edits_before = kb.edits.edit_count(project) if project else 0
         if session is not None and is_build_ask(question, project is not None):
             question += BUILD_NOTE
             self.trace.append("build ask")
@@ -75,7 +76,7 @@ class Run:
         if project and kb.is_new(project):
             self.send = True
             return "the project as it is now is sent as a file after the reply"
-        if not (project and edits.edit_count(project)):
+        if not (project and kb.edits.edit_count(project)):
             return ("not sent: nothing in the project was changed, so the file would be the one the person sent. "
                     "Do not say a file was sent. If they asked for a change you did not make, tell them in words "
                     "what to change and where.")
@@ -196,16 +197,16 @@ class Agent:
         project, trace = run.project, run.trace
         if project and kb.is_new(project) and "steps ran out" in trace:
             run.send = False  # a game the answer did not finish is not sent as if it were
-        elif project and "steps ran out" in trace and edits.edit_count(project) > run.edits_before:
+        elif project and "steps ran out" in trace and kb.edits.edit_count(project) > run.edits_before:
             # a change left half done (a sheet with one variable, 2026-10-06) is taken back, not sent
-            while edits.edit_count(project) > run.edits_before:
-                edits.undo(project)
+            while kb.edits.edit_count(project) > run.edits_before:
+                kb.edits.undo(project)
             run.send = False
             text = NOT_FINISHED
             trace.append("unfinished edits undone")
-        elif project and not run.send and edits.edit_count(project) > run.edits_before:
-            while edits.edit_count(project) > run.edits_before:  # edits of a build that is not sent
-                edits.undo(project)
+        elif project and not run.send and kb.edits.edit_count(project) > run.edits_before:
+            while kb.edits.edit_count(project) > run.edits_before:  # edits of a build that is not sent
+                kb.edits.undo(project)
             trace.append("edits of an unsent build undone")
         if project and run.send and outbox is not None:
             try:

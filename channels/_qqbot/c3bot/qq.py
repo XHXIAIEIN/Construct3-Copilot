@@ -1,7 +1,7 @@
 """QQ bot front end for the Construct 3 answer agent.
 
-    python bot.py                 connect to QQ over WebSocket (needs QQ_APPID, QQ_SECRET)
-    python bot.py --cli "问题"     ask once in the terminal, print the reply and the tool calls
+    python -m c3bot.qq                 connect to QQ over WebSocket (needs QQ_APPID, QQ_SECRET)
+    python -m c3bot.qq --cli "问题"     ask once in the terminal, print the reply and the tool calls
 """
 from __future__ import annotations
 
@@ -28,10 +28,10 @@ import xml.etree.ElementTree as ET
 
 # before the c3bot package, whose config.py reads C3BOT_BASE_URL and C3BOT_MODEL when it is imported
 # (2026-10-06: the .env switch to a local model was read too late and the bot kept calling DeepSeek)
-load_dotenv(Path(__file__).parent / ".env")
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 from c3bot import attachments as attachments_mod  # noqa: E402
-from c3bot import copilot, edits, qqfile  # noqa: E402
-from c3bot.agent import Agent  # noqa: E402
+from c3bot import copilot, qqfile  # noqa: E402
+from c3bot.agent import Agent, kb  # noqa: E402
 from c3bot.config import DATA  # noqa: E402
 from c3bot.gateway import GatewayReceipt  # noqa: E402
 
@@ -123,6 +123,12 @@ def serialized_sessions(handler):
 
 def run_qq(agent: Agent) -> None:
     copilot.get_runtime()
+    log_dir = DATA / "logs" / "bot"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    handler = logging.FileHandler(log_dir / "bot.log", encoding="utf-8")
+    handler.setFormatter(logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s"))
+    handler.addFilter(_Quiet())
+    logging.getLogger().addHandler(handler)
     import botpy
     from botpy.message import C2CMessage, GroupMessage
 
@@ -155,7 +161,7 @@ def run_qq(agent: Agent) -> None:
                 history[key].clear()
                 if project:
                     projects[key] = project
-                    edits.reset(project)  # the edits of an earlier upload do not apply to this one
+                    kb.edits.reset(project)  # the edits of an earlier upload do not apply to this one
                     log.info("project for %s: %s", key, project)
                 else:  # a Construct 2 project replaces the session's project too
                     projects.pop(key, None)

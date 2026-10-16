@@ -12,11 +12,12 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-import bot
-from c3bot import copilot
+from c3bot import qq as bot
+from c3bot import copilot as qqcopilot
+from copilot.providers.construct3 import services as copilot
 from c3bot.agent import Agent, NO_FILE
 from c3bot.gateway import GatewayReceipt
-from plugins.construct3 import newproject, tools
+from copilot.providers.construct3 import newproject, tools
 
 
 class AdapterTests(unittest.TestCase):
@@ -57,17 +58,17 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(self.runtime.run_script.call_args.args[1][-1], str(self.root / "data-clone"))
 
     def test_child_context_is_scoped_to_subprocess_environment(self):
-        task = SimpleNamespace(task_id="task-placeholder")
-        token = copilot._active.set((task, "session-placeholder"))
+        task = SimpleNamespace(task_id="task-placeholder", session_id="session-placeholder")
+        token = copilot._active.set(task)
         self.addCleanup(copilot._active.reset, token)
         before = dict(os.environ)
         env = copilot.child_environment()
-        self.assertEqual(env["C3BOT_COPILOT_PARENT"], task.task_id)
-        self.assertEqual(env["C3BOT_COPILOT_SESSION"], "session-placeholder")
+        self.assertEqual(env["COPILOT_PARENT_TASK"], task.task_id)
+        self.assertEqual(env["COPILOT_SESSION"], "session-placeholder")
         self.assertEqual(dict(os.environ), before)
 
     def test_child_calls_carry_parent_without_opening_another_session(self):
-        with patch.dict(os.environ, {"C3BOT_COPILOT_PARENT": "parent-placeholder", "C3BOT_COPILOT_SESSION": "child-placeholder"}):
+        with patch.dict(os.environ, {"COPILOT_PARENT_TASK": "parent-placeholder", "COPILOT_SESSION": "child-placeholder"}):
             copilot.run_script("check_project", [], self.root)
         self.assertEqual(self.runtime.run_script.call_args.kwargs["parent_id"], "parent-placeholder")
         self.assertEqual(self.runtime.run_script.call_args.kwargs["session_id"], "child-placeholder")
@@ -80,14 +81,14 @@ class AdapterTests(unittest.TestCase):
             yield task
 
         agent = Agent.__new__(Agent)
-        with patch.object(copilot, "session", fake_session), patch.object(agent, "_answer_in_session", return_value=(NO_FILE, ["pack failed: refused"])):
+        with patch.object(qqcopilot, "session", fake_session), patch.object(agent, "_answer_in_session", return_value=(NO_FILE, ["pack failed: refused"])):
             self.assertEqual(agent.answer("make an example", outbox=[])[0], NO_FILE)
         self.assertEqual(task.finish.call_args.kwargs["status"], "failed")
         self.assertEqual(task.finish.call_args.kwargs["artifacts"], [])
 
     def test_pack_failure_clears_delivery_claim(self):
         run = SimpleNamespace(project=self.root, trace=[], send=True, edits_before=0)
-        with patch("c3bot.agent.kb.is_new", return_value=False), patch("c3bot.agent.kb.pack", side_effect=RuntimeError("refused")), patch("c3bot.agent.edits.edit_count", return_value=0):
+        with patch("c3bot.agent.kb.is_new", return_value=False), patch("c3bot.agent.kb.pack", side_effect=RuntimeError("refused")), patch("c3bot.agent.kb.edits.edit_count", return_value=0):
             text = Agent.__new__(Agent)._finish(run, "项目文件随后发给你。", [])
         self.assertEqual(text, NO_FILE)
         self.assertFalse(run.send)
@@ -184,7 +185,7 @@ class AdapterTests(unittest.TestCase):
 
     def test_invalid_copilot_configuration_fails_before_gateway_start(self):
         self.runtime = None
-        with patch.object(copilot, "get_runtime", side_effect=ImportError("missing configured checkout")), patch.object(bot, "GatewayReceipt") as receipt:
+        with patch.object(qqcopilot, "get_runtime", side_effect=ImportError("missing configured checkout")), patch.object(bot, "GatewayReceipt") as receipt:
             with self.assertRaisesRegex(ImportError, "missing configured checkout"):
                 bot.run_qq(Mock())
         receipt.assert_not_called()

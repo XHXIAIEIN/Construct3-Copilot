@@ -3,9 +3,9 @@
 Nothing is sent to QQ. The bot exists to find what the Construct3-RAG repo lacks; a grade names the root of each
 wrong claim so a later session can fix it there.
 
-    python -u grader.py              # follow bot.log from its end
-    python -u grader.py --from-start # grade the whole log first
-    GRADER=claude python -u grader.py # Claude Code instead of Codex
+    python -u -m c3bot.grader              # follow bot.log from its end
+    python -u -m c3bot.grader --from-start # grade the whole log first
+    GRADER=claude python -u -m c3bot.grader # Claude Code instead of Codex
 
 State (the byte offset read so far) lives in reviews/.offset, so a restart neither skips nor repeats a reply.
 """
@@ -24,7 +24,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv  # noqa: E402
 
-HERE = Path(__file__).parent
+HERE = Path(__file__).resolve().parents[1]
 load_dotenv(HERE / ".env")  # the paths and keys the bot itself reads
 from c3bot.copilot import get_runtime  # noqa: E402
 DATA = Path(os.environ.get("C3BOT_DATA") or HERE / "var")  # as c3bot/config.py reads it
