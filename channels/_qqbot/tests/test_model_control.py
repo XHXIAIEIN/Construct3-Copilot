@@ -74,6 +74,20 @@ class ModelControlTests(unittest.TestCase):
         for private in ("private-placeholder", "old-placeholder", "digest", "QQ_SECRET"):
             self.assertNotIn(private, serialized)
 
+    def test_parent_exit_after_child_stop_is_success(self):
+        with patch.object(self.control, "_process", side_effect=[self.process, self.parent, None]), \
+             patch("qqbot.model_manager.control.subprocess.run", side_effect=[
+                 subprocess.CompletedProcess([], 0), subprocess.CompletedProcess([], 1)
+             ]) as stop:
+            self.control._stop([self.process, self.parent])
+        self.assertEqual(stop.call_count, 2)
+
+    def test_stop_failure_keeps_a_live_process_as_failure(self):
+        with patch.object(self.control, "_process", return_value=self.parent), \
+             patch("qqbot.model_manager.control.subprocess.run", return_value=subprocess.CompletedProcess([], 1)):
+            with self.assertRaises(ControlError):
+                self.control._stop([self.parent])
+
     def test_configuration_is_read_again_per_operation(self):
         self.assertEqual(self.control._config()["url"], self.config["url"])
         self.config["url"] = "http://127.0.0.1:12345"

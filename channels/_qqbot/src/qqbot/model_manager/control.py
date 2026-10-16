@@ -390,7 +390,7 @@ class ModelControl:
             result = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command",
                                      f"Stop-Process -Id {int(expected['ProcessId'])} -Force -ErrorAction Stop"],
                                     capture_output=True, timeout=8, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-            if result.returncode:
+            if result.returncode and self._process(expected["ProcessId"]) is not None:
                 raise ControlError("QQ 进程未能停止，请检查本地服务。")
 
     def _launch_bot(self):
