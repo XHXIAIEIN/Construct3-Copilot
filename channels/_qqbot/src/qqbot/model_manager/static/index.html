@@ -481,7 +481,7 @@ const METRICS={
   people:{of:"answers",label:"人数",value:a=>new Set(a.map(x=>x.who)).size,fmt:n=>[[n,"人"]],
     note:a=>`人均 ${trim(a.length/new Set(a.map(x=>x.who)).size)} 次`},
   tokens:{of:"answers",label:"词元",value:a=>sum(a,"prompt")+sum(a,"completion"),fmt:n=>bigNumber(n),
-    note:a=>`输入 ${plain(bigNumber(sum(a,"prompt")))} · 输出 ${plain(bigNumber(sum(a,"completion")))}`},
+    note:a=>`输出 ${plain(bigNumber(sum(a,"completion")))}`},
   time:{of:"answers",label:"用时（中位）",value:a=>median(a.map(x=>x.seconds)),fmt:n=>duration(n),
     note:a=>`最长 ${plain(duration(Math.max(...a.map(x=>x.seconds))))}`},
   received:{of:"received",label:"收到项目",value:a=>a.length,fmt:n=>[[n,"个"]],note:a=>`共 ${fileSize(sum(a,"bytes"))}`},
@@ -501,7 +501,8 @@ try{
 function median(values){ if(!values.length)return null;const v=[...values].sort((a,b)=>a-b),m=v.length>>1;return v.length%2?v[m]:Math.round((v[m-1]+v[m])/2); }
 function trim(n){ return String(+n.toFixed(n<10?1:0)); }
 function bigNumber(n){ return n>=1e8?[[trim(n/1e8),"亿"]]:n>=1e4?[[trim(n/1e4),"万"]]:[[n,""]]; }
-function duration(s){ return s<60?[[s,"秒"]]:s<3600?[[Math.floor(s/60),"分"],[s%60,"秒"]]:[[Math.floor(s/3600),"小时"],[Math.floor(s%3600/60),"分"]]; }
+// Seconds matter only for short answers; past ten minutes they are noise.
+function duration(s){ return s<60?[[s,"秒"]]:s<600?[[Math.floor(s/60),"分"],[s%60,"秒"]]:s<3600?[[Math.floor(s/60),"分"]]:[[Math.floor(s/3600),"小时"],[Math.floor(s%3600/60),"分"]]; }
 function fileSize(n){ return n<1048576?`${Math.round(n/1024)} KB`:`${trim(n/1048576)} MB`; }
 function plain(parts){ return parts.map(([n,u])=>n+u).join(" "); }
 function parseAt(at){ const [d,t]=at.split(" "),[y,m,day]=d.split("-").map(Number),[h,mi,se]=t.split(":").map(Number);return new Date(y,m-1,day,h,mi,se); }
@@ -593,7 +594,7 @@ function showPage(name){
   document.querySelectorAll("section[data-page]").forEach(s=>s.hidden=s.dataset.page!==page);
   document.querySelectorAll("nav a").forEach(a=>a.dataset.page===page?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
   document.querySelectorAll(".tools").forEach(t=>t.hidden=t.dataset.for!==page);
-  setText($("title"),titles[page]);closeMenu();
+  setText($("title"),titles[page]);closeMenu();$("now").hidden=page!=="models";
   if(page==="logs")refreshLog();
   if(page==="stats"){renderStats();refreshStats(true);}
   $("tip").hidden=true;
