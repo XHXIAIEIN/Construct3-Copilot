@@ -494,8 +494,8 @@ const METRICS={
     note:a=>`输出 ${plain(bigNumber(sum(a,"completion")))}`},
   time:{of:"answers",label:"用时（中位）",value:a=>median(a.map(x=>x.seconds)),fmt:n=>duration(n),
     note:a=>`最长 ${plain(duration(Math.max(...a.map(x=>x.seconds))))}`},
-  received:{split:true,of:"received",label:"收到项目",value:a=>a.length,fmt:n=>[[n,"个"]],note:a=>`共 ${fileSize(sum(a,"bytes"))}`},
-  sent:{split:true,of:"sent",label:"发出项目",value:a=>a.filter(x=>x.ok).length,fmt:n=>[[n,"个"]],
+  received:{split:true,of:"received",label:"用户上传",value:a=>a.length,fmt:n=>[[n,"个"]],note:a=>`共 ${fileSize(sum(a,"bytes"))}`},
+  sent:{split:true,of:"sent",label:"发给用户",value:a=>a.filter(x=>x.ok).length,fmt:n=>[[n,"个"]],
     note:a=>{const failed=a.filter(x=>!x.ok).length;return failed?`失败 ${failed} 次`:`共 ${fileSize(sum(a,"bytes"))}`;}},
   builds:{split:true,of:"builds",label:"生成项目",value:a=>a.length,fmt:n=>[[n,"次"]],
     // "unknown": the log cut the line that says how the build ended.
