@@ -136,9 +136,10 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
     <section data-page="stats" hidden>
       <div class="list empty" id="stats-empty">正在读取…</div>
       <div id="stats-body" hidden>
-        <div class="kpis" id="kpis" role="group" aria-label="图表显示的指标"></div>
+        <div class="kpis" id="kpis" role="group" aria-label="回答"></div>
+        <div class="kpis" id="kpis-projects" role="group" aria-label="项目"></div>
         <div class="list chart"><div class="chart-head"><span id="trend-title"></span><small id="trend-range"></small></div><div class="bars" id="trend"></div><div class="ticks" id="trend-ticks"></div></div>
-        <div class="list chart"><div class="chart-head"><span id="hours-title"></span><small>按提问时间</small></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
+        <div class="list chart"><div class="chart-head"><span>时段</span></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
         <div class="muted" id="stats-meta"></div>
       </div>
     </section>
@@ -471,13 +472,27 @@ const logResize=new ResizeObserver(()=>{if(logFollow)$("log-box").scrollTop=$("l
 logResize.observe($("log-lines"));logResize.observe($("log-box"));
 
 // ---- stats
-// usage.log has one line per answer: the whole answer, every model call and tool step, not one request.
+// Each tile counts one list: answers (usage.log, one line per whole answer, every model call and tool step), or the
+// project files received, sent and built (bot.log). Picking a tile sets what both charts show.
+const sum=(list,key)=>list.reduce((t,x)=>t+x[key],0);
 const METRICS={
-  count:{label:"回答",chart:"回答次数",value:a=>a.length,fmt:n=>[[n,"次"]]},
-  people:{label:"人数",chart:"提问的人数",value:a=>new Set(a.map(x=>x.who)).size,fmt:n=>[[n,"人"]]},
-  tokens:{label:"词元",chart:"用掉的词元",value:a=>a.reduce((t,x)=>t+x.prompt+x.completion,0),fmt:n=>bigNumber(n)},
-  time:{label:"用时（中位）",chart:"每次回答的用时（中位）",value:a=>median(a.map(x=>x.seconds)),fmt:n=>n===null?[["—",""]]:duration(n)},
+  count:{of:"answers",label:"回答",value:a=>a.length,fmt:n=>[[n,"次"]],
+    note:a=>{const g=a.filter(x=>x.chat==="group").length;return `私聊 ${a.length-g} · 群聊 ${g}`;}},
+  people:{of:"answers",label:"人数",value:a=>new Set(a.map(x=>x.who)).size,fmt:n=>[[n,"人"]],
+    note:a=>`人均 ${trim(a.length/new Set(a.map(x=>x.who)).size)} 次`},
+  tokens:{of:"answers",label:"词元",value:a=>sum(a,"prompt")+sum(a,"completion"),fmt:n=>bigNumber(n),
+    note:a=>`输入 ${plain(bigNumber(sum(a,"prompt")))} · 输出 ${plain(bigNumber(sum(a,"completion")))}`},
+  time:{of:"answers",label:"用时（中位）",value:a=>median(a.map(x=>x.seconds)),fmt:n=>duration(n),
+    note:a=>`最长 ${plain(duration(Math.max(...a.map(x=>x.seconds))))}`},
+  received:{of:"received",label:"收到项目",value:a=>a.length,fmt:n=>[[n,"个"]],note:a=>`共 ${fileSize(sum(a,"bytes"))}`},
+  sent:{of:"sent",label:"发出项目",value:a=>a.filter(x=>x.ok).length,fmt:n=>[[n,"个"]],
+    note:a=>{const failed=a.filter(x=>!x.ok).length;return failed?`失败 ${failed} 次`:`共 ${fileSize(sum(a,"bytes"))}`;}},
+  builds:{of:"builds",label:"生成项目",value:a=>a.length,fmt:n=>[[n,"次"]],
+    note:a=>{const ok=a.filter(x=>x.ok).length;return `成功 ${ok} · 失败 ${a.length-ok}`;}},
+  fixes:{of:"builds",label:"自动修复",value:a=>sum(a,"fixes"),fmt:n=>[[n,"处"]],
+    note:a=>{const n=a.filter(x=>x.fixes).length;return n?`在 ${n} 次生成里`:"";}},
 };
+const ROWS=[["count","people","tokens","time"],["received","sent","builds","fixes"]];
 let statsData=null,statsError=null,statsBusy=false,statsDrawn="",statsTick=0,statsRange="day",statsMetric="count";
 try{
   statsRange=localStorage.getItem("panel-stats-range")==="month"?"month":"day";
@@ -487,6 +502,7 @@ function median(values){ if(!values.length)return null;const v=[...values].sort(
 function trim(n){ return String(+n.toFixed(n<10?1:0)); }
 function bigNumber(n){ return n>=1e8?[[trim(n/1e8),"亿"]]:n>=1e4?[[trim(n/1e4),"万"]]:[[n,""]]; }
 function duration(s){ return s<60?[[s,"秒"]]:s<3600?[[Math.floor(s/60),"分"],[s%60,"秒"]]:[[Math.floor(s/3600),"小时"],[Math.floor(s%3600/60),"分"]]; }
+function fileSize(n){ return n<1048576?`${Math.round(n/1024)} KB`:`${trim(n/1048576)} MB`; }
 function plain(parts){ return parts.map(([n,u])=>n+u).join(" "); }
 function parseAt(at){ const [d,t]=at.split(" "),[y,m,day]=d.split("-").map(Number),[h,mi,se]=t.split(":").map(Number);return new Date(y,m-1,day,h,mi,se); }
 function dayKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
@@ -510,43 +526,38 @@ async function refreshStats(force){
 function renderStats(){
   const body=$("stats-body"),empty=$("stats-empty");
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.range===statsRange)));
-  const message=statsError&&!statsData?statsError.message+"。":!statsData?"正在读取…":!statsData.answers.length?"还没有回答记录。有人在 QQ 里提问后，这里会显示统计。":"";
+  const none=statsData&&!["answers","received","sent","builds"].some(k=>statsData[k]?.length);
+  const message=statsError&&!statsData?statsError.message+"。":!statsData?"正在读取…":none?"还没有记录。":"";
   empty.hidden=!message;body.hidden=!!message;setText(empty,message);empty.classList.toggle("bad",!!statsError&&!statsData);
   if(message)return;
-  setText($("stats-meta"),statsError?`${statsError.message}。下面是上次读到的数字。`:statsData.clipped?"usage.log 太大，只统计了最近约 2 万次回答。":"");
+  setText($("stats-meta"),statsError?`${statsError.message}。下面是上次读到的数字。`:statsData.clipped?"日志太大，只统计了最近的部分。":"");
   $("stats-meta").classList.toggle("bad",!!statsError);
-  const list=buckets(),from=list[0].start;
-  const signature=[statsRange,statsMetric,statsData.answers.length,statsData.answers.at(-1)?.at,list.at(-1).key].join();
+  const list=buckets(),from=list[0].start,metric=METRICS[statsMetric];
+  const signature=[statsRange,statsMetric,list.at(-1).key,...["answers","received","sent","builds"].map(k=>statsData[k].length+(statsData[k].at(-1)?.at||""))].join();
   if(signature===statsDrawn)return;
   statsDrawn=signature;
-  const answers=statsData.answers.map(a=>({...a,date:parseAt(a.at)})).filter(a=>a.date>=from);
-  const sum=key=>answers.reduce((t,x)=>t+x[key],0),group=answers.filter(a=>a.chat==="group").length;
-  const notes={
-    count:answers.length?`私聊 ${answers.length-group} · 群聊 ${group}`:"这段时间没有回答",
-    people:answers.length?`平均每人 ${trim(answers.length/METRICS.people.value(answers))} 次`:"",
-    tokens:answers.length?`输入 ${plain(bigNumber(sum("prompt")))} · 输出 ${plain(bigNumber(sum("completion")))}`:"",
-    time:answers.length?`最长 ${plain(duration(Math.max(...answers.map(x=>x.seconds))))}`:"",
-  };
-  $("kpis").replaceChildren(...Object.entries(METRICS).map(([key,m])=>{
-    const b=make("button","kpi"),v=make("div","v");
+  const lists={};
+  for(const k of ["answers","received","sent","builds"])lists[k]=statsData[k].map(a=>({...a,date:parseAt(a.at)})).filter(a=>a.date>=from);
+  const tile=key=>{
+    const m=METRICS[key],items=lists[m.of],value=items.length?m.value(items):null,b=make("button","kpi"),v=make("div","v");
     b.type="button";b.setAttribute("aria-pressed",String(key===statsMetric));
-    for(const [n,u] of m.fmt(m.value(answers))){v.append(String(n));if(u)v.append(make("small","",u));}
-    b.append(make("div","k",m.label),v,make("div","n",notes[key]||" "));
+    for(const [n,u] of value===null?[["—",""]]:m.fmt(value)){v.append(String(n));if(u)v.append(make("small","",u));}
+    b.append(make("div","k",m.label),v,make("div","n",items.length?m.note(items):" "));
     b.addEventListener("click",()=>{statsMetric=key;try{localStorage.setItem("panel-stats-metric",key);}catch{}renderStats();});
     return b;
-  }));
-  const metric=METRICS[statsMetric],byKey=new Map(list.map(b=>[b.key,[]]));
-  for(const a of answers)byKey.get(statsRange==="day"?dayKey(a.date):dayKey(a.date).slice(0,7))?.push(a);
-  setText($("trend-title"),metric.chart);setText($("trend-range"),statsRange==="day"?"近 14 天":"近 12 个月");
+  };
+  [$("kpis"),$("kpis-projects")].forEach((row,i)=>row.replaceChildren(...ROWS[i].map(tile)));
+  const items=lists[metric.of],byKey=new Map(list.map(b=>[b.key,[]]));
+  for(const a of items)byKey.get(statsRange==="day"?dayKey(a.date):dayKey(a.date).slice(0,7))?.push(a);
+  setText($("trend-title"),metric.label.replace("（中位）",""));setText($("trend-range"),statsRange==="day"?"近 14 天":"近 12 个月");
   drawBars($("trend"),$("trend-ticks"),list.map(b=>({tick:b.tick,name:b.name,items:byKey.get(b.key)})),metric);
-  setText($("hours-title"),`一天中的时段 · ${metric.chart}`);
-  drawBars($("hours"),$("hours-ticks"),Array.from({length:24},(_,h)=>({tick:h%6?"":`${h} 点`,name:`${h}:00–${h+1}:00`,items:answers.filter(a=>a.date.getHours()===h)})),metric);
+  drawBars($("hours"),$("hours-ticks"),Array.from({length:24},(_,h)=>({tick:h%6?"":`${h} 点`,name:`${h}:00–${h+1}:00`,items:items.filter(a=>a.date.getHours()===h)})),metric);
 }
 function drawBars(chart,ticks,groups,metric){
   const values=groups.map(g=>g.items.length?metric.value(g.items)||0:0),max=Math.max(...values,1);
   $("tip").hidden=true;
   chart.replaceChildren(...groups.map((g,i)=>{
-    const cell=make("div","cell"),bar=make("div","bar"+(values[i]?"":" zero")),text=values[i]?plain(metric.fmt(values[i])):"没有回答";
+    const cell=make("div","cell"),bar=make("div","bar"+(values[i]?"":" zero")),text=values[i]?plain(metric.fmt(values[i])):"无";
     bar.style.height=values[i]?`${Math.max(4,values[i]/max*100)}%`:"2px";
     cell.setAttribute("role","img");cell.setAttribute("aria-label",`${g.name}：${text}`);cell.dataset.name=g.name;cell.dataset.text=text;
     cell.append(bar);return cell;

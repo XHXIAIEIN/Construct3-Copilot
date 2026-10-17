@@ -103,20 +103,63 @@ def read(control, ident, after=None):
 
 
 USAGE_BYTES = 2 * 1024 * 1024  # about 20 000 answers
+BOT_BYTES = 8 * 1024 * 1024
+PROJECTS = {".c3p", ".zip"}
+# bot.log lines as qqbot.qq and copilot's construct3 application write them; free text, so a reworded message
+# drops out of the counts instead of breaking the page.
+STAMPED_LINE = re.compile(r"(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d),\d+ \S+ (?:INFO|WARNING|ERROR) (.*)")
+TOOLS = re.compile(r"(c2c|group):\S+ tools: (.*)")
+# One build in a tool trace: copilot's tool_trace keeps the first lines of its result after " -> ", at most 600
+# characters, so a long list of fixes is counted short.
+BUILD = re.compile(r"""(?:new_project_from_\w+|patch_spec)\(.*?\) -> (.*?)(?=['"](?:, ['"]|\]$))""")
+ATTACHMENT = re.compile(r"attachment: name-md5 \w+, \w+, (\d+) bytes, (\S*)")
+SENT = re.compile(r"sent file (\d+) bytes")
+
+
+def _tail(path, cap):
+    with path.open("rb") as stream:
+        size = stream.seek(0, 2)
+        stream.seek(max(0, size - cap))
+        return stream.read().decode("utf-8", errors="replace"), size > cap
+
+
+def events(control):
+    """Project files received and sent, and project builds, from bot.log. Sends and attachments do not name the
+    chat, so only builds say whether they were private or group."""
+    received, sent, builds = [], [], []
+    try:
+        text, clipped = _tail(_path(control, "bot")[1], BOT_BYTES)
+    except OSError:
+        return {"received": received, "sent": sent, "builds": builds, "clipped": False}
+    for line in text.splitlines():
+        stamped = STAMPED_LINE.match(line)
+        if not stamped:
+            continue
+        at, message = stamped.groups()
+        if tools := TOOLS.match(message):
+            for result in BUILD.findall(tools[2]):
+                ok = not re.search(r"(^| / )refused", result)  # a refused build applied none of its fixes
+                builds.append({"at": at, "chat": "private" if tools[1] == "c2c" else "group", "ok": ok,
+                               "fixes": result.count("fixed: ") if ok else 0})
+        elif attachment := ATTACHMENT.match(message):
+            if attachment[2].lower() in PROJECTS:
+                received.append({"at": at, "bytes": int(attachment[1])})
+        elif sending := SENT.match(message):
+            sent.append({"at": at, "bytes": int(sending[1]), "ok": True})
+        elif message.startswith("file send failed"):
+            sent.append({"at": at, "bytes": 0, "ok": False})
+    return {"received": received, "sent": sent, "builds": builds, "clipped": clipped}
 
 
 def usage(control):
-    """Every answer usage.log records (QQ ones only, not terminal runs), oldest first. A person is a session name,
-    sent as a number so the page never sees an openid; the same person in a group and in private counts twice."""
-    _, path = _path(control, "usage")
-    try:
-        with path.open("rb") as stream:
-            size = stream.seek(0, 2)
-            stream.seek(max(0, size - USAGE_BYTES))
-            text = stream.read().decode("utf-8", errors="replace")
-    except OSError:
-        return {"exists": False, "clipped": False, "answers": []}
+    """Every answer usage.log records (QQ ones only, not terminal runs), oldest first, and the project events of
+    bot.log. A person is a session name, sent as a number so the page never sees an openid; the same person in a
+    group and in private counts twice."""
     people, answers = {}, []
+    try:
+        text, clipped = _tail(_path(control, "usage")[1], USAGE_BYTES)
+    except OSError:
+        text, clipped = "", False
     for line in text.splitlines():
         match = USAGE.fullmatch(line.strip())
         if not match or not match[2].startswith(("c2c_", "group_")):
@@ -124,4 +167,5 @@ def usage(control):
         answers.append({"at": match[1], "who": people.setdefault(match[2], len(people)),
                         "chat": "private" if match[2].startswith("c2c_") else "group", "calls": int(match[3]),
                         "prompt": int(match[4]), "completion": int(match[5]), "seconds": int(match[6])})
-    return {"exists": True, "clipped": size > USAGE_BYTES, "answers": answers}
+    found = events(control)
+    return {"clipped": clipped or found.pop("clipped"), "answers": answers, **found}

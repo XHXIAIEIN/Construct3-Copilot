@@ -103,7 +103,7 @@ class LogTests(unittest.TestCase):
         self.assertEqual((data["exists"], data["lines"]), (False, []))
 
     def test_usage_lists_qq_answers_without_openids(self):
-        self.assertEqual(self.get("/api/usage"), {"exists": False, "clipped": False, "answers": []})
+        self.assertEqual(self.get("/api/usage"), {"clipped": False, "answers": [], "received": [], "sent": [], "builds": []})
         usage = self.home / "var/logs/bot/usage.log"
         usage.write_text("2026-10-16 21:00:39 query-fixed calls 5 prompt 15286 (cache hit 0) completion 388 in 42 s\n"
                          "2026-10-16 21:02:16 c2c_E5DB calls 20 prompt 164297 (cache hit 0) completion 3157 in 95 s\n"
@@ -121,6 +121,24 @@ class LogTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError) as error:
             self.get("/api/usage", token="")
         self.assertEqual(error.exception.code, 403)
+
+    def test_project_events_come_from_bot_log(self):
+        self.bot.write_text(
+            "2026-10-16 20:59:51,230 copilot.construct3 INFO attachment: name-md5 a7ea, file, 680575 bytes, .zip\n"
+            "2026-10-16 20:59:52,000 copilot.construct3 INFO attachment: name-md5 b8fb, image, 1200 bytes, .png\n"
+            "2026-10-16 21:02:16,646 qqbot INFO group:G1:M2 tools: [\"presearch ['x']\", "
+            "'new_project_from_spec({}) -> refused, nothing was built: / fixed: a / spec: bad', "
+            "'patch_spec({\"a\": 1}) -> fixed: spec.objects[1].size: x / fixed: spec.objects[4].align: y / built: 2 object types', "
+            "'print_sheet({})']\n"
+            "2026-10-16 21:02:19,526 qqbot INFO sent file 74488 bytes\n"
+            "2026-10-16 21:03:00,000 qqbot WARNING file send failed: timeout\n", encoding="utf-8")
+        data = self.get("/api/usage")
+        self.assertEqual(data["received"], [{"at": "2026-10-16 20:59:51", "bytes": 680575}])
+        self.assertEqual(data["sent"], [{"at": "2026-10-16 21:02:19", "bytes": 74488, "ok": True},
+                                        {"at": "2026-10-16 21:03:00", "bytes": 0, "ok": False}])
+        self.assertEqual([(b["chat"], b["ok"], b["fixes"]) for b in data["builds"]], [("group", False, 0), ("group", True, 2)])
+        self.assertNotIn("G1", json.dumps(data))
+
 
 if __name__ == "__main__":
     unittest.main()
