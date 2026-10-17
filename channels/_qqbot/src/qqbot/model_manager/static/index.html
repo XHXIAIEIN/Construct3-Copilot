@@ -63,7 +63,7 @@ fieldset{border:1px solid var(--border);border-radius:10px;padding:12px;margin:0
 details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] summary{margin-bottom:8px}
 .facts{display:grid;grid-template-columns:140px minmax(0,1fr);gap:0}.facts>*{padding:11px 14px;border-top:1px solid var(--border)}
 .facts>:nth-child(-n+2){border-top:0}.facts dt{color:var(--text2)}.facts dd{margin:0;overflow-wrap:anywhere;display:flex;justify-content:space-between;gap:8px;align-items:center}
-.notes{margin:16px 2px;color:var(--text2);font-size:13px;padding-left:18px}.notes li{margin:4px 0}
+
 .group{margin-bottom:20px}.group-head{display:flex;width:100%;align-items:center;gap:8px;border:0;border-radius:6px;padding:4px 4px 8px;min-height:0;font-weight:500;text-align:left}
 .group-head:hover:enabled{background:transparent}.group-head small{color:var(--muted);font-weight:400}
 .chev{margin-left:auto;margin-right:6px;width:7px;height:7px;border-right:1.5px solid var(--text2);border-bottom:1.5px solid var(--text2);transform:rotate(45deg);transition:transform .15s}
@@ -91,7 +91,6 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
       <div class="group" data-group="api"><button class="group-head" type="button" aria-expanded="true" aria-controls="apis">云端 API <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="apis"></div></div>
       <div class="group" data-group="local"><button class="group-head" type="button" aria-expanded="true" aria-controls="models">本地模型 · Ollama <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="models"></div></div>
       <div class="group" data-group="todo"><button class="group-head" type="button" aria-expanded="true" aria-controls="apis-todo">待配置 <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="apis-todo"></div></div>
-      <ul class="notes"><li>切换会写入 .env 并重启 QQbot；本地模型切换前会检查是否支持对话与工具调用。机器人正在回答时，请等回答结束再切换。</li><li>正在使用的接口要先切换到其他配置，才能编辑或删除。删除会保留本地备份与密钥。</li></ul>
     </section>
 
     <section data-page="settings" hidden>
@@ -213,11 +212,13 @@ function renderLocal(){
 
 // ---- API profiles
 function missing(p){ return [!p.has_key&&"密钥",!p.model&&"模型",!p.base_url&&"服务地址"].filter(Boolean); }
+// One plain sentence per problem; the 待配置 group header already says these profiles cannot be used yet.
 function apiProblem(p){
-  if(!p.has_key)return {badge:"缺少密钥",tone:"warn",note:`.env 中没有 ${p.api_key_env||"密钥变量"}`+(p.key_alternatives?.[0]?`，但有 ${p.key_alternatives[0]}`:""),fix:p.key_alternatives?.[0]?"修复":"填写密钥"};
-  if(!p.ready)return {badge:"待补全",tone:"warn",note:"缺少"+missing(p).join("、"),fix:"补全"};
-  if(p.balance_mark==="empty")return {badge:"余额耗尽",tone:"danger",note:"手动标记为余额耗尽，编辑标记后才能切换",fix:"编辑"};
-  if(p.balance?.state==="unavailable"&&p.balance_mark!=="available")return {badge:"账户不可用",tone:"danger",note:"余额查询显示账户不可用",fix:"编辑"};
+  const alt=p.key_alternatives?.[0];
+  if(!p.has_key)return {text:alt?`密钥在 ${alt}，不是 ${p.api_key_env}`:`.env 里没有 ${p.api_key_env||"密钥"}`,fix:alt?"修复":"填写密钥"};
+  if(!p.ready)return {text:"还没填"+missing(p).join("、"),fix:"补全"};
+  if(p.balance_mark==="empty")return {text:"已标记余额耗尽",fix:"编辑"};
+  if(p.balance?.state==="unavailable"&&p.balance_mark!=="available")return {text:"余额查询显示账户不可用",fix:"编辑"};
   return null;
 }
 function balanceText(p){
@@ -237,9 +238,9 @@ function apiRow(){
 }
 function fillApi(row,p){
   const problem=apiProblem(p),proto=p.protocol==="auto"||!p.protocol?`${protocols[p.effective_protocol]||"OpenAI 兼容"}（自动）`:protocols[p.protocol]||p.protocol;
-  const sub=[p.model||"未填写模型",proto,!problem&&balanceText(p)].filter(Boolean).join(" · ");
-  fillRow(row,{name:p.name,sub,note:armedFor("switch",p.id)?"再点一次确认：会写入 .env 并重启 QQbot":p.active?"":problem?.note,
-    badge:running(p.id)?"处理中…":p.active?"正在使用":problem?.badge,tone:running(p.id)?"plain":p.active?"current":problem?.tone,
+  const todo=problem&&!p.active,sub=todo?problem.text:[p.model,proto,!problem&&balanceText(p)].filter(Boolean).join(" · ");
+  fillRow(row,{name:p.name,sub,note:armedFor("switch",p.id)?"再点一次确认：会写入 .env 并重启 QQbot":p.active&&problem?problem.text:"",
+    badge:running(p.id)?"处理中…":p.active?"正在使用":"",tone:running(p.id)?"plain":"current",
     action:p.active?"":problem?"fix":"switch",actionLabel:p.active?"":problem?problem.fix:"切换",armedLabel:"确认切换",moreLabel:`${p.name} 更多操作`});
 }
 function renderApis(){
