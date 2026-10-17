@@ -268,7 +268,8 @@ class ModelControl:
         base = urllib.parse.urlsplit(env.get("C3BOT_BASE_URL") or "https://api.deepseek.com")
         public_base = urllib.parse.urlunsplit((base.scheme, base.netloc.rsplit("@", 1)[-1], base.path, "", ""))
         from .api_profiles import ApiProfiles
-        return {"apis": ApiProfiles(self).public(), "current": {"base_url": public_base,
+        registry = ApiProfiles(self)
+        return {"apis": registry.public(), "api_key_names": registry.key_names(), "current": {"base_url": public_base,
                             "model": env.get("C3BOT_MODEL") or env.get("DEEPSEEK_MODEL", "deepseek-flash"),
                             "reasoning": env.get("C3BOT_REASONING", "none")},
                 "ollama": {"online": online, "url": self._local_url(config["url"])}, "models": models,

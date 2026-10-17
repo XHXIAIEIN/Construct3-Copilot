@@ -15,7 +15,7 @@ import uuid
 
 from dotenv.parser import parse_stream
 
-from .control import ControlError, _date, _digest, _utc
+from .control import MANAGED, ControlError, _date, _digest, _utc
 
 MARKS = {"unknown", "available", "low", "empty"}
 _registry_lock = threading.RLock()
@@ -26,6 +26,33 @@ SEEDS = [
     ("gemini", "Gemini", ["GEMINI_API_KEY", "GEMINI_KEY"], "https://generativelanguage.googleapis.com/v1beta/openai", ""),
     ("claude", "Claude", ["ANTHROPIC_API_KEY", "CLAUDE_KEY"], "", ""),
 ]
+# Profiles may not borrow the bot's own credentials or the values the panel writes on switch.
+RESERVED_KEYS = MANAGED | {"QQ_APPID", "QQ_SECRET"}
+ENV_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,127}")
+
+
+def protocol_of(profile):
+    """Resolve "auto" the same way qqbot.model_client does."""
+    protocol = profile.get("protocol", "auto")
+    if protocol == "auto":
+        host = urllib.parse.urlsplit(profile.get("base_url", "")).hostname
+        return "anthropic" if host == "api.anthropic.com" else "openai"
+    return protocol
+
+
+def key_names(env):
+    """Names of non-empty .env entries that look like credentials; values never leave this function."""
+    return sorted(k for k, v in env.items() if v and k not in RESERVED_KEYS and re.search(r"KEY|TOKEN", k, re.I))
+
+
+def key_alternatives(profile, env):
+    """Known names for the same provider that hold a value, for a profile whose own name is empty."""
+    host = urllib.parse.urlsplit(profile.get("base_url", "")).hostname
+    names = []
+    for ident, _, keys, base, _ in SEEDS:
+        if ident == profile.get("id") or (host and base and urllib.parse.urlsplit(base).hostname == host):
+            names += [k for k in keys if env.get(k) and k not in names]
+    return names
 
 
 def api_url(value):
@@ -102,10 +129,18 @@ class ApiProfiles:
             for profile in self._load()["profiles"]:
                 p = {k: profile[k] for k in ("id", "name", "base_url", "model", "balance_mark", "balance", "protocol") if k in profile}
                 p["has_key"] = bool(env.get(profile.get("api_key_env")))
+                p["api_key_env"] = profile.get("api_key_env", "")
+                p["protocol"] = profile.get("protocol", "auto")
+                p["effective_protocol"] = protocol_of(profile)
+                if not p["has_key"]:
+                    p["key_alternatives"] = key_alternatives(profile, env)
                 p["active"] = env.get("C3BOT_API_PROFILE") == p["id"]
                 p["ready"] = bool(p.get("base_url") and p.get("model") and p["has_key"])
                 profiles.append(p)
             return profiles
+
+    def key_names(self):
+        return key_names(self.control._env())
 
     def save(self, values):
         with self.control._lock:
@@ -131,7 +166,14 @@ class ApiProfiles:
                 raise ControlError("余额标记无效。")
             profile = {**(old or {}), "id": ident, "name": name, "base_url": base, "model": model,
                        "balance_mark": mark, "protocol": protocol, "api_key_env": (old or {}).get("api_key_env") or "QQBOT_API_" + ident.upper()}
+            key_env = str(values.get("api_key_env") or "").strip()
             secret = values.get("api_key")
+            if key_env and not secret and key_env != profile["api_key_env"]:
+                if not ENV_NAME.fullmatch(key_env) or key_env in RESERVED_KEYS:
+                    raise ControlError("密钥变量名无效，或属于机器人保留变量。")
+                if not self.control._env().get(key_env):
+                    raise ControlError(f".env 中没有 {key_env}，请先在 .env 添加，或直接填写密钥。")
+                profile["api_key_env"] = key_env
             if secret:
                 if not isinstance(secret, str) or len(secret) > 8192 or any(c in secret for c in "\r\n"):
                     raise ControlError("密钥格式无效。")

@@ -32,6 +32,8 @@ class PanelTests(unittest.TestCase):
 
     def test_page_and_status_are_served(self):
         self.assertIn("切换并重启 QQbot", self.page)
+        self.assertIn('id="api-key-env"', self.page)
+        self.assertIn("<th>协议</th>", self.page)
         self.assertNotIn("__PANEL_TOKEN__", self.page)
         with urllib.request.urlopen(self.url + "/api/status") as response:
             self.assertEqual(json.load(response)["status"]["current"]["model"], "example")

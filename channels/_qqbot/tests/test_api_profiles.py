@@ -80,6 +80,38 @@ class ApiProfileTests(unittest.TestCase):
         fetch.assert_not_called()
         self.assertEqual(self.registry.public()[-1]["balance"]["state"], "unsupported")
 
+    def test_misnamed_key_variable_is_explained_and_can_be_repointed(self):
+        with (self.home / ".env").open("a") as stream:
+            stream.write('BIGMODEL_KEY="zhipu-placeholder"\n')
+        self.registry.public()
+        self.registry.save({"id": "zhipu", "name": "智谱", "model": "glm-4.5-flash",
+                            "base_url": "https://open.bigmodel.cn/api/anthropic", "protocol": "anthropic"})
+        data = json.loads(self.registry.path.read_text(encoding="utf-8"))
+        next(p for p in data["profiles"] if p["id"] == "zhipu")["api_key_env"] = "ZHIPU_API_KEY"
+        self.registry.path.write_text(json.dumps(data), encoding="utf-8")
+        zhipu = next(p for p in self.registry.public() if p["id"] == "zhipu")
+        self.assertEqual((zhipu["has_key"], zhipu["api_key_env"], zhipu["key_alternatives"]),
+                         (False, "ZHIPU_API_KEY", ["BIGMODEL_KEY"]))
+        self.assertEqual(zhipu["effective_protocol"], "anthropic")
+        self.assertEqual(self.registry.key_names(), ["BIGMODEL_KEY", "DEEPSEEK_API_KEY"])
+        self.registry.save({"id": "zhipu", "name": "智谱", "model": "glm-4.5-flash", "protocol": "anthropic",
+                            "base_url": "https://open.bigmodel.cn/api/anthropic", "api_key_env": "BIGMODEL_KEY"})
+        zhipu = next(p for p in self.registry.public() if p["id"] == "zhipu")
+        self.assertTrue(zhipu["ready"])
+        self.assertNotIn("zhipu-placeholder", json.dumps(self.registry.public()) + self.registry.path.read_text(encoding="utf-8"))
+
+    def test_key_variable_must_exist_and_cannot_borrow_reserved_names(self):
+        for name in ("MISSING_KEY", "QQ_SECRET", "C3BOT_API_KEY", "bad name"):
+            with self.subTest(name=name), self.assertRaises(ControlError):
+                self.registry.save({"id": "example", "name": "Example", "api_key_env": name})
+
+    def test_auto_protocol_resolves_like_the_bot(self):
+        self.registry.save({"id": "claude", "name": "Claude", "base_url": "https://api.anthropic.com/v1"})
+        self.registry.save({"id": "other", "name": "Other", "base_url": "https://example.test/api/anthropic"})
+        profiles = {p["id"]: p for p in self.registry.public()}
+        self.assertEqual(profiles["claude"]["effective_protocol"], "anthropic")
+        self.assertEqual((profiles["other"]["protocol"], profiles["other"]["effective_protocol"]), ("auto", "openai"))
+
     def test_urls_reject_credentials_and_nonlocal_plaintext(self):
         for url in ("http://example.test/v1", "https://user:password@example.test/v1", "https://example.test/v1?key=example"):
             with self.subTest(url=url), self.assertRaises(ControlError):

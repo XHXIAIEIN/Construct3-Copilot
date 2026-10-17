@@ -14,7 +14,7 @@ button.primary:hover:enabled{background:#1c4d9f}.toolbar{display:flex;gap:8px;al
 input[type=search]{border:1px solid #cbd0d8;border-radius:6px;padding:6px 10px;min-height:30px;flex:1;min-width:120px;background:white}
 .table-wrap{overflow:auto;max-height:52vh;border-block:1px solid #dce0e6}table{border-collapse:collapse;width:100%;background:white;text-align:left}
 th{position:sticky;top:0;background:#f0f2f5;font-weight:500;color:#616875}th,td{padding:7px 10px;border-bottom:1px solid #edf0f3;white-space:nowrap}
-th:first-child,td:first-child{width:38px}tr[data-model]{cursor:pointer}tr.selected{background:#eaf0fc}tr[data-model]:hover{background:#f1f5fc}
+th:first-child,td:first-child{width:38px}tr[data-key]{cursor:pointer}tr.selected{background:#eaf0fc}tr[data-key]:hover{background:#f1f5fc}
 input[type=radio]{accent-color:#275dc1}.model-name{font-weight:550}.muted{color:#737b87;font-size:12px}.actions{padding:10px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .selection{flex:1;min-width:200px;display:flex;align-items:baseline;gap:8px}.selection strong{overflow-wrap:anywhere}#feedback{margin-top:8px;padding:8px 10px;background:#e9edf3;border-radius:6px;min-height:34px;white-space:pre-wrap}
 #feedback[data-state=failed]{background:#fceceb;color:#91362b}#feedback[data-state=completed]{background:#e9f3ed;color:#285d3a}
@@ -25,6 +25,10 @@ details{margin-top:10px;color:#616875;font-size:12px}summary{cursor:pointer}code
 .fields label{display:flex;flex-direction:column;gap:3px}.fields input,.fields select{font:inherit;padding:6px 8px;border:1px solid #cbd0d8;border-radius:6px;min-width:0;min-height:30px;background:white}
 .api-tools{display:flex;gap:4px}.api-tools button{font-size:12px;padding:4px 7px;min-height:28px}.balance{white-space:normal;min-width:130px}.balance small{display:block;color:#737b87}.api-name strong{display:block}.api-name small{display:block;max-width:190px;overflow:hidden;text-overflow:ellipsis;color:#737b87}
 @media(max-width:650px){.fields{grid-template-columns:1fr}.api-tools{flex-wrap:wrap;max-width:110px}}
+.wide{grid-column:1/-1}.form-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}.form-title strong{font-size:14px}
+.fields small{color:#737b87;font-size:12px}.proto{display:inline-block;padding:1px 6px;border-radius:4px;background:#eef1f6;color:#3d4450;font-size:12px}.proto[data-p=anthropic]{background:#f6ece4;color:#7a4317}
+.cfg-ok{color:#285d3a}.cfg-warn{color:#91362b}.cfg small{display:block;color:#737b87;max-width:220px;white-space:normal}.cfg button{margin-top:3px;font-size:12px;padding:3px 7px;min-height:26px}
+.api-tools button.danger{border-color:#c4473a;color:#a2342a}#api-reason{color:#91362b;font-size:12px}
 </style>
 <main>
   <div class="top"><div><h1>QQbot 模型</h1><p>管理本地模型与 API 接口，选择机器人使用的模型。</p></div><button id="start">启动 Ollama</button></div>
@@ -38,20 +42,23 @@ details{margin-top:10px;color:#616875;font-size:12px}summary{cursor:pointer}code
   <section id="api-group" role="tabpanel" aria-labelledby="api-tab" hidden>
     <div class="toolbar"><span id="api-count" class="muted"></span><button id="api-add">添加接口</button></div>
     <form id="api-form" class="api-form" hidden>
+      <div class="form-title"><strong id="api-form-title">添加接口</strong><span id="api-form-note" class="muted"></span></div>
       <div class="fields">
         <label>接口名称<input id="api-name" required maxlength="80"></label>
         <label>接口协议<select id="api-protocol"><option value="auto">自动识别</option><option value="openai">OpenAI 兼容</option><option value="anthropic">Anthropic 原生</option></select></label>
         <label>模型名称<input id="api-model" maxlength="200" placeholder="填写服务商提供的模型 ID"></label>
         <label class="wide">服务地址<input id="api-base" type="url" placeholder="https://example.com/v1"></label>
-        <label class="wide">API 密钥<input id="api-key" type="password" autocomplete="new-password" placeholder="编辑时留空会保留原密钥"></label>
+        <label>密钥变量<input id="api-key-env" list="api-key-names" maxlength="128" spellcheck="false" placeholder="例如 DEEPSEEK_API_KEY"><small>从 .env 读取密钥的变量名，可从 .env 已有的密钥变量中选择。</small></label>
+        <label>API 密钥<input id="api-key" type="password" autocomplete="new-password" placeholder="留空则使用左侧变量里的密钥"><small>填写新密钥会写入 .env 的 QQBOT_API_&lt;编号&gt;，并改用这个变量。</small></label>
+        <datalist id="api-key-names"></datalist>
         <label>手动余额标记<select id="api-mark"><option value="unknown">未知</option><option value="available">余额充足</option><option value="low">余额偏低</option><option value="empty">余额耗尽</option></select></label>
       </div>
-      <p class="muted">填写服务地址；Claude 官方地址会自动使用原生协议。密钥保存在本机 .env。</p>
+      <p class="muted">“自动识别”只把 api.anthropic.com 当作 Anthropic 协议；其他服务商的 Anthropic 兼容地址（例如 …/api/anthropic）请选“Anthropic 原生”。</p>
       <div class="toolbar"><button class="primary" type="submit">保存接口</button><button id="api-cancel" type="button">取消编辑</button></div>
     </form>
-    <div class="table-wrap"><table><thead><tr><th></th><th>接口与模型</th><th>配置</th><th>余额状态</th><th>管理</th></tr></thead><tbody id="apis"></tbody></table></div>
-    <div class="actions"><div class="selection"><span class="muted">已选择接口</span><strong id="api-selected">请选择接口</strong></div><button id="api-switch" class="primary" disabled>切换到此接口</button></div>
-    <p class="muted">余额查询结果带查询时间；手动标记单独显示。删除接口会保留本地备份与密钥。</p>
+    <div class="table-wrap"><table><thead><tr><th></th><th>接口与模型</th><th>协议</th><th>配置</th><th>余额状态</th><th>管理</th></tr></thead><tbody id="apis"></tbody></table></div>
+    <div class="actions"><div class="selection"><span class="muted">已选择接口</span><strong id="api-selected">请选择接口</strong></div><span id="api-reason"></span><button id="api-switch" class="primary" disabled>切换到此接口</button></div>
+    <p class="muted">“查余额”目前只支持 DeepSeek 官方接口，其他接口用手动标记。当前配置的接口要先切换到其他配置才能编辑或删除；删除会保留本地备份与密钥。</p>
   </section>
   <p class="muted">切换会保存 .env 并重启 QQbot；机器人正在回答时，请等待完成后再切换。模型加载可能需要一两分钟。</p>
   <div id="feedback" role="status" aria-live="polite">正在读取状态…</div>
@@ -59,71 +66,170 @@ details{margin-top:10px;color:#616875;font-size:12px}summary{cursor:pointer}code
 </main>
 <script>
 const token="__PANEL_TOKEN__";
-let state=null,selected="",selectedApi="",editingApi="",busy=false,refreshing=false,lastJob="";
+// editingApi: null while the form is closed, "" for a new profile, else the profile id.
+let state=null,selected="",selectedApi="",editingApi=null,busy=false,refreshing=false,lastJob="",pendingSave=false,confirmDelete="",confirmTimer=0;
 const $=id=>document.getElementById(id);
-function feedback(message,kind=""){ $("feedback").textContent=message;$("feedback").dataset.state=kind; }
-function buttons(){ $("warm").disabled=busy||!selected||!state?.ollama?.online;$("switch").disabled=busy||!selected||!state?.ollama?.online;$("start").disabled=busy||!!state?.ollama?.online;$("refresh").disabled=refreshing;$("api-switch").disabled=busy||!(state?.apis||[]).find(p=>p.id===selectedApi&&p.ready);$("api-add").disabled=busy;document.querySelectorAll("#apis button,#api-form button").forEach(b=>b.disabled=busy); }
-function render(){
-  const list=state?.models||[], query=$("search").value.toLowerCase();
-  const filtered=list.filter(m=>m.name.toLowerCase().includes(query));
-  $("count").textContent=query?`${filtered.length} / ${list.length} 个`:`${list.length} 个模型`;
-  const tbody=$("models");tbody.replaceChildren();
-  for(const m of filtered){
-    const tr=document.createElement("tr");tr.dataset.model=m.name;tr.className=selected===m.name?"selected":"";
-    const td=document.createElement("td"),radio=document.createElement("input");radio.type="radio";radio.name="model";radio.checked=selected===m.name;radio.setAttribute("aria-label",`选择 ${m.name}`);td.append(radio);tr.append(td);
-    const current=state.current?.model===m.name && ["localhost","127.0.0.1","::1"].includes(new URL(state.current.base_url).hostname);
-    const fields=[m.name,m.parameter_size||"—",m.quantization||"—",m.size?(m.size/1e9).toFixed(1)+" GB":"—",[current?"当前配置":"",m.loaded?"已加载":""].filter(Boolean).join(" · ")||"未加载"];
-    fields.forEach((v,i)=>{const cell=document.createElement("td");cell.textContent=v;if(i===0)cell.className="model-name";tr.append(cell);});
-    tr.addEventListener("click",()=>{selected=m.name;render();});tbody.append(tr);
+const protocols={openai:"OpenAI 兼容",anthropic:"Anthropic"},marks={unknown:"未知",available:"余额充足",low:"余额偏低",empty:"余额耗尽"};
+function feedback(message,kind=""){ setText($("feedback"),message);$("feedback").dataset.state=kind; }
+// Refreshes write only what changed, so rows, buttons and form fields keep their identity between polls.
+function setText(node,text){ if(node.textContent!==text)node.textContent=text; }
+function setProp(node,key,value){ if(node[key]!==value)node[key]=value; }
+function make(tag,className="",text=""){ const node=document.createElement(tag);if(className)node.className=className;if(text)node.textContent=text;return node; }
+function sync(tbody,items,keyOf,create,update,columns,emptyText){
+  const rows=new Map();
+  for(const row of [...tbody.rows]){ if(row.dataset.key===undefined)row.remove();else rows.set(row.dataset.key,row); }
+  let previous=null;
+  for(const item of items){
+    const key=keyOf(item);let row=rows.get(key);
+    if(row)rows.delete(key);else{row=create(item);row.dataset.key=key;}
+    update(row,item);
+    const expected=previous?previous.nextSibling:tbody.firstChild;
+    if(row!==expected)tbody.insertBefore(row,expected);
+    previous=row;
   }
-  if(!filtered.length){const row=tbody.insertRow(),cell=row.insertCell();cell.colSpan=6;cell.className="empty";cell.textContent=!state?.ollama?.online?"模型服务未启动。点击“启动 Ollama”后刷新列表。":query?"没有匹配的模型。":"本机模型目录中没有已安装模型，请检查配置文件中的存储位置。";}
-  $("selected").textContent=selected||"请选择模型";buttons();
+  for(const row of rows.values())row.remove();
+  if(!items.length){const cell=tbody.insertRow().insertCell();cell.colSpan=columns;cell.className="empty";cell.textContent=emptyText;}
 }
+function buttons(){
+  const online=!!state?.ollama?.online;
+  setProp($("warm"),"disabled",busy||!selected||!online);setProp($("switch"),"disabled",busy||!selected||!online);
+  setProp($("start"),"disabled",busy||online);setProp($("refresh"),"disabled",refreshing);setProp($("api-add"),"disabled",busy);
+  document.querySelectorAll("#api-form button[type=submit]").forEach(b=>setProp(b,"disabled",busy));
+  const profile=(state?.apis||[]).find(p=>p.id===selectedApi),reason=switchBlocker(profile);
+  setProp($("api-switch"),"disabled",busy||!profile||!!reason);setText($("api-reason"),profile?reason:"");
+}
+function isLocal(url){ try{return ["localhost","127.0.0.1","[::1]","::1"].includes(new URL(url).hostname);}catch{return false;} }
+function renderLocal(){
+  const list=state?.models||[],query=$("search").value.toLowerCase(),filtered=list.filter(m=>m.name.toLowerCase().includes(query));
+  setText($("count"),query?`${filtered.length} / ${list.length} 个`:`${list.length} 个模型`);
+  const empty=!state?.ollama?.online?"模型服务未启动。点击“启动 Ollama”后刷新列表。":query?"没有匹配的模型。":"本机模型目录中没有已安装模型，请检查配置文件中的存储位置。";
+  sync($("models"),filtered,m=>m.name,()=>{
+    const tr=make("tr"),radio=make("input");radio.type="radio";radio.name="model";tr.insertCell().append(radio);
+    for(let i=0;i<5;i++)tr.insertCell().className=i===0?"model-name":"";
+    tr.addEventListener("click",()=>{selected=tr.dataset.key;renderLocal();});return tr;
+  },(tr,m)=>{
+    tr.dataset.model=m.name;setProp(tr,"className",selected===m.name?"selected":"");
+    const radio=tr.cells[0].firstChild;setProp(radio,"checked",selected===m.name);radio.setAttribute("aria-label",`选择 ${m.name}`);
+    const current=state.current?.model===m.name&&isLocal(state.current.base_url);
+    [m.name,m.parameter_size||"—",m.quantization||"—",m.size?(m.size/1e9).toFixed(1)+" GB":"—",[current?"当前配置":"",m.loaded?"已加载":""].filter(Boolean).join(" · ")||"未加载"]
+      .forEach((v,i)=>setText(tr.cells[i+1],v));
+  },6,empty);
+  setText($("selected"),selected||"请选择模型");buttons();
+}
+function missing(p){ return [!p.has_key&&"密钥",!p.model&&"模型名称",!p.base_url&&"服务地址"].filter(Boolean); }
+function switchBlocker(p){
+  if(!p)return "";
+  if(!p.ready)return "缺少"+missing(p).join("、");
+  if(p.balance_mark==="empty")return "已标记余额耗尽";
+  if(p.balance?.state==="unavailable"&&p.balance_mark!=="available")return "余额查询显示账户不可用";
+  return "";
+}
+function balanceSupported(p){ return ["https://api.deepseek.com","https://api.deepseek.com/v1"].includes((p.base_url||"").replace(/\/$/,"")); }
+function profile(id){ return (state?.apis||[]).find(p=>p.id===id); }
+function renderApis(){
+  const profiles=state?.apis||[];setText($("api-count"),`${profiles.length} 个接口`);
+  const names=state?.api_key_names||[],list=$("api-key-names");
+  if([...list.options].map(o=>o.value).join()!==names.join())list.replaceChildren(...names.map(n=>Object.assign(make("option"),{value:n})));
+  sync($("apis"),profiles,p=>p.id,()=>{
+    const tr=make("tr"),radio=make("input");radio.type="radio";radio.name="api-profile";
+    tr.addEventListener("click",e=>{if(!e.target.closest("button")){selectedApi=tr.dataset.key;renderApis();}});tr.insertCell().append(radio);
+    tr.insertCell().className="api-name";tr.cells[1].append(make("strong"),make("span"),make("small"));
+    tr.insertCell().append(make("span","proto"));
+    const cfg=tr.insertCell();cfg.className="cfg";const fix=make("button");fix.type="button";
+    fix.addEventListener("click",()=>{const p=profile(tr.dataset.key);if(p)editApi(p,{api_key_env:p.key_alternatives?.[0]});});
+    cfg.append(make("span"),make("small"),fix);
+    tr.insertCell().className="balance";tr.cells[4].append(make("span"),make("span"),make("small"));tr.cells[4].children[1].style.display="block";
+    const tools=make("div","api-tools");
+    for(const [kind,label] of [["edit","编辑"],["balance","查余额"],["delete","删除"]]){
+      const b=make("button","",label);b.type="button";b.dataset.kind=kind;b.addEventListener("click",()=>apiTool(kind,tr.dataset.key));tools.append(b);
+    }
+    tr.insertCell().append(tools);return tr;
+  },(tr,p)=>{
+    setProp(tr,"className",selectedApi===p.id?"selected":"");
+    const radio=tr.cells[0].firstChild;setProp(radio,"checked",selectedApi===p.id);radio.setAttribute("aria-label",`选择接口 ${p.name}`);
+    const [name,model,base]=tr.cells[1].children;
+    setText(name,p.name+(p.active?" · 当前配置":""));setText(model,p.model||"待填写模型");setText(base,p.base_url||"待填写服务地址");base.title=p.base_url||"";
+    const proto=tr.cells[2].firstChild,effective=p.effective_protocol||"openai";proto.dataset.p=effective;
+    setText(proto,p.protocol==="auto"||!p.protocol?`自动 · ${protocols[effective]}`:protocols[p.protocol]||p.protocol);
+    const [status,hint,fix]=tr.cells[3].children,alt=p.key_alternatives?.[0];
+    setProp(status,"className",p.ready?"cfg-ok":"cfg-warn");
+    setText(status,p.ready?"已配置":p.has_key?"待补全":"缺少密钥");
+    setText(hint,!p.has_key?`.env 中没有 ${p.api_key_env||"密钥变量"}`+(alt?`，但有 ${alt}`:""):p.ready?`密钥 · ${p.api_key_env}`:"缺少"+missing(p).join("、"));
+    fix.hidden=!!(p.has_key||!alt||p.active);setText(fix,alt?`改用 ${alt}`:"");setProp(fix,"disabled",busy);
+    fix.setAttribute("aria-label",`${p.name} 改用 ${alt||""}`);
+    const [manual,result,when]=tr.cells[4].children,b=p.balance;
+    setText(manual,"手动 · "+(marks[p.balance_mark]||"未知"));
+    setText(result,!b?"":b.entries?b.entries.map(e=>`${e.currency} ${e.amount}`).join(" / ")+(b.state==="unavailable"?" · 账户不可用":""):b.state==="error"?"查询失败":b.state==="unsupported"?"使用手动标记":"未查询");
+    setText(when,b?.checked_at?new Date(b.checked_at).toLocaleString():"");when.title=b?.message||"";
+    for(const button of tr.cells[5].firstChild.children){
+      const kind=button.dataset.kind,label={edit:"编辑",balance:"查余额",delete:confirmDelete===p.id?"确认删除":"删除"}[kind];
+      setText(button,label);button.setAttribute("aria-label",`${label} ${p.name}`);
+      setProp(button,"className",kind==="delete"&&confirmDelete===p.id?"danger":"");
+      const blocked=p.active&&kind!=="balance"?"当前配置的接口要先切换到其他配置才能修改":kind==="balance"&&!balanceSupported(p)?"只支持 DeepSeek 官方接口查询，其他接口请用手动标记":"";
+      setProp(button,"disabled",busy||!!blocked);button.title=blocked;
+    }
+  },6,"还没有 API 接口，点击“添加接口”。");
+  setText($("api-selected"),profile(selectedApi)?.name||"请选择接口");buttons();
+}
+function apiTool(kind,id){
+  const p=profile(id);if(!p)return;
+  if(kind==="edit")return editApi(p);
+  if(kind==="balance")return act("api_balance",id);
+  if(confirmDelete!==id){confirmDelete=id;clearTimeout(confirmTimer);confirmTimer=setTimeout(()=>{confirmDelete="";renderApis();},4000);renderApis();return;}
+  confirmDelete="";act("api_delete",id);
+}
+function editApi(p=null,overrides={}){
+  editingApi=p?.id||"";
+  setText($("api-form-title"),p?`编辑接口 · ${p.name}`:"添加接口");
+  setText($("api-form-note"),overrides.api_key_env?`密钥变量已改为 ${overrides.api_key_env}，保存后生效`:"");
+  $("api-name").value=p?.name||"";$("api-model").value=p?.model||"";$("api-base").value=p?.base_url||"";$("api-key").value="";
+  $("api-key-env").value=overrides.api_key_env||p?.api_key_env||"";
+  $("api-mark").value=p?.balance_mark||"unknown";$("api-protocol").value=p?.protocol||"auto";
+  $("api-form").hidden=false;$("api-name").focus();
+}
+function closeForm(){ editingApi=null;pendingSave=false;$("api-form").hidden=true;$("api-key").value=""; }
 async function refresh(){
   if(refreshing)return;refreshing=true;buttons();
   try{
     const r=await fetch("/api/status"),data=await r.json();if(!r.ok)throw Error(data.error||"读取状态失败");
     state=data.status;busy=data.job?.state==="running";
-    $("service").textContent=state.ollama.online?"运行中":"未启动";
-    $("gateway").textContent=state.gateway?.alive?(state.gateway.status==="ready"?"已就绪":"连接中") :"未运行";
-    $("current").textContent=state.current.model||"尚未配置";$("config").textContent=state.config_path||"var/models.json";
+    setText($("service"),state.ollama.online?"运行中":"未启动");
+    setText($("gateway"),state.gateway?.alive?(state.gateway.status==="ready"?"已就绪":"连接中"):"未运行");
+    setText($("current"),state.current.model||"尚未配置");setText($("config"),state.config_path||"var/models.json");
     if(!selected&&(state.models||[]).some(m=>m.name===state.current.model))selected=state.current.model;
-    render();renderApis();
-    if(data.job?.action==="api_save"&&data.job.state==="completed"){$("api-form").hidden=true;editingApi="";}
-    if(data.job){const signature=JSON.stringify(data.job);if(signature!==lastJob){lastJob=signature;feedback(busy?(data.job.action.startsWith("api_")?"正在处理接口操作…":`${data.job.action==="start"?"正在启动 Ollama":data.job.action==="warm"?"正在加载 ":"正在切换到 "}${data.job.model||""}…`):data.job.message,data.job.state);}}
-    else if(!lastJob)feedback(state.ollama.online?"选择一个模型后，可以加载或切换。":"先启动 Ollama，再选择本机模型。");
+    if(data.job){
+      const signature=JSON.stringify(data.job);
+      if(signature!==lastJob){
+        lastJob=signature;
+        // Only the save this page submitted may close the form; a failed save keeps every field, including the key.
+        if(pendingSave&&data.job.action==="api_save"&&!busy){pendingSave=false;if(data.job.state==="completed")closeForm();}
+        feedback(busy?(data.job.action.startsWith("api_")?"正在处理接口操作…":`${data.job.action==="start"?"正在启动 Ollama":data.job.action==="warm"?"正在加载 ":"正在切换到 "}${data.job.model||""}…`):data.job.message,data.job.state);
+      }
+    }else if(!lastJob)feedback(state.ollama.online?"选择一个模型后，可以加载或切换。":"先启动 Ollama，再选择本机模型。");
+    renderLocal();renderApis();
   }catch(e){feedback(e.message+"。请检查服务并刷新页面。","failed");}
   finally{refreshing=false;buttons();}
 }
 async function act(action,model=selected){
-  if(busy)return;busy=true;buttons();feedback("正在提交操作…");
+  if(busy)return;busy=true;renderLocal();renderApis();feedback("正在提交操作…");
   try{const r=await fetch("/api/action",{method:"POST",headers:{"Content-Type":"application/json","X-Panel-Token":token},body:JSON.stringify({action,model})});const data=await r.json();if(!r.ok)throw Error(data.error||"提交失败");lastJob="";await refresh();}
-  catch(e){busy=false;buttons();feedback(e.message,"failed");}
+  catch(e){busy=false;pendingSave=false;renderLocal();renderApis();feedback(e.message,"failed");}
 }
-const marks={unknown:"未知",available:"余额充足",low:"余额偏低",empty:"余额耗尽"};
-function group(name){for(const item of ["local","api"]){$(item+"-group").hidden=item!==name;$(item+"-tab").setAttribute("aria-selected",String(item===name));}$("start").hidden=name!=="local";}
-function editApi(profile=null){editingApi=profile?.id||"";$("api-name").value=profile?.name||"";$("api-model").value=profile?.model||"";$("api-base").value=profile?.base_url||"";$("api-key").value="";$("api-mark").value=profile?.balance_mark||"unknown";$("api-protocol").value=profile?.protocol||"auto";$("api-form").hidden=false;$("api-name").focus();}
-function renderApis(){
- const profiles=state?.apis||[];$("api-count").textContent=`${profiles.length} 个接口`;const tbody=$("apis");tbody.replaceChildren();
- for(const p of profiles){
-  const tr=document.createElement("tr");tr.className=selectedApi===p.id?"selected":"";
-  const choose=tr.insertCell(),radio=document.createElement("input");radio.type="radio";radio.name="api-profile";radio.checked=selectedApi===p.id;radio.setAttribute("aria-label",`选择接口 ${p.name}`);radio.addEventListener("change",()=>{selectedApi=p.id;renderApis();});choose.append(radio);
-  const title=tr.insertCell();title.className="api-name";const name=document.createElement("strong");name.textContent=p.name+(p.active?" · 当前配置":"");const model=document.createElement("span");model.textContent=p.model||"待填写模型";const base=document.createElement("small");base.textContent=p.base_url||"待填写兼容地址";title.append(name,model,base);
-  const config=tr.insertCell();config.textContent=p.ready?"已配置":p.has_key?"待补全":"缺少密钥";
-  const balance=tr.insertCell();balance.className="balance";const manual=document.createElement("span");manual.textContent="手动 · "+(marks[p.balance_mark]||"未知");balance.append(manual);
-  if(p.balance){const result=document.createElement("span");result.style.display="block";const b=p.balance;result.textContent=b.entries?b.entries.map(e=>`${e.currency} ${e.amount}`).join(" / ")+(b.state==="unavailable"?" · 账户不可用":""):(b.state==="error"?"查询失败":b.state==="unsupported"?"使用手动标记":"未查询");const when=document.createElement("small");when.textContent=b.checked_at?new Date(b.checked_at).toLocaleString():"";when.title=b.message||"";balance.append(result,when);}
-  const actions=tr.insertCell(),tools=document.createElement("div");tools.className="api-tools";
-  for(const [label,fn] of [["编辑",()=>editApi(p)],["查余额",()=>act("api_balance",p.id)],["删除",()=>act("api_delete",p.id)]]){const button=document.createElement("button");button.textContent=label;button.setAttribute("aria-label",`${label} ${p.name}`);button.disabled=busy;button.addEventListener("click",fn);tools.append(button);}actions.append(tools);tbody.append(tr);
- }
- if(!profiles.length){const cell=tbody.insertRow().insertCell();cell.colSpan=5;cell.className="empty";cell.textContent="还没有 API 接口，点击“添加接口”。";}
- $("api-selected").textContent=profiles.find(p=>p.id===selectedApi)?.name||"请选择接口";buttons();
+function group(name){
+  for(const item of ["local","api"]){$(item+"-group").hidden=item!==name;$(item+"-tab").setAttribute("aria-selected",String(item===name));}
+  $("start").hidden=name!=="local";history.replaceState(null,"",name==="api"?"#api":location.pathname);
 }
 $("local-tab").addEventListener("click",()=>group("local"));$("api-tab").addEventListener("click",()=>group("api"));
-$("api-add").addEventListener("click",()=>editApi());$("api-cancel").addEventListener("click",()=>{$("api-form").hidden=true;$("api-key").value="";});
-$("api-form").addEventListener("submit",async e=>{e.preventDefault();const values={id:editingApi,name:$("api-name").value,model:$("api-model").value,base_url:$("api-base").value,api_key:$("api-key").value,balance_mark:$("api-mark").value,protocol:$("api-protocol").value};await act("api_save",values);$("api-key").value="";});
+$("api-add").addEventListener("click",()=>editApi());$("api-cancel").addEventListener("click",()=>{closeForm();if($("feedback").dataset.state==="failed")feedback("已取消编辑。");});
+$("api-form").addEventListener("submit",async e=>{
+  e.preventDefault();pendingSave=true;
+  await act("api_save",{id:editingApi,name:$("api-name").value,model:$("api-model").value,base_url:$("api-base").value,api_key:$("api-key").value,
+    api_key_env:$("api-key-env").value,balance_mark:$("api-mark").value,protocol:$("api-protocol").value});
+});
 $("api-switch").addEventListener("click",()=>act("api_switch",selectedApi));
-$("search").addEventListener("input",render);$("refresh").addEventListener("click",refresh);
+$("search").addEventListener("input",renderLocal);$("refresh").addEventListener("click",refresh);
 $("start").addEventListener("click",()=>act("start"));$("warm").addEventListener("click",()=>act("warm"));$("switch").addEventListener("click",()=>act("switch"));
+if(location.hash==="#api")group("api");
 refresh();setInterval(refresh,3000);
 </script>
 </html>
