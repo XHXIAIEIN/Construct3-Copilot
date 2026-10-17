@@ -1,5 +1,7 @@
 """Verify the log endpoint reads only its allowlist, needs the page token, removes credentials and tails by offset."""
 import json
+import sqlite3
+from contextlib import closing
 import tempfile
 import threading
 import unittest
@@ -103,7 +105,7 @@ class LogTests(unittest.TestCase):
         self.assertEqual((data["exists"], data["lines"]), (False, []))
 
     def test_usage_lists_qq_answers_without_openids(self):
-        self.assertEqual(self.get("/api/usage"), {"clipped": False, "answers": [], "received": [], "sent": [], "builds": []})
+        self.assertEqual(self.get("/api/usage"), {"clipped": False, "answers": [], "received": [], "sent": [], "builds": [], "tasks": []})
         usage = self.home / "var/logs/bot/usage.log"
         usage.write_text("2026-10-16 21:00:39 query-fixed calls 5 prompt 15286 (cache hit 0) completion 388 in 42 s\n"
                          "2026-10-16 21:02:16 c2c_E5DB calls 20 prompt 164297 (cache hit 0) completion 3157 in 95 s\n"
@@ -151,6 +153,23 @@ class LogTests(unittest.TestCase):
         self.assertEqual([(b["chat"], b["outcome"], b["fixes"]) for b in data["builds"]],
                          [("group", "failed", 1), ("group", "built", 2), ("group", "failed", 0), ("group", "unknown", 4)])
         self.assertNotIn("G1", json.dumps(data))
+
+    def test_tasks_come_from_copilot_records_without_sessions(self):
+        database = self.home / "var/copilot/tasks.sqlite3"
+        database.parent.mkdir(parents=True)
+        with closing(sqlite3.connect(database)) as db:
+            db.execute("CREATE TABLE tasks (task_id TEXT PRIMARY KEY, session_id TEXT, capability TEXT, status TEXT, "
+                       "created_at TEXT, finished_at TEXT)")
+            db.executemany("INSERT INTO tasks VALUES (?, ?, ?, ?, ?, ?)", [
+                ("t1", "secret-session", "lookup_ace", "failed", "2026-10-16T12:56:15+00:00", None),
+                ("t2", "secret-session", "conversation", "interrupted", "2026-10-16T12:50:00+00:00", None),
+                ("t3", "secret-session", "lookup_ace", "completed", "not a time", None)])
+            db.commit()
+        data = self.get("/api/usage")
+        self.assertEqual([(t["tool"], t["status"]) for t in data["tasks"]], [("conversation", "interrupted"), ("lookup_ace", "failed")])
+        self.assertRegex(data["tasks"][0]["at"], r"^2026-10-1[67] \d\d:50:00$")
+        self.assertNotIn("secret-session", json.dumps(data))
+
 
 if __name__ == "__main__":
     unittest.main()

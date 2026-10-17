@@ -97,10 +97,15 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .bar.split{display:flex;flex-direction:column-reverse;gap:2px;background:none;overflow:hidden}.bar.split i{min-height:2px}.bar.split .u,.legend .u{background:var(--border2)}.bar.split .p,.legend .p{background:var(--private)}.bar.split .g,.legend .g{background:var(--group)}
 .chart-head .side{display:flex;gap:12px;align-items:baseline}.legend{display:flex;gap:10px;font-size:12px;color:var(--text2);font-weight:400}.legend span{display:inline-flex;align-items:center;gap:4px}.legend i{width:8px;height:8px;border-radius:2px}
 .ticks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;margin-top:4px;font-size:11px;color:var(--muted);text-align:center;white-space:nowrap}.hours+.ticks{gap:2px}
+.toolrow{display:grid;grid-template-columns:minmax(0,1fr) 56px 88px minmax(72px,160px);gap:12px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:13px}
+.toolrow:first-child{border-top:0;padding-top:0;font-size:12px;color:var(--muted)}.toolrow .num{text-align:right;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.meter{display:flex;align-items:center;gap:8px}.meter .track{flex:1;height:6px;border-radius:3px;background:var(--hover)}.meter .fill{height:100%;border-radius:3px;background:var(--danger)}
+.meter span{width:34px;text-align:right;color:var(--text2);font-variant-numeric:tabular-nums}.toolrow:first-child .meter span{width:auto}
 .tip{position:fixed;z-index:20;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px 10px;font-size:12px;color:var(--text2);white-space:nowrap}.tip b{display:block;color:var(--text);font-weight:500}
 @media(max-width:720px){
   .app{grid-template-columns:1fr}nav{position:static;height:auto;margin:0;border-radius:0;border-width:0 0 1px;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--border);padding:8px 12px;overflow-x:auto}
   .brand{padding:0 8px 0 0}.side-toggle{display:none!important}.app.side-collapsed nav{display:flex}main{padding:16px}header{flex-direction:column}header>div:first-child{flex-basis:auto}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
+  .toolrow{grid-template-columns:56px 104px minmax(80px,1fr);row-gap:2px}.toolrow>:first-child{grid-column:1/-1}.toolrow:first-child{display:none}.toolrow .num{text-align:left}
   .kpis{grid-template-columns:1fr 1fr}.kpi:nth-child(3){border-left:0}.kpi:nth-child(n+3){border-top:1px solid var(--border)}.kpi .v{font-size:20px}
   .logbox{height:calc(100vh - 290px)}.tools select{flex:1}
   .row{flex-wrap:wrap}.row .what{flex-basis:100%}.facts{grid-template-columns:1fr}.facts dd{border-top:0;padding-top:0}
@@ -144,6 +149,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
         <div class="kpis" id="kpis-projects" role="group" aria-label="项目"></div>
         <div class="list chart"><div class="chart-head"><span id="trend-title"></span><div class="side"><span class="legend" hidden><span><i class="p"></i>私聊</span><span><i class="g"></i>群聊</span><span class="unknown" hidden><i class="u"></i>未知</span></span><small id="trend-range"></small></div></div><div class="bars" id="trend"></div><div class="ticks" id="trend-ticks"></div></div>
         <div class="list chart"><div class="chart-head"><span>时段</span><div class="side"><span class="legend" hidden><span><i class="p"></i>私聊</span><span><i class="g"></i>群聊</span><span class="unknown" hidden><i class="u"></i>未知</span></span><small>按完成时间</small></div></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
+        <div class="list chart" id="tools-card" hidden><div class="chart-head"><span>工具</span><small id="tools-since"></small></div><div id="tools"></div></div>
         <div class="muted" id="stats-meta"></div>
       </div>
     </section>
@@ -531,18 +537,18 @@ async function refreshStats(force){
 function renderStats(){
   const body=$("stats-body"),empty=$("stats-empty");
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.range===statsRange)));
-  const none=statsData&&!["answers","received","sent","builds"].some(k=>statsData[k]?.length);
+  const none=statsData&&!["answers","received","sent","builds","tasks"].some(k=>statsData[k]?.length);
   const message=statsError&&!statsData?statsError.message+"。":!statsData?"正在读取…":none?"还没有记录。":"";
   empty.hidden=!message;body.hidden=!!message;setText(empty,message);empty.classList.toggle("bad",!!statsError&&!statsData);
   if(message)return;
   setText($("stats-meta"),statsError?`${statsError.message}。下面是上次读到的数字。`:statsData.clipped?"日志太大，只统计了最近的部分。":"");
   $("stats-meta").classList.toggle("bad",!!statsError);
   const list=buckets(),from=list[0].start,metric=METRICS[statsMetric];
-  const signature=[statsRange,statsMetric,list.at(-1).key,...["answers","received","sent","builds"].map(k=>statsData[k].length+(statsData[k].at(-1)?.at||""))].join();
+  const signature=[statsRange,statsMetric,list.at(-1).key,...["answers","received","sent","builds","tasks"].map(k=>statsData[k].length+(statsData[k].at(-1)?.at||""))].join();
   if(signature===statsDrawn)return;
   statsDrawn=signature;
   const lists={};
-  for(const k of ["answers","received","sent","builds"])lists[k]=statsData[k].map(a=>({...a,date:parseAt(a.at)})).filter(a=>a.date>=from);
+  for(const k of ["answers","received","sent","builds","tasks"])lists[k]=statsData[k].map(a=>({...a,date:parseAt(a.at)})).filter(a=>a.date>=from);
   const tile=key=>{
     const m=METRICS[key],items=lists[m.of],value=items.length?m.value(items):null,b=make("button","kpi"),v=make("div","v");
     b.type="button";b.setAttribute("aria-pressed",String(key===statsMetric));
@@ -556,10 +562,30 @@ function renderStats(){
   for(const a of items)byKey.get(statsRange==="day"?dayKey(a.date):dayKey(a.date).slice(0,7))?.push(a);
   setText($("trend-title"),metric.label.replace("（中位）",""));setText($("trend-range"),statsRange==="day"?"近 14 天":"近 12 个月");
   drawBars($("trend"),$("trend-ticks"),list.map(b=>({tick:b.tick,name:b.name,items:byKey.get(b.key)})),metric);
+  drawTools(lists.tasks,statsData.tasks);
   drawBars($("hours"),$("hours-ticks"),Array.from({length:24},(_,h)=>({tick:h%6?"":`${h} 点`,name:`${h}:00–${h+1}:00`,items:items.filter(a=>a.date.getHours()===h)})),metric);
 }
 // A split metric stacks private (bottom) and group; both are sums over disjoint sessions, so the parts add up.
 // The median time does not add up and received or sent files do not name their chat: those stay one series.
+// copilot's task records: one row per tool, the whole answer ("conversation") first. An interrupted answer
+// (QQbot restarted mid-answer) counts as failed and is named in the row.
+function drawTools(tasks,all){
+  const card=$("tools-card");card.hidden=!all.length;if(!all.length)return;
+  const first=all[0]&&parseAt(all[0].at),since=first&&first>buckets()[0].start?`记录从 ${first.getMonth()+1}月${first.getDate()}日 开始`:"";
+  setText($("tools-since"),since);
+  const by=new Map();
+  for(const t of tasks){const r=by.get(t.tool)||{tool:t.tool,calls:0,failed:0,interrupted:0};r.calls++;
+    if(t.status==="failed"||t.status==="interrupted")r.failed++;if(t.status==="interrupted")r.interrupted++;by.set(t.tool,r);}
+  const rows=[...by.values()].sort((a,b)=>(b.tool==="conversation")-(a.tool==="conversation")||b.failed-a.failed||b.calls-a.calls);
+  const head=make("div","toolrow");head.append(make("span","",""),make("span","num","调用"),make("span","num","失败"),Object.assign(make("span","meter"),{textContent:"失败率"}));
+  $("tools").replaceChildren(head,...(rows.length?rows.map(r=>{
+    const row=make("div","toolrow"),meter=make("div","meter"),track=make("div","track"),fill=make("div","fill"),rate=Math.round(r.failed/r.calls*100);
+    fill.style.width=rate+"%";track.append(fill);meter.append(track,make("span","",rate+"%"));
+    row.append(make("span","",r.tool==="conversation"?"整次回答":r.tool),make("span","num",`${r.calls} 次`),
+      make("span","num",r.failed?`${r.failed} 次`+(r.interrupted?`（中断 ${r.interrupted}）`:""):"—"),meter);
+    return row;
+  }):[make("div","empty","这段时间没有记录。")]));
+}
 function drawBars(chart,ticks,groups,metric){
   const part=(items,chat)=>{const some=items.filter(x=>x.chat===chat);return some.length?metric.value(some)||0:0;};
   // null chat: an older log line whose chat the log order could not tell (two chats answering at once)

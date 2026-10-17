@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 import re
+import sqlite3
+from contextlib import closing
+from datetime import datetime
 
 from .api_profiles import SEEDS, key_names
 
@@ -180,6 +182,31 @@ def events(control):
     return {"received": received, "sent": sent, "builds": builds, "clipped": clipped}
 
 
+TASK_ROWS = 20000
+
+
+def tasks(control):
+    """copilot's own record of each tool call and each whole answer ("conversation"): its status and when it ran,
+    in local time. Read-only; the session column is left out, so nothing names a chat."""
+    database = control._data() / "copilot" / "tasks.sqlite3"
+    if not database.exists():
+        return []
+    try:
+        with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2)) as db:
+            rows = db.execute("SELECT capability, status, created_at FROM tasks ORDER BY created_at DESC LIMIT ?",
+                              (TASK_ROWS,)).fetchall()
+    except sqlite3.Error:
+        return []
+    found = []
+    for capability, status, created in reversed(rows):
+        try:
+            at = datetime.fromisoformat(created).astimezone().strftime("%Y-%m-%d %H:%M:%S")
+        except (TypeError, ValueError):
+            continue
+        found.append({"at": at, "tool": capability, "status": status})
+    return found
+
+
 def usage(control):
     """Every answer usage.log records (QQ ones only, not terminal runs), oldest first, and the project events of
     bot.log. A person is a session name, sent as a number so the page never sees an openid; the same person in a
@@ -197,4 +224,4 @@ def usage(control):
                         "chat": "private" if match[2].startswith("c2c_") else "group", "calls": int(match[3]),
                         "prompt": int(match[4]), "completion": int(match[5]), "seconds": int(match[6])})
     found = events(control)
-    return {"clipped": clipped or found.pop("clipped"), "answers": answers, **found}
+    return {"clipped": clipped or found.pop("clipped"), "answers": answers, **found, "tasks": tasks(control)}
