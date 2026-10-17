@@ -68,9 +68,21 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .group-head:hover:enabled{background:transparent}.group-head small{color:var(--muted);font-weight:400}
 .chev{margin-left:auto;margin-right:6px;width:7px;height:7px;border-right:1.5px solid var(--text2);border-bottom:1.5px solid var(--text2);transform:rotate(45deg);transition:transform .15s}
 .group.collapsed .chev{transform:rotate(-45deg)}.group.collapsed .list{display:none}.searching .group.collapsed .list{display:block}
+.check{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;white-space:nowrap}.check input,.tools .check input{width:auto;min-height:0;margin:0;padding:0;accent-color:var(--primary)}
+.logwrap{position:relative}
+.logbox{height:calc(100vh - 250px);min-height:300px;overflow:auto;padding:6px 0;font:12px/1.65 ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei",monospace}
+.logline{padding:0 14px 0 12px;border-left:2px solid transparent;white-space:pre-wrap;overflow-wrap:anywhere}
+.logline[data-level=warn]{color:var(--warn);border-left-color:var(--warn)}
+.logline[data-level=error]{color:var(--danger);background:var(--danger-bg);border-left-color:var(--danger)}
+.only-issues .logline:not([data-level]){display:none}
+.logbox .empty{font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;font-size:14px}
+.jump{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--surface);border-color:var(--border);box-shadow:var(--shadow);font-size:13px}
+.jump:hover:enabled{background:var(--surface);color:var(--text)}
+.logmeta{margin-top:8px}
 @media(max-width:720px){
   .app{grid-template-columns:1fr}nav{flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--border);padding:8px 12px;overflow-x:auto}
-  .brand{padding:0 8px 0 0}main{padding:16px}header{flex-direction:column}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
+  .brand{padding:0 8px 0 0}main{padding:16px}header{flex-direction:column}header>div:first-child{flex-basis:auto}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
+  .logbox{height:calc(100vh - 290px)}.tools select{flex:1}
   .row{flex-wrap:wrap}.row .what{flex-basis:100%}.facts{grid-template-columns:1fr}.facts dd{border-top:0;padding-top:0}
 }
 </style>
@@ -78,12 +90,14 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
   <nav aria-label="页面">
     <div class="brand">QQbot</div>
     <a href="#models" data-page="models">模型 <small id="model-count"></small></a>
+    <a href="#logs" data-page="logs">日志</a>
     <a href="#settings" data-page="settings">设置</a>
   </nav>
   <main>
     <header>
       <div><h1 id="title">模型</h1><div class="sub" id="now">正在读取状态…</div></div>
       <div class="tools" data-for="models" hidden><input id="search" type="search" placeholder="搜索模型或接口" aria-label="搜索模型或接口"><button id="api-add">添加接口</button><button id="refresh" class="ghost">刷新</button></div>
+      <div class="tools" data-for="logs" hidden><select id="log-pick" aria-label="选择日志"></select><label class="check"><input type="checkbox" id="log-issues">只看警告和错误</label></div>
     </header>
     <div class="status" id="status" role="status" aria-live="polite"><span id="status-text">正在读取状态…</span><button id="status-close" hidden aria-label="关闭提示">知道了</button></div>
 
@@ -91,6 +105,14 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
       <div class="group" data-group="api"><button class="group-head" type="button" aria-expanded="true" aria-controls="apis">云端 API <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="apis"></div></div>
       <div class="group" data-group="local"><button class="group-head" type="button" aria-expanded="true" aria-controls="models">本地模型 · Ollama <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="models"></div></div>
       <div class="group" data-group="todo"><button class="group-head" type="button" aria-expanded="true" aria-controls="apis-todo">待配置 <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="apis-todo"></div></div>
+    </section>
+
+    <section data-page="logs" hidden>
+      <div class="logwrap">
+        <div class="list logbox" id="log-box" tabindex="0" aria-label="日志内容"><div id="log-lines"></div></div>
+        <button type="button" class="jump" id="log-jump" hidden>有新日志 · 回到底部</button>
+      </div>
+      <div class="muted logmeta" id="log-meta"></div>
     </section>
 
     <section data-page="settings" hidden>
@@ -139,7 +161,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 const token="__PANEL_TOKEN__";
 const $=id=>document.getElementById(id);
 const protocols={openai:"OpenAI 兼容",anthropic:"Anthropic"},marks={available:"余额充足",low:"余额偏低",empty:"余额耗尽"};
-const titles={models:"模型",settings:"设置"};
+const titles={models:"模型",logs:"日志",settings:"设置"};
 // editingApi: null while the dialog is closed, "" for a new profile, else the profile id.
 let state=null,job=null,page="",busy=false,refreshing=false,lastJob="",pendingSave=false,editingApi=null,armed=null,armTimer=0,menuFor=null,dismissed="";
 
@@ -330,6 +352,80 @@ $("api-form").addEventListener("submit",async e=>{
     api_key_env:$("api-key-env").value,balance_mark:$("api-mark").value,protocol:$("api-protocol").value});
 });
 
+// ---- logs
+// Appends only: lines already on screen stay put, so reading older lines is never interrupted by a refresh.
+const LOG_KEEP=2000,ERR=/\b(ERROR|CRITICAL|FATAL)\b|\[ERROR\]|level=ERROR|Traceback \(most recent call last\)/,WARN=/\bWARN(ING)?\b|\[WARNING\]|level=WARN/,STAMPED=/^(\d{4}-\d\d-\d\d|time=)/;
+// logFollow: the reader is at the bottom, so new lines and reflows keep the view pinned there.
+let logId="",logOffset=null,logLevel="",logBusy=false,logAgain=false,logCatalog=[],logFollow=true;
+try{logId=localStorage.getItem("panel-log")||"";}catch{}
+async function getJSON(url){ const r=await fetch(url,{headers:{"X-Panel-Token":token}}),data=await r.json();if(!r.ok)throw Error(data.error||"读取日志失败");return data; }
+// A timestamped line says its own level near the start; a line without one (traceback, wrapped JSON) belongs to the line above.
+function levelOf(line){
+  if(STAMPED.test(line)){const head=line.slice(0,64);return logLevel=ERR.test(head)?"error":WARN.test(head)?"warn":"";}
+  if(!logLevel&&ERR.test(line))logLevel="error";
+  return logLevel;
+}
+function formatSize(n){ return n<1024?`${n} B`:n<1048576?`${(n/1024).toFixed(0)} KB`:`${(n/1048576).toFixed(1)} MB`; }
+function renderLogPicker(){
+  const pick=$("log-pick"),present=logCatalog.filter(l=>l.exists);
+  if(!present.some(l=>l.id===logId))logId=present[0]?.id||"";
+  const want=present.map(l=>l.id+l.label).join();
+  if(pick.dataset.want!==want){pick.dataset.want=want;pick.replaceChildren(...present.map(l=>Object.assign(make("option","",l.label),{value:l.id})));}
+  setProp(pick,"value",logId);
+  const meta=logCatalog.find(l=>l.id===logId);
+  setText($("log-meta"),meta?`${meta.file} · ${formatSize(meta.size)} · .env 里的密钥显示为“已隐藏”`:"");
+}
+function renderLogEmpty(){
+  const lines=$("log-lines"),issues=$("log-issues").checked,shown=issues?lines.querySelectorAll(".logline[data-level]").length:lines.children.length;
+  let empty=$("log-box").querySelector(".empty");
+  const text=!logCatalog.some(l=>l.exists)?"还没有日志。QQbot 和面板运行后会写在 var/logs 里。":!lines.children.length?"这个日志还是空的。":issues&&!shown?"最近的日志里没有警告或错误。":"";
+  if(!text){empty?.remove();return;}
+  if(!empty){empty=make("div","empty");$("log-box").append(empty);}
+  setText(empty,text);
+}
+function atBottom(box){ return box.scrollHeight-box.scrollTop-box.clientHeight<24; }
+async function refreshLog(){
+  if(page!=="logs")return;
+  if(logBusy){logAgain=true;return;}
+  logBusy=true;
+  try{
+    logCatalog=(await getJSON("/api/logs")).logs;renderLogPicker();
+    const id=logId;
+    if(id){
+      const data=await getJSON(`/api/logs/${encodeURIComponent(id)}`+(logOffset===null?"":`?after=${logOffset}`));
+      if(id===logId)appendLog(data);
+    }
+    renderLogEmpty();
+  }catch(e){status(e.message,"failed");}
+  finally{logBusy=false;if(logAgain){logAgain=false;refreshLog();}}
+}
+function appendLog(data){
+  const box=$("log-box"),lines=$("log-lines"),follow=data.reset||logOffset===null||logFollow;
+  if(data.reset){lines.replaceChildren();logLevel="";}
+  logOffset=data.offset;
+  if(!data.lines.length)return;
+  const fragment=document.createDocumentFragment();
+  for(const line of data.lines){const node=make("div","logline",line||" ");const level=levelOf(line);if(level)node.dataset.level=level;fragment.append(node);}
+  lines.append(fragment);
+  const before=box.scrollHeight;
+  while(lines.children.length>LOG_KEEP)lines.firstChild.remove();
+  if(follow){logFollow=true;box.scrollTop=box.scrollHeight;$("log-jump").hidden=true;}
+  else{box.scrollTop-=before-box.scrollHeight;$("log-jump").hidden=false;}
+}
+function pickLog(id){
+  logId=id;logOffset=null;logLevel="";logFollow=true;$("log-lines").replaceChildren();$("log-jump").hidden=true;
+  try{localStorage.setItem("panel-log",id);}catch{}
+  refreshLog();
+}
+$("log-pick").addEventListener("change",e=>pickLog(e.target.value));
+$("log-issues").addEventListener("change",e=>{$("log-box").classList.toggle("only-issues",e.target.checked);renderLogEmpty();pinLog();});
+function pinLog(){ const box=$("log-box");logFollow=true;box.scrollTop=box.scrollHeight;$("log-jump").hidden=true; }
+$("log-box").addEventListener("scroll",e=>{logFollow=atBottom(e.currentTarget);if(logFollow)$("log-jump").hidden=true;});
+$("log-jump").addEventListener("click",pinLog);
+// Wrapping changes with the width, so a resize or the page becoming visible would otherwise leave a follower mid-log.
+const logResize=new ResizeObserver(()=>{if(logFollow)$("log-box").scrollTop=$("log-box").scrollHeight;});
+logResize.observe($("log-lines"));logResize.observe($("log-box"));
+
 // ---- page chrome
 function showPage(name){
   page=titles[name]?name:"models";
@@ -337,6 +433,7 @@ function showPage(name){
   document.querySelectorAll("nav a").forEach(a=>a.dataset.page===page?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
   document.querySelectorAll(".tools").forEach(t=>t.hidden=t.dataset.for!==page);
   setText($("title"),titles[page]);closeMenu();
+  if(page==="logs")refreshLog();
 }
 addEventListener("hashchange",()=>showPage(location.hash.slice(1)));
 function status(text,kind=""){ $("status").hidden=!text;setText($("status-text"),text);$("status").dataset.state=kind;$("status-close").hidden=kind!=="completed"&&kind!=="failed"; }
@@ -392,6 +489,6 @@ async function act(action,model){
 }
 $("search").addEventListener("input",()=>{$("groups").classList.toggle("searching",!!$("search").value);renderLocal();renderApis();});$("refresh").addEventListener("click",refresh);
 $("api-add").addEventListener("click",()=>editApi());$("start").addEventListener("click",()=>act("start"));
-refresh();setInterval(refresh,3000);
+refresh();setInterval(()=>{refresh();refreshLog();},3000);
 </script>
 </html>

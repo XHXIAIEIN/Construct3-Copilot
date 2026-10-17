@@ -7,6 +7,7 @@ import logging
 import secrets
 import sys
 import threading
+import urllib.parse
 import urllib.request
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -14,6 +15,7 @@ from pathlib import Path
 
 from .control import ModelControl, ControlError
 from .api_profiles import ApiProfiles
+from . import logs as panel_logs
 
 log = logging.getLogger(__name__)
 
@@ -102,6 +104,8 @@ def create_server(control, port=8767):
                 self.send(200, page.replace("__PANEL_TOKEN__", token), "text/html; charset=utf-8")
             elif self.path == "/api/health":
                 self.send(200, {"app": "qqbot-model-manager", "home": str(control.home)})
+            elif self.path == "/api/logs" or self.path.startswith("/api/logs/"):
+                self.send_log()
             elif self.path == "/api/status":
                 try:
                     self.send(200, {"status": control.status(), "job": jobs.snapshot()})
@@ -109,6 +113,27 @@ def create_server(control, port=8767):
                     self.send(500, {"error": str(exc), "job": jobs.snapshot()})
             else:
                 self.send(404, {"error": "页面不存在"})
+
+        def send_log(self):
+            # Logs hold conversations, so reading them needs the page token as well as the loopback Host.
+            if self.headers.get("X-Panel-Token") != token:
+                self.send(403, {"error": "页面已失效，请刷新后重试"})
+                return
+            url = urllib.parse.urlsplit(self.path)
+            ident = url.path.removeprefix("/api/logs").removeprefix("/")
+            if not ident:
+                self.send(200, {"logs": panel_logs.catalog(control)})
+                return
+            after = urllib.parse.parse_qs(url.query).get("after", [None])[-1]
+            try:
+                after = int(after) if after is not None else None
+            except ValueError:
+                self.send(400, {"error": "日志位置无效"})
+                return
+            try:
+                self.send(200, panel_logs.read(control, ident, after))
+            except KeyError:
+                self.send(404, {"error": "没有这个日志"})
 
         def do_POST(self):
             if not self.valid_host() or self.headers.get("X-Panel-Token") != token:
