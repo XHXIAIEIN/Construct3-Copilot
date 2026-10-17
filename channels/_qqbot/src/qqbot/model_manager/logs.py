@@ -104,13 +104,14 @@ def read(control, ident, after=None):
 
 USAGE_BYTES = 2 * 1024 * 1024  # about 20 000 answers
 BOT_BYTES = 8 * 1024 * 1024
-PROJECTS = {".c3p", ".zip"}
+# copilot's attachments.PROJECT_SUFFIXES: the files it unpacks as a project (copied, copilot is another checkout)
+PROJECTS = {".c3p", ".zip", ".capx", ".rar", ".7z", ".tar", ".tgz", ".gz"}
 # bot.log lines as qqbot.qq and copilot's construct3 application write them; free text, so a reworded message
 # drops out of the counts instead of breaking the page.
 STAMPED_LINE = re.compile(r"(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d),\d+ \S+ (?:INFO|WARNING|ERROR) (.*)")
 TOOLS = re.compile(r"(c2c|group):\S+ tools: (.*)")
-# One build in a tool trace: copilot's tool_trace keeps the first lines of its result after " -> ", at most 600
-# characters, so a long list of fixes is counted short.
+# One build in a tool trace: copilot's tool_trace keeps the first four lines of its result after " -> ", at most
+# 600 characters, so a long list of fixes is counted short.
 BUILD = re.compile(r"""(?:new_project_from_\w+|patch_spec)\(.*?\) -> (.*?)(?=['"](?:, ['"]|\]$))""")
 ATTACHMENT = re.compile(r"attachment: name-md5 \w+, \w+, (\d+) bytes, (\S*)")
 SENT = re.compile(r"sent file (\d+) bytes")
@@ -138,9 +139,13 @@ def events(control):
         at, message = stamped.groups()
         if tools := TOOLS.match(message):
             for result in BUILD.findall(tools[2]):
-                ok = not re.search(r"(^| / )refused", result)  # a refused build applied none of its fixes
-                builds.append({"at": at, "chat": "private" if tools[1] == "c2c" else "group", "ok": ok,
-                               "fixes": result.count("fixed: ") if ok else 0})
+                # The trace keeps four result lines; with four fixes or more the outcome line is cut, so neither
+                # "built" nor a failure shows and the build is "unknown". A fix is a spec error the builder
+                # corrected, counted whatever the build's outcome.
+                outcome = ("failed" if re.search(r"(^| / )(refused|copilot failed)", result)
+                           else "built" if re.search(r"(^| / )built:", result) else "unknown")
+                builds.append({"at": at, "chat": "private" if tools[1] == "c2c" else "group", "outcome": outcome,
+                               "fixes": result.count("fixed: ")})
         elif attachment := ATTACHMENT.match(message):
             if attachment[2].lower() in PROJECTS:
                 received.append({"at": at, "bytes": int(attachment[1])})

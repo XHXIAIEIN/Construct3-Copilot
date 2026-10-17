@@ -129,6 +129,8 @@ class LogTests(unittest.TestCase):
             "2026-10-16 21:02:16,646 qqbot INFO group:G1:M2 tools: [\"presearch ['x']\", "
             "'new_project_from_spec({}) -> refused, nothing was built: / fixed: a / spec: bad', "
             "'patch_spec({\"a\": 1}) -> fixed: spec.objects[1].size: x / fixed: spec.objects[4].align: y / built: 2 object types', "
+            "'patch_spec({}) -> -- the call JSON had brackets out of order / copilot failed: Script exited with 1', "
+            "'patch_spec({}) -> fixed: a / fixed: b / fixed: c / fixed: d', "
             "'print_sheet({})']\n"
             "2026-10-16 21:02:19,526 qqbot INFO sent file 74488 bytes\n"
             "2026-10-16 21:03:00,000 qqbot WARNING file send failed: timeout\n", encoding="utf-8")
@@ -136,7 +138,8 @@ class LogTests(unittest.TestCase):
         self.assertEqual(data["received"], [{"at": "2026-10-16 20:59:51", "bytes": 680575}])
         self.assertEqual(data["sent"], [{"at": "2026-10-16 21:02:19", "bytes": 74488, "ok": True},
                                         {"at": "2026-10-16 21:03:00", "bytes": 0, "ok": False}])
-        self.assertEqual([(b["chat"], b["ok"], b["fixes"]) for b in data["builds"]], [("group", False, 0), ("group", True, 2)])
+        self.assertEqual([(b["chat"], b["outcome"], b["fixes"]) for b in data["builds"]],
+                         [("group", "failed", 1), ("group", "built", 2), ("group", "failed", 0), ("group", "unknown", 4)])
         self.assertNotIn("G1", json.dumps(data))
 
 

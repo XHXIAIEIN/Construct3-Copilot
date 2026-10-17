@@ -88,7 +88,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .kpi{position:relative;display:block;text-align:left;white-space:normal;border:0;border-left:1px solid var(--border);border-radius:0;padding:14px 16px 16px;min-height:0}.kpi:first-child{border-left:0}
 .kpi[aria-pressed=true]{background:var(--hover)}.kpi[aria-pressed=true]::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:2px;border-radius:2px;background:var(--info)}
 .kpi .k{font-size:12px;color:var(--text2)}.kpi .v{font-size:24px;font-weight:500;line-height:1.35}.kpi .v small{font-size:13px;font-weight:400;color:var(--text2);margin:0 4px 0 2px}
-.kpi .n{font-size:12px;color:var(--muted)}
+.kpi .n{font-size:12px;color:var(--muted);word-break:keep-all}
 .chart{padding:14px 16px 10px;margin-bottom:12px}.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:500;margin-bottom:12px}.chart-head small{color:var(--muted);font-weight:400;font-size:12px}
 .bars{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;height:120px;border-bottom:1px solid var(--border)}.bars.hours{height:72px;gap:2px}
 .cell{display:flex;align-items:flex-end;height:100%}.bar{width:100%;min-height:2px;background:var(--info);border-radius:4px 4px 0 0}.bar.zero{background:var(--border);border-radius:0}.cell:hover .bar{opacity:.7}
@@ -139,7 +139,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
         <div class="kpis" id="kpis" role="group" aria-label="回答"></div>
         <div class="kpis" id="kpis-projects" role="group" aria-label="项目"></div>
         <div class="list chart"><div class="chart-head"><span id="trend-title"></span><small id="trend-range"></small></div><div class="bars" id="trend"></div><div class="ticks" id="trend-ticks"></div></div>
-        <div class="list chart"><div class="chart-head"><span>时段</span></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
+        <div class="list chart"><div class="chart-head"><span>时段</span><small>按完成时间</small></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
         <div class="muted" id="stats-meta"></div>
       </div>
     </section>
@@ -488,8 +488,9 @@ const METRICS={
   sent:{of:"sent",label:"发出项目",value:a=>a.filter(x=>x.ok).length,fmt:n=>[[n,"个"]],
     note:a=>{const failed=a.filter(x=>!x.ok).length;return failed?`失败 ${failed} 次`:`共 ${fileSize(sum(a,"bytes"))}`;}},
   builds:{of:"builds",label:"生成项目",value:a=>a.length,fmt:n=>[[n,"次"]],
-    note:a=>{const ok=a.filter(x=>x.ok).length;return `成功 ${ok} · 失败 ${a.length-ok}`;}},
-  fixes:{of:"builds",label:"自动修复",value:a=>sum(a,"fixes"),fmt:n=>[[n,"处"]],
+    // "unknown": the log cut the line that says how the build ended.
+    note:a=>{const n=k=>a.filter(x=>x.outcome===k).length,unknown=n("unknown");return `成功 ${n("built")} · 失败 ${n("failed")}`+(unknown?` · 未知 ${unknown}`:"");}},
+  fixes:{of:"builds",label:"自动修正",value:a=>sum(a,"fixes"),fmt:n=>[[n,"处"]],
     note:a=>{const n=a.filter(x=>x.fixes).length;return n?`在 ${n} 次生成里`:"";}},
 };
 const ROWS=[["count","people","tokens","time"],["received","sent","builds","fixes"]];
