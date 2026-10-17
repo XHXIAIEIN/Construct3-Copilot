@@ -33,7 +33,7 @@ nav{background:var(--side);border-right:1px solid var(--border);padding:16px 10p
 nav a{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:8px;color:var(--text2);text-decoration:none}
 nav a:hover{background:var(--hover)}nav a[aria-current=page]{background:var(--selected);color:var(--text)}nav a small{color:var(--muted)}
 main{padding:28px 32px;max-width:960px;width:100%}
-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px 16px;margin-bottom:16px}header>div:first-child{flex:1 1 300px;min-width:0}.tools{flex-shrink:0}
 h1{font-size:22px;font-weight:500;margin:0 0 2px}.sub{color:var(--text2);font-size:13px}.muted{color:var(--muted);font-size:12px}
 .status{display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:8px;margin-bottom:16px;background:var(--hover);color:var(--text2);font-size:13px}
 .status[data-state=running]{background:var(--info-bg);color:var(--info)}.status[data-state=failed]{background:var(--danger-bg);color:var(--danger)}.status[data-state=completed]{background:var(--ok-bg);color:var(--ok)}
@@ -47,7 +47,7 @@ h1{font-size:22px;font-weight:500;margin:0 0 2px}.sub{color:var(--text2);font-si
 .badge[data-tone=warn]{background:var(--warn-bg);color:var(--warn)}.badge[data-tone=danger]{background:var(--danger-bg);color:var(--danger)}.badge[data-tone=plain]{background:var(--hover);color:var(--text2)}
 .more{border-color:transparent;padding:4px 8px;color:var(--text2);font-size:16px;line-height:1}
 .empty{padding:28px 16px;text-align:center;color:var(--text2)}.empty button{margin-top:10px}
-.tools{display:flex;gap:8px}.tools input{width:220px}
+.tools{display:flex;gap:8px}.tools input{width:200px}
 .menu{position:fixed;z-index:10;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:4px;min-width:180px}
 .menu button{display:block;width:100%;text-align:left;border:0;border-radius:6px;padding:6px 10px;min-height:30px}
 .menu button.danger{color:var(--danger)}.menu .why{padding:2px 10px 6px;font-size:12px;color:var(--muted);max-width:240px}
@@ -64,6 +64,10 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .facts{display:grid;grid-template-columns:140px minmax(0,1fr);gap:0}.facts>*{padding:11px 14px;border-top:1px solid var(--border)}
 .facts>:nth-child(-n+2){border-top:0}.facts dt{color:var(--text2)}.facts dd{margin:0;overflow-wrap:anywhere;display:flex;justify-content:space-between;gap:8px;align-items:center}
 .notes{margin:16px 2px;color:var(--text2);font-size:13px;padding-left:18px}.notes li{margin:4px 0}
+.group{margin-bottom:20px}.group-head{display:flex;width:100%;align-items:center;gap:8px;border:0;border-radius:6px;padding:4px 4px 8px;min-height:0;font-weight:500;text-align:left}
+.group-head:hover:enabled{background:transparent}.group-head small{color:var(--muted);font-weight:400}
+.chev{margin-left:auto;margin-right:6px;width:7px;height:7px;border-right:1.5px solid var(--text2);border-bottom:1.5px solid var(--text2);transform:rotate(45deg);transition:transform .15s}
+.group.collapsed .chev{transform:rotate(-45deg)}.group.collapsed .list{display:none}.searching .group.collapsed .list{display:block}
 @media(max-width:720px){
   .app{grid-template-columns:1fr}nav{flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--border);padding:8px 12px;overflow-x:auto}
   .brand{padding:0 8px 0 0}main{padding:16px}header{flex-direction:column}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
@@ -73,26 +77,21 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 <div class="app">
   <nav aria-label="页面">
     <div class="brand">QQbot</div>
-    <a href="#local" data-page="local">本地模型 <small id="local-count"></small></a>
-    <a href="#api" data-page="api">API 接口 <small id="api-count"></small></a>
+    <a href="#models" data-page="models">模型 <small id="model-count"></small></a>
     <a href="#settings" data-page="settings">设置</a>
   </nav>
   <main>
     <header>
-      <div><h1 id="title">API 接口</h1><div class="sub" id="now">正在读取状态…</div></div>
-      <div class="tools" data-for="local" hidden><input id="search" type="search" placeholder="搜索模型" aria-label="搜索本机模型"><button id="refresh">刷新</button></div>
-      <div class="tools" data-for="api" hidden><button id="api-add">添加接口</button></div>
+      <div><h1 id="title">模型</h1><div class="sub" id="now">正在读取状态…</div></div>
+      <div class="tools" data-for="models" hidden><input id="search" type="search" placeholder="搜索模型或接口" aria-label="搜索模型或接口"><button id="api-add">添加接口</button><button id="refresh" class="ghost">刷新</button></div>
     </header>
     <div class="status" id="status" role="status" aria-live="polite"><span id="status-text">正在读取状态…</span><button id="status-close" hidden aria-label="关闭提示">知道了</button></div>
 
-    <section data-page="local" hidden>
-      <div class="list" id="models"></div>
-      <ul class="notes"><li>切换会写入 .env 并重启 QQbot，切换前会检查模型是否支持对话与工具调用。</li><li>机器人正在回答时，请等回答结束再切换。</li></ul>
-    </section>
-
-    <section data-page="api" hidden>
-      <div class="list" id="apis"></div>
-      <ul class="notes"><li>切换会写入 .env 并重启 QQbot。</li><li>正在使用的接口要先切换到其他配置，才能编辑或删除。删除会保留本地备份与密钥。</li></ul>
+    <section data-page="models" id="groups" hidden>
+      <div class="group" data-group="api"><button class="group-head" type="button" aria-expanded="true" aria-controls="apis">云端 API <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="apis"></div></div>
+      <div class="group" data-group="local"><button class="group-head" type="button" aria-expanded="true" aria-controls="models">本地模型 · Ollama <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="models"></div></div>
+      <div class="group" data-group="todo"><button class="group-head" type="button" aria-expanded="true" aria-controls="apis-todo">待配置 <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="apis-todo"></div></div>
+      <ul class="notes"><li>切换会写入 .env 并重启 QQbot；本地模型切换前会检查是否支持对话与工具调用。机器人正在回答时，请等回答结束再切换。</li><li>正在使用的接口要先切换到其他配置，才能编辑或删除。删除会保留本地备份与密钥。</li></ul>
     </section>
 
     <section data-page="settings" hidden>
@@ -141,7 +140,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 const token="__PANEL_TOKEN__";
 const $=id=>document.getElementById(id);
 const protocols={openai:"OpenAI 兼容",anthropic:"Anthropic"},marks={available:"余额充足",low:"余额偏低",empty:"余额耗尽"};
-const titles={local:"本地模型",api:"API 接口",settings:"设置"};
+const titles={models:"模型",settings:"设置"};
 // editingApi: null while the dialog is closed, "" for a new profile, else the profile id.
 let state=null,job=null,page="",busy=false,refreshing=false,lastJob="",pendingSave=false,editingApi=null,armed=null,armTimer=0,menuFor=null,dismissed="";
 
@@ -197,7 +196,7 @@ function running(id){ return busy&&job&&job.model===id; }
 function renderLocal(){
   const online=!!state?.ollama?.online,list=state?.models||[],query=$("search").value.toLowerCase();
   const items=list.filter(m=>m.name.toLowerCase().includes(query));
-  setText($("local-count"),String(list.length||""));
+  groupCount("local",query?`${items.length} / ${list.length}`:String(list.length),query&&!items.length);
   sync($("models"),items,m=>m.name,()=>{
     const row=rowSkeleton();
     row.children[2].addEventListener("click",()=>{const name=row.dataset.key;armedFor("switch",name)?(armed=null,act("switch",name)):arm("switch",name);});
@@ -209,7 +208,7 @@ function renderLocal(){
       note:armedFor("switch",m.name)?"再点一次确认：会写入 .env 并重启 QQbot":"",
       badge:running(m.name)?"处理中…":current?"正在使用":m.loaded?"已加载":"",tone:running(m.name)?"plain":current?"current":"ok",
       action:"switch",actionLabel:current||!online?"":"切换",armedLabel:"确认切换",moreLabel:`${m.name} 更多操作`});
-  },()=>!online?emptyState("模型服务未启动。","启动 Ollama",()=>act("start")):query?emptyState("没有匹配的模型。"):emptyState("本机还没有已安装的模型。检查设置里的模型配置文件。"));
+  },()=>!online?emptyState("模型服务未启动。","启动 Ollama",()=>act("start")):emptyState("本机还没有已安装的模型。检查设置里的模型配置文件。"));
 }
 
 // ---- API profiles
@@ -230,24 +229,45 @@ function balanceText(p){
 }
 function profile(id){ return (state?.apis||[]).find(p=>p.id===id); }
 function balanceSupported(p){ return ["https://api.deepseek.com","https://api.deepseek.com/v1"].includes((p.base_url||"").replace(/\/$/,"")); }
-function renderApis(){
-  const profiles=state?.apis||[],names=state?.api_key_names||[],datalist=$("api-key-names");
-  setText($("api-count"),String(profiles.length||""));
-  if([...datalist.options].map(o=>o.value).join()!==names.join())datalist.replaceChildren(...names.map(n=>Object.assign(make("option"),{value:n})));
-  sync($("apis"),profiles,p=>p.id,()=>{
-    const row=rowSkeleton();
-    row.children[2].addEventListener("click",()=>apiAction(row.children[2].dataset.action,row.dataset.key));
-    row.children[3].addEventListener("click",e=>openMenu(e.currentTarget,"api",row.dataset.key));
-    return row;
-  },(row,p)=>{
-    const problem=apiProblem(p),proto=p.protocol==="auto"||!p.protocol?`${protocols[p.effective_protocol]||"OpenAI 兼容"}（自动）`:protocols[p.protocol]||p.protocol;
-    const sub=[p.model||"未填写模型",proto,!problem&&balanceText(p)].filter(Boolean).join(" · ");
-    const isArmed=armedFor("switch",p.id);
-    fillRow(row,{name:p.name,sub,note:isArmed?"再点一次确认：会写入 .env 并重启 QQbot":p.active?"":problem?.note,
-      badge:running(p.id)?"处理中…":p.active?"正在使用":problem?.badge,tone:running(p.id)?"plain":p.active?"current":problem?.tone,
-      action:p.active?"":problem?"fix":"switch",actionLabel:p.active?"":problem?problem.fix:"切换",armedLabel:"确认切换",moreLabel:`${p.name} 更多操作`});
-  },()=>emptyState("添加一个 API 接口，机器人就能使用云端模型。","添加接口",()=>editApi()));
+function apiRow(){
+  const row=rowSkeleton();
+  row.children[2].addEventListener("click",()=>apiAction(row.children[2].dataset.action,row.dataset.key));
+  row.children[3].addEventListener("click",e=>openMenu(e.currentTarget,"api",row.dataset.key));
+  return row;
 }
+function fillApi(row,p){
+  const problem=apiProblem(p),proto=p.protocol==="auto"||!p.protocol?`${protocols[p.effective_protocol]||"OpenAI 兼容"}（自动）`:protocols[p.protocol]||p.protocol;
+  const sub=[p.model||"未填写模型",proto,!problem&&balanceText(p)].filter(Boolean).join(" · ");
+  fillRow(row,{name:p.name,sub,note:armedFor("switch",p.id)?"再点一次确认：会写入 .env 并重启 QQbot":p.active?"":problem?.note,
+    badge:running(p.id)?"处理中…":p.active?"正在使用":problem?.badge,tone:running(p.id)?"plain":p.active?"current":problem?.tone,
+    action:p.active?"":problem?"fix":"switch",actionLabel:p.active?"":problem?problem.fix:"切换",armedLabel:"确认切换",moreLabel:`${p.name} 更多操作`});
+}
+function renderApis(){
+  const profiles=state?.apis||[],names=state?.api_key_names||[],datalist=$("api-key-names"),query=$("search").value.toLowerCase();
+  if([...datalist.options].map(o=>o.value).join()!==names.join())datalist.replaceChildren(...names.map(n=>Object.assign(make("option"),{value:n})));
+  const match=profiles.filter(p=>!query||`${p.name} ${p.model}`.toLowerCase().includes(query));
+  // The active profile stays with the usable ones even when it has a problem, so "正在使用" is never filed under 待配置.
+  const usable=match.filter(p=>p.active||!apiProblem(p)),todo=match.filter(p=>!p.active&&apiProblem(p));
+  const total=profiles.filter(p=>p.active||!apiProblem(p)).length,totalTodo=profiles.length-total;
+  groupCount("api",query?`${usable.length} / ${total}`:String(total),query?!usable.length:profiles.length>0&&!total);
+  groupCount("todo",query?`${todo.length} / ${totalTodo}`:String(totalTodo),!todo.length);
+  sync($("apis"),usable,p=>p.id,apiRow,fillApi,()=>emptyState("添加一个 API 接口，机器人就能使用云端模型。","添加接口",()=>editApi()));
+  sync($("apis-todo"),todo,p=>p.id,apiRow,fillApi,()=>make("div"));
+  setText($("model-count"),String(profiles.length+(state?.models||[]).length||""));
+}
+function groupCount(name,text,hide){
+  const group=document.querySelector(`.group[data-group=${name}]`);
+  setText(group.querySelector(".group-head small"),text);group.hidden=!!hide;
+}
+let collapsed=new Set();
+try{collapsed=new Set(JSON.parse(localStorage.getItem("panel-collapsed")||"[]"));}catch{}
+document.querySelectorAll(".group").forEach(group=>{
+  const head=group.querySelector(".group-head"),apply=()=>{const c=collapsed.has(group.dataset.group);group.classList.toggle("collapsed",c);head.setAttribute("aria-expanded",String(!c));};
+  head.addEventListener("click",()=>{
+    const name=group.dataset.group;collapsed.has(name)?collapsed.delete(name):collapsed.add(name);apply();
+    try{localStorage.setItem("panel-collapsed",JSON.stringify([...collapsed]));}catch{}
+  });apply();
+});
 function apiAction(kind,id){
   const p=profile(id);if(!p)return;
   if(kind==="fix")return editApi(p,!p.has_key?p.key_alternatives?.[0]:"");
@@ -311,7 +331,7 @@ $("api-form").addEventListener("submit",async e=>{
 
 // ---- page chrome
 function showPage(name){
-  page=titles[name]?name:"api";
+  page=titles[name]?name:"models";
   document.querySelectorAll("section[data-page]").forEach(s=>s.hidden=s.dataset.page!==page);
   document.querySelectorAll("nav a").forEach(a=>a.dataset.page===page?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
   document.querySelectorAll(".tools").forEach(t=>t.hidden=t.dataset.for!==page);
@@ -342,7 +362,7 @@ async function refresh(){
     state=data.status;job=data.job;busy=job?.state==="running";
     // A job that finished before this page opened is history, not news.
     if(firstLoad&&job&&!busy)dismissed=lastJob=JSON.stringify(job);
-    if(!page)showPage(location.hash.slice(1)||(activeApi()||!isLocal(state.current.base_url)?"api":"local"));
+    if(!page)showPage(location.hash.slice(1));
     const signature=JSON.stringify(job);
     if(job&&signature!==lastJob){
       lastJob=signature;
@@ -369,7 +389,7 @@ async function act(action,model){
     status(e.message,"failed");
   }
 }
-$("search").addEventListener("input",renderLocal);$("refresh").addEventListener("click",refresh);
+$("search").addEventListener("input",()=>{$("groups").classList.toggle("searching",!!$("search").value);renderLocal();renderApis();});$("refresh").addEventListener("click",refresh);
 $("api-add").addEventListener("click",()=>editApi());$("start").addEventListener("click",()=>act("start"));
 refresh();setInterval(refresh,3000);
 </script>
