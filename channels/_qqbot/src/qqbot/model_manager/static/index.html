@@ -8,7 +8,7 @@
   --page:#f5f4ef;--surface:#ffffff;--side:#efeee8;--hover:rgba(31,30,29,.05);--selected:rgba(31,30,29,.08);
   --text:#1f1e1d;--text2:#6b6a64;--muted:#9a9890;--border:rgba(31,30,29,.12);--border2:rgba(31,30,29,.22);
   --primary:#1f1e1d;--on-primary:#faf9f5;--accent:#2c6fd6;
-  --ok:#2f6b3f;--ok-bg:#e5efe2;--warn:#8a5a00;--warn-bg:#f6ecd4;--danger:#b5402f;--danger-bg:#f8e6e2;--info:#2a5aa8;--info-bg:#e4ecf8;
+  --ok:#2f6b3f;--ok-bg:#e5efe2;--warn:#8a5a00;--warn-bg:#f6ecd4;--danger:#b5402f;--danger-bg:#f8e6e2;--info:#2a5aa8;--info-bg:#e4ecf8;--private:#2a78d6;--group:#eb6834;
   --shadow:0 8px 24px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.08);
   color-scheme:light;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);
 }
@@ -16,7 +16,7 @@
   --page:#151515;--surface:#1f1e1d;--side:#1a1a19;--hover:rgba(255,255,255,.06);--selected:rgba(255,255,255,.1);
   --text:#f0efec;--text2:#a6a49c;--muted:#78766f;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);
   --primary:#f0efec;--on-primary:#151515;--accent:#6c9fec;
-  --ok:#8fc49a;--ok-bg:#1f3324;--warn:#e0b45c;--warn-bg:#3a2e14;--danger:#ec8f80;--danger-bg:#3d201b;--info:#9dbcf0;--info-bg:#1d2a40;
+  --ok:#8fc49a;--ok-bg:#1f3324;--warn:#e0b45c;--warn-bg:#3a2e14;--danger:#ec8f80;--danger-bg:#3d201b;--info:#9dbcf0;--info-bg:#1d2a40;--private:#3987e5;--group:#d95926;
   --shadow:0 8px 24px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.3);color-scheme:dark;
 }}
 *{box-sizing:border-box}body{margin:0;background:var(--page)}[hidden]{display:none!important}
@@ -92,6 +92,8 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .chart{padding:14px 16px 10px;margin-bottom:12px}.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:500;margin-bottom:12px}.chart-head small{color:var(--muted);font-weight:400;font-size:12px}
 .bars{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;height:120px;border-bottom:1px solid var(--border)}.bars.hours{height:72px;gap:2px}
 .cell{display:flex;align-items:flex-end;height:100%}.bar{width:100%;min-height:2px;background:var(--info);border-radius:4px 4px 0 0}.bar.zero{background:var(--border);border-radius:0}.cell:hover .bar{opacity:.7}
+.bar.split{display:flex;flex-direction:column-reverse;gap:2px;background:none;overflow:hidden}.bar.split i{min-height:2px}.bar.split .p,.legend .p{background:var(--private)}.bar.split .g,.legend .g{background:var(--group)}
+.chart-head .side{display:flex;gap:12px;align-items:baseline}.legend{display:flex;gap:10px;font-size:12px;color:var(--text2);font-weight:400}.legend span{display:inline-flex;align-items:center;gap:4px}.legend i{width:8px;height:8px;border-radius:2px}
 .ticks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;margin-top:4px;font-size:11px;color:var(--muted);text-align:center;white-space:nowrap}.hours+.ticks{gap:2px}
 .tip{position:fixed;z-index:20;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px 10px;font-size:12px;color:var(--text2);white-space:nowrap}.tip b{display:block;color:var(--text);font-weight:500}
 @media(max-width:720px){
@@ -138,8 +140,8 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
       <div id="stats-body" hidden>
         <div class="kpis" id="kpis" role="group" aria-label="回答"></div>
         <div class="kpis" id="kpis-projects" role="group" aria-label="项目"></div>
-        <div class="list chart"><div class="chart-head"><span id="trend-title"></span><small id="trend-range"></small></div><div class="bars" id="trend"></div><div class="ticks" id="trend-ticks"></div></div>
-        <div class="list chart"><div class="chart-head"><span>时段</span><small>按完成时间</small></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
+        <div class="list chart"><div class="chart-head"><span id="trend-title"></span><div class="side"><span class="legend" hidden><span><i class="p"></i>私聊</span><span><i class="g"></i>群聊</span></span><small id="trend-range"></small></div></div><div class="bars" id="trend"></div><div class="ticks" id="trend-ticks"></div></div>
+        <div class="list chart"><div class="chart-head"><span>时段</span><div class="side"><span class="legend" hidden><span><i class="p"></i>私聊</span><span><i class="g"></i>群聊</span></span><small>按完成时间</small></div></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
         <div class="muted" id="stats-meta"></div>
       </div>
     </section>
@@ -476,21 +478,21 @@ logResize.observe($("log-lines"));logResize.observe($("log-box"));
 // project files received, sent and built (bot.log). Picking a tile sets what both charts show.
 const sum=(list,key)=>list.reduce((t,x)=>t+x[key],0);
 const METRICS={
-  count:{of:"answers",label:"回答",value:a=>a.length,fmt:n=>[[n,"次"]],
+  count:{split:true,of:"answers",label:"回答",value:a=>a.length,fmt:n=>[[n,"次"]],
     note:a=>{const g=a.filter(x=>x.chat==="group").length;return `私聊 ${a.length-g} · 群聊 ${g}`;}},
-  people:{of:"answers",label:"人数",value:a=>new Set(a.map(x=>x.who)).size,fmt:n=>[[n,"人"]],
+  people:{split:true,of:"answers",label:"人数",value:a=>new Set(a.map(x=>x.who)).size,fmt:n=>[[n,"人"]],
     note:a=>`人均 ${trim(a.length/new Set(a.map(x=>x.who)).size)} 次`},
-  tokens:{of:"answers",label:"词元",value:a=>sum(a,"prompt")+sum(a,"completion"),fmt:n=>bigNumber(n),
+  tokens:{split:true,of:"answers",label:"词元",value:a=>sum(a,"prompt")+sum(a,"completion"),fmt:n=>bigNumber(n),
     note:a=>`输出 ${plain(bigNumber(sum(a,"completion")))}`},
   time:{of:"answers",label:"用时（中位）",value:a=>median(a.map(x=>x.seconds)),fmt:n=>duration(n),
     note:a=>`最长 ${plain(duration(Math.max(...a.map(x=>x.seconds))))}`},
   received:{of:"received",label:"收到项目",value:a=>a.length,fmt:n=>[[n,"个"]],note:a=>`共 ${fileSize(sum(a,"bytes"))}`},
   sent:{of:"sent",label:"发出项目",value:a=>a.filter(x=>x.ok).length,fmt:n=>[[n,"个"]],
     note:a=>{const failed=a.filter(x=>!x.ok).length;return failed?`失败 ${failed} 次`:`共 ${fileSize(sum(a,"bytes"))}`;}},
-  builds:{of:"builds",label:"生成项目",value:a=>a.length,fmt:n=>[[n,"次"]],
+  builds:{split:true,of:"builds",label:"生成项目",value:a=>a.length,fmt:n=>[[n,"次"]],
     // "unknown": the log cut the line that says how the build ended.
     note:a=>{const n=k=>a.filter(x=>x.outcome===k).length,unknown=n("unknown");return `成功 ${n("built")} · 失败 ${n("failed")}`+(unknown?` · 未知 ${unknown}`:"");}},
-  fixes:{of:"builds",label:"自动修正",value:a=>sum(a,"fixes"),fmt:n=>[[n,"处"]],
+  fixes:{split:true,of:"builds",label:"自动修正",value:a=>sum(a,"fixes"),fmt:n=>[[n,"处"]],
     note:a=>{const n=a.filter(x=>x.fixes).length;return n?`在 ${n} 次生成里`:"";}},
 };
 const ROWS=[["count","people","tokens","time"],["received","sent","builds","fixes"]];
@@ -555,12 +557,22 @@ function renderStats(){
   drawBars($("trend"),$("trend-ticks"),list.map(b=>({tick:b.tick,name:b.name,items:byKey.get(b.key)})),metric);
   drawBars($("hours"),$("hours-ticks"),Array.from({length:24},(_,h)=>({tick:h%6?"":`${h} 点`,name:`${h}:00–${h+1}:00`,items:items.filter(a=>a.date.getHours()===h)})),metric);
 }
+// A split metric stacks private (bottom) and group; both are sums over disjoint sessions, so the parts add up.
+// The median time does not add up and received or sent files do not name their chat: those stay one series.
 function drawBars(chart,ticks,groups,metric){
-  const values=groups.map(g=>g.items.length?metric.value(g.items)||0:0),max=Math.max(...values,1);
+  const part=(items,chat)=>{const some=items.filter(x=>x.chat===chat);return some.length?metric.value(some)||0:0;};
+  const parts=groups.map(g=>metric.split?[part(g.items,"private"),part(g.items,"group")]:null);
+  const values=groups.map((g,i)=>parts[i]?parts[i][0]+parts[i][1]:g.items.length?metric.value(g.items)||0:0),max=Math.max(...values,1);
   $("tip").hidden=true;
+  chart.parentElement.querySelector(".legend").hidden=!metric.split;
   chart.replaceChildren(...groups.map((g,i)=>{
-    const cell=make("div","cell"),bar=make("div","bar"+(values[i]?"":" zero")),text=values[i]?plain(metric.fmt(values[i])):"无";
+    const cell=make("div","cell"),bar=make("div","bar"+(values[i]?"":" zero")),total=values[i]?plain(metric.fmt(values[i])):"无";
+    const text=parts[i]&&values[i]?`${total}（私聊 ${plain(metric.fmt(parts[i][0]))} · 群聊 ${plain(metric.fmt(parts[i][1]))}）`:total;
     bar.style.height=values[i]?`${Math.max(4,values[i]/max*100)}%`:"2px";
+    if(parts[i]&&values[i]){
+      bar.classList.add("split");
+      parts[i].forEach((v,k)=>{if(v){const seg=make("i",k?"g":"p");seg.style.flex=`${v} 0 0`;bar.append(seg);}});
+    }
     cell.setAttribute("role","img");cell.setAttribute("aria-label",`${g.name}：${text}`);cell.dataset.name=g.name;cell.dataset.text=text;
     cell.append(bar);return cell;
   }));
