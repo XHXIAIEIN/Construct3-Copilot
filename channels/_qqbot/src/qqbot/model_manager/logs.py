@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 import re
 
 from .api_profiles import SEEDS, key_names
@@ -109,12 +110,18 @@ PROJECTS = {".c3p", ".zip", ".capx", ".rar", ".7z", ".tar", ".tgz", ".gz"}
 # bot.log lines as qqbot.qq and copilot's construct3 application write them; free text, so a reworded message
 # drops out of the counts instead of breaking the page.
 STAMPED_LINE = re.compile(r"(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d),\d+ \S+ (?:INFO|WARNING|ERROR) (.*)")
-TOOLS = re.compile(r"(c2c|group):\S+ tools: (.*)")
+# A chat's own lines start with its session key ("c2c:<openid>" or "group:<group>:<member>"); newer bots also key
+# the attachment and send lines, older logs do not.
+KEYED = re.compile(r"((c2c|group):\S+) (.*)")
+TOOLS = re.compile(r"tools: (.*)")
 # One build in a tool trace: copilot's tool_trace keeps the first four lines of its result after " -> ", at most
 # 600 characters, so a long list of fixes is counted short.
 BUILD = re.compile(r"""(?:new_project_from_\w+|patch_spec)\(.*?\) -> (.*?)(?=['"](?:, ['"]|\]$))""")
 ATTACHMENT = re.compile(r"attachment: name-md5 \w+, \w+, (\d+) bytes, (\S*)")
 SENT = re.compile(r"sent file (\d+) bytes")
+# Unkeyed lines are placed by order: an answer runs from "<key> asks" to "<key> reply" and sends its file right
+# after the reply, so a line belongs to the one chat in that state, or to no chat when two overlap.
+SEND_WINDOW = 120
 
 
 def _tail(path, cap):
@@ -125,34 +132,51 @@ def _tail(path, cap):
 
 
 def events(control):
-    """Project files received and sent, and project builds, from bot.log. Sends and attachments do not name the
-    chat, so only builds say whether they were private or group."""
+    """Project files received and sent, and project builds, from bot.log, each with its chat ("private",
+    "group", or None when the log cannot tell)."""
     received, sent, builds = [], [], []
     try:
         text, clipped = _tail(_path(control, "bot")[1], BOT_BYTES)
     except OSError:
         return {"received": received, "sent": sent, "builds": builds, "clipped": False}
+    chat = lambda key: "private" if key.startswith("c2c:") else "group"
+    answering, replied = set(), {}  # keys between asks and reply; keys that replied, with when
     for line in text.splitlines():
         stamped = STAMPED_LINE.match(line)
         if not stamped:
             continue
         at, message = stamped.groups()
-        if tools := TOOLS.match(message):
-            for result in BUILD.findall(tools[2]):
+        when = datetime.strptime(at, "%Y-%m-%d %H:%M:%S")
+        keyed = KEYED.match(message)
+        key, body = (keyed[1], keyed[3]) if keyed else (None, message)
+        if body.startswith("asks: ") and key:
+            answering.add(key)
+        elif body.startswith("reply: ") and key:
+            answering.discard(key)
+            replied[key] = when
+        elif body.startswith("daily limit reached for "):
+            answering.discard(body.removeprefix("daily limit reached for "))
+        elif body == "QQ gateway connection starting":
+            answering.clear()
+            replied.clear()
+        elif (tools := TOOLS.match(body)) and key:
+            for result in BUILD.findall(tools[1]):
                 # The trace keeps four result lines; with four fixes or more the outcome line is cut, so neither
                 # "built" nor a failure shows and the build is "unknown". A fix is a spec error the builder
                 # corrected, counted whatever the build's outcome.
                 outcome = ("failed" if re.search(r"(^| / )(refused|copilot failed)", result)
                            else "built" if re.search(r"(^| / )built:", result) else "unknown")
-                builds.append({"at": at, "chat": "private" if tools[1] == "c2c" else "group", "outcome": outcome,
-                               "fixes": result.count("fixed: ")})
-        elif attachment := ATTACHMENT.match(message):
+                builds.append({"at": at, "chat": chat(key), "outcome": outcome, "fixes": result.count("fixed: ")})
+        elif attachment := ATTACHMENT.match(body):
+            owner = key or (next(iter(answering)) if len(answering) == 1 else None)
             if attachment[2].lower() in PROJECTS:
-                received.append({"at": at, "bytes": int(attachment[1])})
-        elif sending := SENT.match(message):
-            sent.append({"at": at, "bytes": int(sending[1]), "ok": True})
-        elif message.startswith("file send failed"):
-            sent.append({"at": at, "bytes": 0, "ok": False})
+                received.append({"at": at, "chat": owner and chat(owner), "bytes": int(attachment[1])})
+        elif (sending := SENT.match(body)) or body.startswith("file send failed"):
+            recent = [k for k, t in replied.items() if (when - t).total_seconds() <= SEND_WINDOW]
+            owner = key or (recent[0] if len(recent) == 1 else None)
+            replied.pop(owner, None)  # an answer sends one file
+            sent.append({"at": at, "chat": owner and chat(owner), "bytes": int(sending[1]) if sending else 0,
+                         "ok": bool(sending)})
     return {"received": received, "sent": sent, "builds": builds, "clipped": clipped}
 
 

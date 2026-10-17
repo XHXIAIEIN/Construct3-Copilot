@@ -126,9 +126,9 @@ def run_qq(application) -> None:
         for seq, path in enumerate(files, start=len(notes) + len(parts) + 1):
             try:
                 await send_file(path, seq)
-                log.info("sent file %s bytes", path.stat().st_size)
+                log.info("%s sent file %s bytes", key, path.stat().st_size)
             except (OSError, aiohttp.ClientError, asyncio.TimeoutError, qqfile.UploadError) as exc:
-                log.warning("file send failed: %s", exc)
+                log.warning("%s file send failed: %s", key, exc)
                 if seq < MAX_REPLIES:
                     await reply(content="文件未发送成功，请稍后重试。", msg_seq=seq + 1)
 

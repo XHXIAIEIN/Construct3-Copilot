@@ -124,6 +124,7 @@ class LogTests(unittest.TestCase):
 
     def test_project_events_come_from_bot_log(self):
         self.bot.write_text(
+            "2026-10-16 20:59:50,000 qqbot INFO group:G1:M2 asks: make a game\n"
             "2026-10-16 20:59:51,230 copilot.construct3 INFO attachment: name-md5 a7ea, file, 680575 bytes, .zip\n"
             "2026-10-16 20:59:52,000 copilot.construct3 INFO attachment: name-md5 b8fb, image, 1200 bytes, .png\n"
             "2026-10-16 21:02:16,646 qqbot INFO group:G1:M2 tools: [\"presearch ['x']\", "
@@ -132,16 +133,24 @@ class LogTests(unittest.TestCase):
             "'patch_spec({}) -> -- the call JSON had brackets out of order / copilot failed: Script exited with 1', "
             "'patch_spec({}) -> fixed: a / fixed: b / fixed: c / fixed: d', "
             "'print_sheet({})']\n"
+            "2026-10-16 21:02:17,000 qqbot INFO group:G1:M2 reply: here it is\n"
             "2026-10-16 21:02:19,526 qqbot INFO sent file 74488 bytes\n"
-            "2026-10-16 21:03:00,000 qqbot WARNING file send failed: timeout\n", encoding="utf-8")
+            # two chats answering at once: an unkeyed line cannot be placed, a keyed one can
+            "2026-10-16 21:02:30,000 qqbot INFO c2c:A asks: hi\n"
+            "2026-10-16 21:02:31,000 qqbot INFO c2c:B asks: hi\n"
+            "2026-10-16 21:02:32,000 copilot.construct3 INFO attachment: name-md5 c9, file, 10 bytes, .c3p\n"
+            "2026-10-16 21:02:40,000 copilot.construct3 INFO c2c:A attachment: name-md5 d0, file, 20 bytes, .capx\n"
+            "2026-10-16 21:02:50,000 qqbot INFO c2c:A reply: x\n"
+            "2026-10-16 21:02:51,000 qqbot INFO c2c:B reply: y\n"
+            "2026-10-16 21:02:52,000 qqbot WARNING file send failed: timeout\n"
+            "2026-10-16 21:03:00,000 qqbot INFO c2c:B sent file 5 bytes\n", encoding="utf-8")
         data = self.get("/api/usage")
-        self.assertEqual(data["received"], [{"at": "2026-10-16 20:59:51", "bytes": 680575}])
-        self.assertEqual(data["sent"], [{"at": "2026-10-16 21:02:19", "bytes": 74488, "ok": True},
-                                        {"at": "2026-10-16 21:03:00", "bytes": 0, "ok": False}])
+        self.assertEqual([(r["chat"], r["bytes"]) for r in data["received"]], [("group", 680575), (None, 10), ("private", 20)])
+        self.assertEqual([(r["chat"], r["bytes"], r["ok"]) for r in data["sent"]],
+                         [("group", 74488, True), (None, 0, False), ("private", 5, True)])
         self.assertEqual([(b["chat"], b["outcome"], b["fixes"]) for b in data["builds"]],
                          [("group", "failed", 1), ("group", "built", 2), ("group", "failed", 0), ("group", "unknown", 4)])
         self.assertNotIn("G1", json.dumps(data))
-
 
 if __name__ == "__main__":
     unittest.main()
