@@ -75,8 +75,9 @@ class Application:
         for att in attachments:
             # the log keeps a digest of the name, not the name: users send receipts and other private files
             suffix = Path(att.filename or "").suffix.lower()
-            log.info("attachment: name-md5 %s, %s, %s bytes, %s", hashlib.md5((att.filename or "").encode()).hexdigest(),
-                     att.content_type, att.size, suffix)
+            # the session key leads the line as in qqbot's own lines, so its panel can split private and group chats
+            log.info("%s attachment: name-md5 %s, %s, %s bytes, %s", key,
+                     hashlib.md5((att.filename or "").encode()).hexdigest(), att.content_type, att.size, suffix)
             if not att.url:
                 continue
             if suffix in attachments_mod.PROJECT_SUFFIXES:

@@ -1,5 +1,6 @@
 """Check the application boundary independently of QQ and model services."""
 import io
+import re
 from pathlib import Path
 from unittest.mock import Mock, patch
 import zipfile
@@ -59,3 +60,17 @@ def test_model_json_mode_fallback_uses_injected_error_type():
     application = Application(client, model="model-placeholder", bad_request_error=UnsupportedMode)
     assert application.agent._json([]) == {"valid": True}
     assert client.chat.completions.create.call_count == 2
+
+
+def test_attachment_log_leads_with_session_key(tmp_path, caplog):
+    application = Application(Mock(), model="model-placeholder")
+    application.agent.answer = Mock(return_value="ok")
+    attachment = {"filename": "photo.png", "content_type": "image", "size": 123, "url": ""}
+    with caplog.at_level("INFO", logger="copilot.construct3"):
+        application.handle({"text": "example", "session_id": "group:g-placeholder:m-placeholder",
+                            "session_dir": tmp_path, "attachments": [attachment]})
+    line = next(r.getMessage() for r in caplog.records if "attachment:" in r.getMessage())
+    assert re.fullmatch(r"(c2c|group):\S+ attachment: name-md5 \w+, \w+, (\d+) bytes, (\S*)", line)
+    assert line.startswith("group:g-placeholder:m-placeholder attachment: name-md5 ")
+    assert "photo" not in line
+    assert line.endswith(", image, 123 bytes, .png")
