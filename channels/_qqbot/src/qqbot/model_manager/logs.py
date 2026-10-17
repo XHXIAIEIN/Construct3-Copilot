@@ -117,7 +117,7 @@ TOOLS = re.compile(r"tools: (.*)")
 # One build in a tool trace: copilot's tool_trace keeps the first four lines of its result after " -> ", at most
 # 600 characters, so a long list of fixes is counted short.
 BUILD = re.compile(r"""(?:new_project_from_\w+|patch_spec)\(.*?\) -> (.*?)(?=['"](?:, ['"]|\]$))""")
-ATTACHMENT = re.compile(r"attachment: name-md5 \w+, \w+, (\d+) bytes, (\S*)")
+ATTACHMENT = re.compile(r"attachment: name-md5 \w+, [^,]*, (\d+) bytes, (\S*)")
 SENT = re.compile(r"sent file (\d+) bytes")
 # Unkeyed lines are placed by order: an answer runs from "<key> asks" to "<key> reply" and sends its file right
 # after the reply, so a line belongs to the one chat in that state, or to no chat when two overlap.

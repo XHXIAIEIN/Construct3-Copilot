@@ -126,7 +126,7 @@ class LogTests(unittest.TestCase):
         self.bot.write_text(
             "2026-10-16 20:59:50,000 qqbot INFO group:G1:M2 asks: make a game\n"
             "2026-10-16 20:59:51,230 copilot.construct3 INFO attachment: name-md5 a7ea, file, 680575 bytes, .zip\n"
-            "2026-10-16 20:59:52,000 copilot.construct3 INFO attachment: name-md5 b8fb, image, 1200 bytes, .png\n"
+            "2026-10-16 20:59:52,000 copilot.construct3 INFO attachment: name-md5 b8fb, image/png, 1200 bytes, .png\n"
             "2026-10-16 21:02:16,646 qqbot INFO group:G1:M2 tools: [\"presearch ['x']\", "
             "'new_project_from_spec({}) -> refused, nothing was built: / fixed: a / spec: bad', "
             "'patch_spec({\"a\": 1}) -> fixed: spec.objects[1].size: x / fixed: spec.objects[4].align: y / built: 2 object types', "
@@ -139,7 +139,7 @@ class LogTests(unittest.TestCase):
             "2026-10-16 21:02:30,000 qqbot INFO c2c:A asks: hi\n"
             "2026-10-16 21:02:31,000 qqbot INFO c2c:B asks: hi\n"
             "2026-10-16 21:02:32,000 copilot.construct3 INFO attachment: name-md5 c9, file, 10 bytes, .c3p\n"
-            "2026-10-16 21:02:40,000 copilot.construct3 INFO c2c:A attachment: name-md5 d0, file, 20 bytes, .capx\n"
+            "2026-10-16 21:02:40,000 copilot.construct3 INFO c2c:A attachment: name-md5 d0, application/zip, 20 bytes, .capx\n"
             "2026-10-16 21:02:50,000 qqbot INFO c2c:A reply: x\n"
             "2026-10-16 21:02:51,000 qqbot INFO c2c:B reply: y\n"
             "2026-10-16 21:02:52,000 qqbot WARNING file send failed: timeout\n"
