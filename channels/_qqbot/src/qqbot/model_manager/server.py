@@ -68,6 +68,14 @@ class Jobs:
             self.job.update(state=state, message=message)
 
 
+def last_answer(control):
+    """The status poll must not fail because usage.log is unreadable; None reads as "no record"."""
+    try:
+        return panel_logs.last_answer(control)
+    except (OSError, TypeError, ValueError):
+        return None
+
+
 def create_server(control, port=8767):
     token = secrets.token_urlsafe(32)
     jobs = Jobs(control)
@@ -108,7 +116,7 @@ def create_server(control, port=8767):
                 self.send_log()
             elif self.path == "/api/status":
                 try:
-                    self.send(200, {"status": control.status(), "job": jobs.snapshot()})
+                    self.send(200, {"status": control.status(), "job": jobs.snapshot(), "last_answer": last_answer(control)})
                 except Exception as exc:
                     self.send(500, {"error": str(exc), "job": jobs.snapshot()})
             else:

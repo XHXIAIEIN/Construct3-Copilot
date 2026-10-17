@@ -75,10 +75,10 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .logline[data-level=warn]{color:var(--warn);border-left-color:var(--warn)}
 .logline[data-level=error]{color:var(--danger);background:var(--danger-bg);border-left-color:var(--danger)}
 .only-issues .logline:not([data-level]){display:none}
-.logbox .empty{font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;font-size:14px}
+.logbox .empty.bad{color:var(--danger)}.logbox .empty{font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;font-size:14px}
 .jump{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--surface);border-color:var(--border);box-shadow:var(--shadow);font-size:13px}
 .jump:hover:enabled{background:var(--surface);color:var(--text)}
-.logmeta{margin-top:8px}
+.logmeta{margin-top:8px}.logmeta.bad{color:var(--danger)}
 @media(max-width:720px){
   .app{grid-template-columns:1fr}nav{flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--border);padding:8px 12px;overflow-x:auto}
   .brand{padding:0 8px 0 0}main{padding:16px}header{flex-direction:column}header>div:first-child{flex-basis:auto}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
@@ -119,9 +119,9 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
       <dl class="list facts">
         <dt>模型服务</dt><dd><span id="ollama-state">读取中…</span><button id="start" hidden>启动 Ollama</button></dd>
         <dt>QQbot</dt><dd id="gateway-state">读取中…</dd>
+        <dt id="last-answer-label">最近一次回答</dt><dd id="last-answer">—</dd>
         <dt>Ollama 地址</dt><dd id="ollama-url">—</dd>
         <dt>模型配置文件</dt><dd><code id="config">—</code></dd>
-        <dt>机器人配置</dt><dd>.env（每次修改前都会备份）</dd>
       </dl>
     </section>
   </main>
@@ -163,7 +163,7 @@ const $=id=>document.getElementById(id);
 const protocols={openai:"OpenAI 兼容",anthropic:"Anthropic"},marks={available:"余额充足",low:"余额偏低",empty:"余额耗尽"};
 const titles={models:"模型",logs:"日志",settings:"设置"};
 // editingApi: null while the dialog is closed, "" for a new profile, else the profile id.
-let state=null,job=null,page="",busy=false,refreshing=false,lastJob="",pendingSave=false,editingApi=null,armed=null,armTimer=0,menuFor=null,dismissed="";
+let state=null,job=null,lastAnswer=null,page="",busy=false,refreshing=false,lastJob="",pendingSave=false,editingApi=null,armed=null,armTimer=0,menuFor=null,dismissed="";
 
 // Polls write only what changed, so rows, buttons and the dialog keep their identity between refreshes.
 function setText(node,text){ if(node.textContent!==text)node.textContent=text; }
@@ -356,29 +356,45 @@ $("api-form").addEventListener("submit",async e=>{
 // Appends only: lines already on screen stay put, so reading older lines is never interrupted by a refresh.
 const LOG_KEEP=2000,ERR=/\b(ERROR|CRITICAL|FATAL)\b|\[ERROR\]|level=ERROR|Traceback \(most recent call last\)/,WARN=/\bWARN(ING)?\b|\[WARNING\]|level=WARN/,STAMPED=/^(\d{4}-\d\d-\d\d|time=)/;
 // logFollow: the reader is at the bottom, so new lines and reflows keep the view pinned there.
-let logId="",logOffset=null,logLevel="",logBusy=false,logAgain=false,logCatalog=[],logFollow=true;
+// logError: why the last read failed; lines already shown stay, so the reader keeps what was read before.
+const OFFLINE="连不上面板服务，检查它是否还在运行";
+let logId="",logOffset=null,logLevel="",logBusy=false,logAgain=false,logCatalog=null,logFollow=true,logError="";
 try{logId=localStorage.getItem("panel-log")||"";}catch{}
-async function getJSON(url){ const r=await fetch(url,{headers:{"X-Panel-Token":token}}),data=await r.json();if(!r.ok)throw Error(data.error||"读取日志失败");return data; }
+async function getJSON(url){
+  let r,data={};
+  try{r=await fetch(url,{headers:{"X-Panel-Token":token}});}catch{throw Object.assign(Error(OFFLINE),{offline:true});}
+  try{data=await r.json();}catch{}
+  if(r.ok)return data;
+  // An older panel process serves the new page but has no log endpoint until it restarts.
+  if(r.status===404&&url==="/api/logs")throw Error("面板服务需要重启，重启后才能看日志");
+  throw Error(data.error||"日志读取失败");
+}
 // A timestamped line says its own level near the start; a line without one (traceback, wrapped JSON) belongs to the line above.
 function levelOf(line){
   if(STAMPED.test(line)){const head=line.slice(0,64);return logLevel=ERR.test(head)?"error":WARN.test(head)?"warn":"";}
   if(!logLevel&&ERR.test(line))logLevel="error";
   return logLevel;
 }
-function formatSize(n){ return n<1024?`${n} B`:n<1048576?`${(n/1024).toFixed(0)} KB`:`${(n/1048576).toFixed(1)} MB`; }
 function renderLogPicker(){
-  const pick=$("log-pick"),present=logCatalog.filter(l=>l.exists);
+  const pick=$("log-pick"),present=(logCatalog||[]).filter(l=>l.exists);
+  pick.hidden=$("log-issues").parentElement.hidden=!present.length;
   if(!present.some(l=>l.id===logId))logId=present[0]?.id||"";
   const want=present.map(l=>l.id+l.label).join();
   if(pick.dataset.want!==want){pick.dataset.want=want;pick.replaceChildren(...present.map(l=>Object.assign(make("option","",l.label),{value:l.id})));}
   setProp(pick,"value",logId);
-  const meta=logCatalog.find(l=>l.id===logId);
-  setText($("log-meta"),meta?`${meta.file} · ${formatSize(meta.size)} · .env 里的密钥显示为“已隐藏”`:"");
+}
+function renderLogMeta(){
+  const meta=(logCatalog||[]).find(l=>l.id===logId),shown=$("log-lines").children.length;
+  $("log-meta").classList.toggle("bad",!!logError&&!!shown);
+  // Offline is already said by the status bar above, so the note only says what the lines are.
+  setText($("log-meta"),logError?(!shown?"":logError.offline?"下面是之前读到的内容。":`${logError.message}。下面是之前读到的内容。`):meta?.file||"");
 }
 function renderLogEmpty(){
   const lines=$("log-lines"),issues=$("log-issues").checked,shown=issues?lines.querySelectorAll(".logline[data-level]").length:lines.children.length;
   let empty=$("log-box").querySelector(".empty");
-  const text=!logCatalog.some(l=>l.exists)?"还没有日志。QQbot 和面板运行后会写在 var/logs 里。":!lines.children.length?"这个日志还是空的。":issues&&!shown?"最近的日志里没有警告或错误。":"";
+  const text=logError&&!lines.children.length?logError.message+"。":!logCatalog?"正在读取日志…":!logCatalog.some(l=>l.exists)?"还没有日志。QQbot 和面板运行后会写在 var/logs 里。"
+    :!lines.children.length?"这个日志还是空的。":issues&&!shown?"最近的日志里没有警告或错误。":"";
+  empty?.classList.toggle("bad",!!logError);
   if(!text){empty?.remove();return;}
   if(!empty){empty=make("div","empty");$("log-box").append(empty);}
   setText(empty,text);
@@ -395,9 +411,9 @@ async function refreshLog(){
       const data=await getJSON(`/api/logs/${encodeURIComponent(id)}`+(logOffset===null?"":`?after=${logOffset}`));
       if(id===logId)appendLog(data);
     }
-    renderLogEmpty();
-  }catch(e){status(e.message,"failed");}
-  finally{logBusy=false;if(logAgain){logAgain=false;refreshLog();}}
+    logError="";
+  }catch(e){logError=e;}
+  finally{renderLogPicker();renderLogEmpty();renderLogMeta();logBusy=false;if(logAgain){logAgain=false;refreshLog();}}
 }
 function appendLog(data){
   const box=$("log-box"),lines=$("log-lines"),follow=data.reset||logOffset===null||logFollow;
@@ -443,8 +459,18 @@ function renderChrome(){
   const api=activeApi(),gw=state.gateway?.alive?(state.gateway.status==="ready"?"QQbot 已就绪":"QQbot 连接中"):"QQbot 未运行";
   setText($("now"),`正在使用 ${state.current.model||"未配置的模型"} · ${api?api.name:isLocal(state.current.base_url)?"本地 Ollama":"自定义接口"} · ${gw}`);
   setText($("ollama-state"),state.ollama.online?"运行中":"未启动");$("start").hidden=!!state.ollama.online;setProp($("start"),"disabled",busy);
-  setText($("gateway-state"),gw.replace("QQbot ",""));setText($("ollama-url"),state.ollama.url||"—");setText($("config"),state.config_path||"var/models.json");
+  setText($("gateway-state"),gw.replace("QQbot ",""));setText($("ollama-url"),state.ollama.url||"—");setText($("last-answer"),answerText(lastAnswer));
+  // An older panel process does not send last_answer: hide the row rather than claim there is no record.
+  $("last-answer").hidden=$("last-answer-label").hidden=lastAnswer===undefined;setText($("config"),state.config_path||"var/models.json");
   setProp($("api-add"),"disabled",busy);setProp($("refresh"),"disabled",refreshing);setProp($("api-submit"),"disabled",busy);
+}
+// usage.log times a whole answer: every model call and tool step, not one request.
+function answerText(a){
+  if(!a)return "还没有记录";
+  const s=a.seconds,took=s<60?`${s} 秒`:`${Math.floor(s/60)} 分 ${s%60} 秒`;
+  const [date,time]=a.at.split(" "),day=d=>new Date(Date.now()-d*864e5).toLocaleDateString("sv");
+  const when=date===day(0)?"今天":date===day(1)?"昨天":`${+date.slice(5,7)}月${+date.slice(8)}日`;
+  return `用时 ${took} · 调用模型 ${a.calls} 次 · ${when} ${time.slice(0,5)}`;
 }
 function renderAll(){ if(!state)return;renderChrome();renderLocal();renderApis(); }
 function jobText(j){
@@ -455,9 +481,9 @@ function jobText(j){
 async function refresh(){
   if(refreshing)return;refreshing=true;
   try{
-    const r=await fetch("/api/status"),data=await r.json();if(!r.ok)throw Error(data.error||"读取状态失败");
+    const r=await fetch("/api/status").catch(()=>{throw Error(OFFLINE);}),data=await r.json();if(!r.ok)throw Error(data.error||"读取状态失败");
     const firstLoad=!state;
-    state=data.status;job=data.job;busy=job?.state==="running";
+    state=data.status;job=data.job;lastAnswer=data.last_answer;busy=job?.state==="running";
     // A job that finished before this page opened is history, not news.
     if(firstLoad&&job&&!busy)dismissed=lastJob=JSON.stringify(job);
     if(!page)showPage(location.hash.slice(1));
@@ -472,7 +498,7 @@ async function refresh(){
     }
     if(job&&lastJob!==dismissed)status(jobText(job),job.state);else status(idleText());
     renderAll();
-  }catch(e){status(e.message+"。检查面板服务后刷新页面。","failed");}
+  }catch(e){status(e.message===OFFLINE?OFFLINE+"。":e.message+"。检查面板服务后刷新页面。","failed");}
   finally{refreshing=false;if(state)renderChrome();}
 }
 async function act(action,model){

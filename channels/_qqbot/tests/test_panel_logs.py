@@ -102,6 +102,17 @@ class LogTests(unittest.TestCase):
         data = self.get("/api/logs/usage")
         self.assertEqual((data["exists"], data["lines"]), (False, []))
 
+    def test_last_answer_reads_the_newest_usage_line(self):
+        self.assertIsNone(logs.last_answer(self.control))
+        usage = self.home / "var/logs/bot/usage.log"
+        usage.write_text("x" * 5000 + "\n"
+                         "2026-10-16 21:00:39 query-fixed calls 5 prompt 15286 (cache hit 0) completion 388 in 42 s\n"
+                         "2026-10-16 23:12:31 c2c_E5DB calls 39 prompt 1004162 (cache hit 0) completion 43496 in 1742 s\n"
+                         "not a usage line\n", encoding="utf-8")
+        self.assertEqual(logs.last_answer(self.control), {"at": "2026-10-16 23:12:31", "calls": 39, "seconds": 1742})
+        usage.write_text("garbage\n", encoding="utf-8")
+        self.assertIsNone(logs.last_answer(self.control))
+
 
 if __name__ == "__main__":
     unittest.main()

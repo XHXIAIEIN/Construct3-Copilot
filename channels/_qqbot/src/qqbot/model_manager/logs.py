@@ -24,6 +24,8 @@ LINE_CHARS = 1000
 # Values shorter than this are placeholders such as C3BOT_API_KEY=ollama; replacing them would blank ordinary words.
 MIN_SECRET = 8
 BEARER = re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]{8,}")
+# One line an answer, as qqbot.usage.write_usage writes it (not imported: that module loads the bot's config).
+USAGE = re.compile(r"(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d) \S+ calls (\d+) prompt \d+ \(cache hit \d+\) completion \d+ in (\d+) s")
 
 
 def _path(control, ident):
@@ -98,3 +100,19 @@ def read(control, ident, after=None):
         shown.append(line)
     return {"id": ident, "label": entry[1], "exists": True, "offset": offset, "size": size, "reset": reset,
             "clipped": clipped or (reset and start > 0), "lines": shown}
+
+
+def last_answer(control):
+    """When the bot last finished an answer, how long it took and how many model calls it made; None if unknown."""
+    _, path = _path(control, "usage")
+    try:
+        with path.open("rb") as stream:
+            stream.seek(max(0, stream.seek(0, 2) - 4096))
+            tail = stream.read().decode("utf-8", errors="replace")
+    except OSError:
+        return None
+    for line in reversed(tail.splitlines()):
+        match = USAGE.fullmatch(line.strip())
+        if match:
+            return {"at": match[1], "calls": int(match[2]), "seconds": int(match[3])}
+    return None
