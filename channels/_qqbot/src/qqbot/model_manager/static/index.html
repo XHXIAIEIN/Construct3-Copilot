@@ -82,9 +82,22 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .jump{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--surface);border-color:var(--border);box-shadow:var(--shadow);font-size:13px}
 .jump:hover:enabled{background:var(--surface);color:var(--text)}
 .logmeta{margin-top:8px}.logmeta.bad{color:var(--danger)}
+.seg{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--border2);border-radius:8px}
+.seg button{border:0;min-height:28px;padding:3px 14px;border-radius:6px;color:var(--text2)}.seg button[aria-pressed=true]{background:var(--selected);color:var(--text)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.kpi{position:relative;display:block;text-align:left;white-space:normal;border:0;border-left:1px solid var(--border);border-radius:0;padding:14px 16px 16px;min-height:0}.kpi:first-child{border-left:0}
+.kpi[aria-pressed=true]{background:var(--hover)}.kpi[aria-pressed=true]::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:2px;border-radius:2px;background:var(--info)}
+.kpi .k{font-size:12px;color:var(--text2)}.kpi .v{font-size:24px;font-weight:500;line-height:1.35}.kpi .v small{font-size:13px;font-weight:400;color:var(--text2);margin:0 4px 0 2px}
+.kpi .n{font-size:12px;color:var(--muted)}
+.chart{padding:14px 16px 10px;margin-bottom:12px}.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:500;margin-bottom:12px}.chart-head small{color:var(--muted);font-weight:400;font-size:12px}
+.bars{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;height:120px;border-bottom:1px solid var(--border)}.bars.hours{height:72px;gap:2px}
+.cell{display:flex;align-items:flex-end;height:100%}.bar{width:100%;min-height:2px;background:var(--info);border-radius:4px 4px 0 0}.bar.zero{background:var(--border);border-radius:0}.cell:hover .bar{opacity:.7}
+.ticks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;margin-top:4px;font-size:11px;color:var(--muted);text-align:center;white-space:nowrap}.hours+.ticks{gap:2px}
+.tip{position:fixed;z-index:20;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px 10px;font-size:12px;color:var(--text2);white-space:nowrap}.tip b{display:block;color:var(--text);font-weight:500}
 @media(max-width:720px){
   .app{grid-template-columns:1fr}nav{flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--border);padding:8px 12px;overflow-x:auto}
   .brand{padding:0 8px 0 0}.side-toggle{display:none!important}.app.side-collapsed nav{display:flex}main{padding:16px}header{flex-direction:column}header>div:first-child{flex-basis:auto}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr 1fr}.kpi:nth-child(3){border-left:0}.kpi:nth-child(n+3){border-top:1px solid var(--border)}.kpi .v{font-size:20px}
   .logbox{height:calc(100vh - 290px)}.tools select{flex:1}
   .row{flex-wrap:wrap}.row .what{flex-basis:100%}.facts{grid-template-columns:1fr}.facts dd{border-top:0;padding-top:0}
 }
@@ -94,12 +107,14 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
     <div class="brand">QQbot<button type="button" class="side-toggle" id="side-hide" aria-label="收起侧栏" title="收起侧栏"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="M6 2.5v11"/></svg></button></div>
     <a href="#models" data-page="models">模型 <small id="model-count"></small></a>
     <a href="#logs" data-page="logs">日志</a>
+    <a href="#stats" data-page="stats">统计</a>
     <a href="#settings" data-page="settings">设置</a>
   </nav>
   <main>
     <header>
       <div class="title-row"><button type="button" class="side-toggle" id="side-show" aria-label="展开侧栏" title="展开侧栏"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="M6 2.5v11"/></svg></button><div><h1 id="title">模型</h1><div class="sub" id="now">正在读取状态…</div></div></div>
       <div class="tools" data-for="models" hidden><input id="search" type="search" placeholder="搜索模型或接口" aria-label="搜索模型或接口"><button id="api-add">添加接口</button><button id="refresh" class="ghost">刷新</button></div>
+      <div class="tools" data-for="stats" hidden><div class="seg" role="group" aria-label="时间范围"><button type="button" data-range="day">按天</button><button type="button" data-range="month">按月</button></div></div>
       <div class="tools" data-for="logs" hidden><select id="log-pick" aria-label="选择日志"></select><label class="check"><input type="checkbox" id="log-issues">只看警告和错误</label></div>
     </header>
     <div class="status" id="status" role="status" aria-live="polite"><span id="status-text">正在读取状态…</span><button id="status-close" hidden aria-label="关闭提示">知道了</button></div>
@@ -118,11 +133,20 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
       <div class="muted logmeta" id="log-meta"></div>
     </section>
 
+    <section data-page="stats" hidden>
+      <div class="list empty" id="stats-empty">正在读取…</div>
+      <div id="stats-body" hidden>
+        <div class="kpis" id="kpis" role="group" aria-label="图表显示的指标"></div>
+        <div class="list chart"><div class="chart-head"><span id="trend-title"></span><small id="trend-range"></small></div><div class="bars" id="trend"></div><div class="ticks" id="trend-ticks"></div></div>
+        <div class="list chart"><div class="chart-head"><span id="hours-title"></span><small>按提问时间</small></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
+        <div class="muted" id="stats-meta"></div>
+      </div>
+    </section>
+
     <section data-page="settings" hidden>
       <dl class="list facts">
         <dt>模型服务</dt><dd><span id="ollama-state">读取中…</span><button id="start" hidden>启动 Ollama</button></dd>
         <dt>QQbot</dt><dd id="gateway-state">读取中…</dd>
-        <dt id="last-answer-label">最近一次回答</dt><dd id="last-answer">—</dd>
         <dt>Ollama 地址</dt><dd id="ollama-url">—</dd>
         <dt>模型配置文件</dt><dd><code id="config">—</code></dd>
       </dl>
@@ -131,6 +155,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 </div>
 
 <div class="menu" id="menu" role="menu" hidden></div>
+<div class="tip" id="tip" hidden></div>
 
 <dialog id="api-dialog" aria-labelledby="dialog-title">
   <form id="api-form" method="dialog">
@@ -164,9 +189,9 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 const token="__PANEL_TOKEN__";
 const $=id=>document.getElementById(id);
 const protocols={openai:"OpenAI 兼容",anthropic:"Anthropic"},marks={available:"余额充足",low:"余额偏低",empty:"余额耗尽"};
-const titles={models:"模型",logs:"日志",settings:"设置"};
+const titles={models:"模型",logs:"日志",stats:"统计",settings:"设置"};
 // editingApi: null while the dialog is closed, "" for a new profile, else the profile id.
-let state=null,job=null,lastAnswer=null,page="",busy=false,refreshing=false,lastJob="",pendingSave=false,editingApi=null,armed=null,armTimer=0,menuFor=null,dismissed="";
+let state=null,job=null,page="",busy=false,refreshing=false,lastJob="",pendingSave=false,editingApi=null,armed=null,armTimer=0,menuFor=null,dismissed="";
 
 // Polls write only what changed, so rows, buttons and the dialog keep their identity between refreshes.
 function setText(node,text){ if(node.textContent!==text)node.textContent=text; }
@@ -369,7 +394,7 @@ async function getJSON(url){
   try{data=await r.json();}catch{}
   if(r.ok)return data;
   // An older panel process serves the new page but has no log endpoint until it restarts.
-  if(r.status===404&&url==="/api/logs")throw Error("面板服务需要重启，重启后才能看日志");
+  if(r.status===404&&(url==="/api/logs"||url==="/api/usage"))throw Error("面板服务需要重启，重启后才能看日志");
   throw Error(data.error||"日志读取失败");
 }
 // A timestamped line says its own level near the start; a line without one (traceback, wrapped JSON) belongs to the line above.
@@ -445,6 +470,103 @@ $("log-jump").addEventListener("click",pinLog);
 const logResize=new ResizeObserver(()=>{if(logFollow)$("log-box").scrollTop=$("log-box").scrollHeight;});
 logResize.observe($("log-lines"));logResize.observe($("log-box"));
 
+// ---- stats
+// usage.log has one line per answer: the whole answer, every model call and tool step, not one request.
+const METRICS={
+  count:{label:"回答",chart:"回答次数",value:a=>a.length,fmt:n=>[[n,"次"]]},
+  people:{label:"人数",chart:"提问的人数",value:a=>new Set(a.map(x=>x.who)).size,fmt:n=>[[n,"人"]]},
+  tokens:{label:"词元",chart:"用掉的词元",value:a=>a.reduce((t,x)=>t+x.prompt+x.completion,0),fmt:n=>bigNumber(n)},
+  time:{label:"用时（中位）",chart:"每次回答的用时（中位）",value:a=>median(a.map(x=>x.seconds)),fmt:n=>n===null?[["—",""]]:duration(n)},
+};
+let statsData=null,statsError=null,statsBusy=false,statsDrawn="",statsTick=0,statsRange="day",statsMetric="count";
+try{
+  statsRange=localStorage.getItem("panel-stats-range")==="month"?"month":"day";
+  const saved=localStorage.getItem("panel-stats-metric");if(METRICS[saved])statsMetric=saved;
+}catch{}
+function median(values){ if(!values.length)return null;const v=[...values].sort((a,b)=>a-b),m=v.length>>1;return v.length%2?v[m]:Math.round((v[m-1]+v[m])/2); }
+function trim(n){ return String(+n.toFixed(n<10?1:0)); }
+function bigNumber(n){ return n>=1e8?[[trim(n/1e8),"亿"]]:n>=1e4?[[trim(n/1e4),"万"]]:[[n,""]]; }
+function duration(s){ return s<60?[[s,"秒"]]:s<3600?[[Math.floor(s/60),"分"],[s%60,"秒"]]:[[Math.floor(s/3600),"小时"],[Math.floor(s%3600/60),"分"]]; }
+function plain(parts){ return parts.map(([n,u])=>n+u).join(" "); }
+function parseAt(at){ const [d,t]=at.split(" "),[y,m,day]=d.split("-").map(Number),[h,mi,se]=t.split(":").map(Number);return new Date(y,m-1,day,h,mi,se); }
+function dayKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function buckets(){
+  const now=new Date(),list=[];
+  if(statsRange==="day")for(let i=13;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i);
+    list.push({key:dayKey(d),tick:i===0?"今天":i%2?"":`${d.getMonth()+1}/${d.getDate()}`,name:i===0?"今天":`${d.getMonth()+1}月${d.getDate()}日`,start:d});
+  }else for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    list.push({key:dayKey(d).slice(0,7),tick:`${d.getMonth()+1}月`,name:`${d.getFullYear()}年${d.getMonth()+1}月`,start:d});
+  }
+  return list;
+}
+async function refreshStats(force){
+  if(page!=="stats"||statsBusy||(!force&&statsTick++%10))return;
+  statsBusy=true;
+  try{statsData=await getJSON("/api/usage");statsError=null;}catch(e){statsError=e;}
+  finally{statsBusy=false;renderStats();}
+}
+function renderStats(){
+  const body=$("stats-body"),empty=$("stats-empty");
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.range===statsRange)));
+  const message=statsError&&!statsData?statsError.message+"。":!statsData?"正在读取…":!statsData.answers.length?"还没有回答记录。有人在 QQ 里提问后，这里会显示统计。":"";
+  empty.hidden=!message;body.hidden=!!message;setText(empty,message);empty.classList.toggle("bad",!!statsError&&!statsData);
+  if(message)return;
+  setText($("stats-meta"),statsError?`${statsError.message}。下面是上次读到的数字。`:statsData.clipped?"usage.log 太大，只统计了最近约 2 万次回答。":"");
+  $("stats-meta").classList.toggle("bad",!!statsError);
+  const list=buckets(),from=list[0].start;
+  const signature=[statsRange,statsMetric,statsData.answers.length,statsData.answers.at(-1)?.at,list.at(-1).key].join();
+  if(signature===statsDrawn)return;
+  statsDrawn=signature;
+  const answers=statsData.answers.map(a=>({...a,date:parseAt(a.at)})).filter(a=>a.date>=from);
+  const sum=key=>answers.reduce((t,x)=>t+x[key],0),group=answers.filter(a=>a.chat==="group").length;
+  const notes={
+    count:answers.length?`私聊 ${answers.length-group} · 群聊 ${group}`:"这段时间没有回答",
+    people:answers.length?`平均每人 ${trim(answers.length/METRICS.people.value(answers))} 次`:"",
+    tokens:answers.length?`输入 ${plain(bigNumber(sum("prompt")))} · 输出 ${plain(bigNumber(sum("completion")))}`:"",
+    time:answers.length?`最长 ${plain(duration(Math.max(...answers.map(x=>x.seconds))))}`:"",
+  };
+  $("kpis").replaceChildren(...Object.entries(METRICS).map(([key,m])=>{
+    const b=make("button","kpi"),v=make("div","v");
+    b.type="button";b.setAttribute("aria-pressed",String(key===statsMetric));
+    for(const [n,u] of m.fmt(m.value(answers))){v.append(String(n));if(u)v.append(make("small","",u));}
+    b.append(make("div","k",m.label),v,make("div","n",notes[key]||" "));
+    b.addEventListener("click",()=>{statsMetric=key;try{localStorage.setItem("panel-stats-metric",key);}catch{}renderStats();});
+    return b;
+  }));
+  const metric=METRICS[statsMetric],byKey=new Map(list.map(b=>[b.key,[]]));
+  for(const a of answers)byKey.get(statsRange==="day"?dayKey(a.date):dayKey(a.date).slice(0,7))?.push(a);
+  setText($("trend-title"),metric.chart);setText($("trend-range"),statsRange==="day"?"近 14 天":"近 12 个月");
+  drawBars($("trend"),$("trend-ticks"),list.map(b=>({tick:b.tick,name:b.name,items:byKey.get(b.key)})),metric);
+  setText($("hours-title"),`一天中的时段 · ${metric.chart}`);
+  drawBars($("hours"),$("hours-ticks"),Array.from({length:24},(_,h)=>({tick:h%6?"":`${h} 点`,name:`${h}:00–${h+1}:00`,items:answers.filter(a=>a.date.getHours()===h)})),metric);
+}
+function drawBars(chart,ticks,groups,metric){
+  const values=groups.map(g=>g.items.length?metric.value(g.items)||0:0),max=Math.max(...values,1);
+  $("tip").hidden=true;
+  chart.replaceChildren(...groups.map((g,i)=>{
+    const cell=make("div","cell"),bar=make("div","bar"+(values[i]?"":" zero")),text=values[i]?plain(metric.fmt(values[i])):"没有回答";
+    bar.style.height=values[i]?`${Math.max(4,values[i]/max*100)}%`:"2px";
+    cell.setAttribute("role","img");cell.setAttribute("aria-label",`${g.name}：${text}`);cell.dataset.name=g.name;cell.dataset.text=text;
+    cell.append(bar);return cell;
+  }));
+  ticks.replaceChildren(...groups.map(g=>make("span","",g.tick)));
+}
+// The tooltip sits above the hovered column; the whole column is the target, not only the bar.
+function showTip(e){
+  const cell=e.target.closest?.(".cell"),tip=$("tip");
+  if(!cell){tip.hidden=true;return;}
+  tip.replaceChildren(make("b","",cell.dataset.name),cell.dataset.text);tip.hidden=false;
+  const r=cell.getBoundingClientRect(),w=tip.offsetWidth;
+  tip.style.left=Math.max(8,Math.min(r.left+r.width/2-w/2,innerWidth-w-8))+"px";
+  tip.style.top=Math.max(8,r.top-tip.offsetHeight-6)+"px";
+}
+["trend","hours"].forEach(id=>{$(id).addEventListener("pointermove",showTip);$(id).addEventListener("pointerleave",()=>$("tip").hidden=true);});
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  statsRange=b.dataset.range;try{localStorage.setItem("panel-stats-range",statsRange);}catch{}renderStats();
+}));
+
 // ---- sidebar
 function setSide(collapsed,focus){
   $("app").classList.toggle("side-collapsed",collapsed);
@@ -462,6 +584,8 @@ function showPage(name){
   document.querySelectorAll(".tools").forEach(t=>t.hidden=t.dataset.for!==page);
   setText($("title"),titles[page]);closeMenu();
   if(page==="logs")refreshLog();
+  if(page==="stats"){renderStats();refreshStats(true);}
+  $("tip").hidden=true;
 }
 addEventListener("hashchange",()=>showPage(location.hash.slice(1)));
 function status(text,kind=""){ $("status").hidden=!text;setText($("status-text"),text);$("status").dataset.state=kind;$("status-close").hidden=kind!=="completed"&&kind!=="failed"; }
@@ -471,18 +595,8 @@ function renderChrome(){
   const api=activeApi(),gw=state.gateway?.alive?(state.gateway.status==="ready"?"QQbot 已就绪":"QQbot 连接中"):"QQbot 未运行";
   setText($("now"),`正在使用 ${state.current.model||"未配置的模型"} · ${api?api.name:isLocal(state.current.base_url)?"本地 Ollama":"自定义接口"} · ${gw}`);
   setText($("ollama-state"),state.ollama.online?"运行中":"未启动");$("start").hidden=!!state.ollama.online;setProp($("start"),"disabled",busy);
-  setText($("gateway-state"),gw.replace("QQbot ",""));setText($("ollama-url"),state.ollama.url||"—");setText($("last-answer"),answerText(lastAnswer));
-  // An older panel process does not send last_answer: hide the row rather than claim there is no record.
-  $("last-answer").hidden=$("last-answer-label").hidden=lastAnswer===undefined;setText($("config"),state.config_path||"var/models.json");
+  setText($("gateway-state"),gw.replace("QQbot ",""));setText($("ollama-url"),state.ollama.url||"—");setText($("config"),state.config_path||"var/models.json");
   setProp($("api-add"),"disabled",busy);setProp($("refresh"),"disabled",refreshing);setProp($("api-submit"),"disabled",busy);
-}
-// usage.log times a whole answer: every model call and tool step, not one request.
-function answerText(a){
-  if(!a)return "还没有记录";
-  const s=a.seconds,took=s<60?`${s} 秒`:`${Math.floor(s/60)} 分 ${s%60} 秒`;
-  const [date,time]=a.at.split(" "),day=d=>new Date(Date.now()-d*864e5).toLocaleDateString("sv");
-  const when=date===day(0)?"今天":date===day(1)?"昨天":`${+date.slice(5,7)}月${+date.slice(8)}日`;
-  return `用时 ${took} · 调用模型 ${a.calls} 次 · ${when} ${time.slice(0,5)}`;
 }
 function renderAll(){ if(!state)return;renderChrome();renderLocal();renderApis(); }
 function jobText(j){
@@ -495,7 +609,7 @@ async function refresh(){
   try{
     const r=await fetch("/api/status").catch(()=>{throw Error(OFFLINE);}),data=await r.json();if(!r.ok)throw Error(data.error||"读取状态失败");
     const firstLoad=!state;
-    state=data.status;job=data.job;lastAnswer=data.last_answer;busy=job?.state==="running";
+    state=data.status;job=data.job;busy=job?.state==="running";
     // A job that finished before this page opened is history, not news.
     if(firstLoad&&job&&!busy)dismissed=lastJob=JSON.stringify(job);
     if(!page)showPage(location.hash.slice(1));
@@ -527,6 +641,6 @@ async function act(action,model){
 }
 $("search").addEventListener("input",()=>{$("groups").classList.toggle("searching",!!$("search").value);renderLocal();renderApis();});$("refresh").addEventListener("click",refresh);
 $("api-add").addEventListener("click",()=>editApi());$("start").addEventListener("click",()=>act("start"));
-refresh();setInterval(()=>{refresh();refreshLog();},3000);
+refresh();setInterval(()=>{refresh();refreshLog();refreshStats();},3000);
 </script>
 </html>

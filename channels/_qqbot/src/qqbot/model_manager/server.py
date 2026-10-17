@@ -68,14 +68,6 @@ class Jobs:
             self.job.update(state=state, message=message)
 
 
-def last_answer(control):
-    """The status poll must not fail because usage.log is unreadable; None reads as "no record"."""
-    try:
-        return panel_logs.last_answer(control)
-    except (OSError, TypeError, ValueError):
-        return None
-
-
 def create_server(control, port=8767):
     token = secrets.token_urlsafe(32)
     jobs = Jobs(control)
@@ -112,11 +104,16 @@ def create_server(control, port=8767):
                 self.send(200, page.replace("__PANEL_TOKEN__", token), "text/html; charset=utf-8")
             elif self.path == "/api/health":
                 self.send(200, {"app": "qqbot-model-manager", "home": str(control.home)})
+            elif self.path == "/api/usage":
+                if self.headers.get("X-Panel-Token") != token:
+                    self.send(403, {"error": "页面已失效，请刷新后重试"})
+                else:
+                    self.send(200, panel_logs.usage(control))
             elif self.path == "/api/logs" or self.path.startswith("/api/logs/"):
                 self.send_log()
             elif self.path == "/api/status":
                 try:
-                    self.send(200, {"status": control.status(), "job": jobs.snapshot(), "last_answer": last_answer(control)})
+                    self.send(200, {"status": control.status(), "job": jobs.snapshot()})
                 except Exception as exc:
                     self.send(500, {"error": str(exc), "job": jobs.snapshot()})
             else:

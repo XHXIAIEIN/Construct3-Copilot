@@ -102,17 +102,25 @@ class LogTests(unittest.TestCase):
         data = self.get("/api/logs/usage")
         self.assertEqual((data["exists"], data["lines"]), (False, []))
 
-    def test_last_answer_reads_the_newest_usage_line(self):
-        self.assertIsNone(logs.last_answer(self.control))
+    def test_usage_lists_qq_answers_without_openids(self):
+        self.assertEqual(self.get("/api/usage"), {"exists": False, "clipped": False, "answers": []})
         usage = self.home / "var/logs/bot/usage.log"
-        usage.write_text("x" * 5000 + "\n"
-                         "2026-10-16 21:00:39 query-fixed calls 5 prompt 15286 (cache hit 0) completion 388 in 42 s\n"
-                         "2026-10-16 23:12:31 c2c_E5DB calls 39 prompt 1004162 (cache hit 0) completion 43496 in 1742 s\n"
-                         "not a usage line\n", encoding="utf-8")
-        self.assertEqual(logs.last_answer(self.control), {"at": "2026-10-16 23:12:31", "calls": 39, "seconds": 1742})
-        usage.write_text("garbage\n", encoding="utf-8")
-        self.assertIsNone(logs.last_answer(self.control))
-
+        usage.write_text("2026-10-16 21:00:39 query-fixed calls 5 prompt 15286 (cache hit 0) completion 388 in 42 s\n"
+                         "2026-10-16 21:02:16 c2c_E5DB calls 20 prompt 164297 (cache hit 0) completion 3157 in 95 s\n"
+                         "not a usage line\n"
+                         "2026-10-16 22:00:00 group_G1_M2 calls 2 prompt 10 (cache hit 0) completion 5 in 3 s\n"
+                         "2026-10-16 23:12:31 c2c_E5DB calls 39 prompt 1004162 (cache hit 0) completion 43496 in 1742 s\n",
+                         encoding="utf-8")
+        data = self.get("/api/usage")
+        self.assertEqual([(a["at"], a["who"], a["seconds"]) for a in data["answers"]],
+                         [("2026-10-16 21:02:16", 0, 95), ("2026-10-16 22:00:00", 1, 3), ("2026-10-16 23:12:31", 0, 1742)])
+        self.assertEqual(data["answers"][0], {"at": "2026-10-16 21:02:16", "who": 0, "chat": "private", "calls": 20, "prompt": 164297,
+                                              "completion": 3157, "seconds": 95})
+        self.assertEqual(data["answers"][1]["chat"], "group")
+        self.assertNotIn("E5DB", json.dumps(data))
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.get("/api/usage", token="")
+        self.assertEqual(error.exception.code, 403)
 
 if __name__ == "__main__":
     unittest.main()

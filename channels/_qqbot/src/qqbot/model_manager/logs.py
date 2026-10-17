@@ -25,7 +25,7 @@ LINE_CHARS = 1000
 MIN_SECRET = 8
 BEARER = re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]{8,}")
 # One line an answer, as qqbot.usage.write_usage writes it (not imported: that module loads the bot's config).
-USAGE = re.compile(r"(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d) \S+ calls (\d+) prompt \d+ \(cache hit \d+\) completion \d+ in (\d+) s")
+USAGE = re.compile(r"(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d) (\S+) calls (\d+) prompt (\d+) \(cache hit \d+\) completion (\d+) in (\d+) s")
 
 
 def _path(control, ident):
@@ -102,17 +102,26 @@ def read(control, ident, after=None):
             "clipped": clipped or (reset and start > 0), "lines": shown}
 
 
-def last_answer(control):
-    """When the bot last finished an answer, how long it took and how many model calls it made; None if unknown."""
+USAGE_BYTES = 2 * 1024 * 1024  # about 20 000 answers
+
+
+def usage(control):
+    """Every answer usage.log records (QQ ones only, not terminal runs), oldest first. A person is a session name,
+    sent as a number so the page never sees an openid; the same person in a group and in private counts twice."""
     _, path = _path(control, "usage")
     try:
         with path.open("rb") as stream:
-            stream.seek(max(0, stream.seek(0, 2) - 4096))
-            tail = stream.read().decode("utf-8", errors="replace")
+            size = stream.seek(0, 2)
+            stream.seek(max(0, size - USAGE_BYTES))
+            text = stream.read().decode("utf-8", errors="replace")
     except OSError:
-        return None
-    for line in reversed(tail.splitlines()):
+        return {"exists": False, "clipped": False, "answers": []}
+    people, answers = {}, []
+    for line in text.splitlines():
         match = USAGE.fullmatch(line.strip())
-        if match:
-            return {"at": match[1], "calls": int(match[2]), "seconds": int(match[3])}
-    return None
+        if not match or not match[2].startswith(("c2c_", "group_")):
+            continue
+        answers.append({"at": match[1], "who": people.setdefault(match[2], len(people)),
+                        "chat": "private" if match[2].startswith("c2c_") else "group", "calls": int(match[3]),
+                        "prompt": int(match[4]), "completion": int(match[5]), "seconds": int(match[6])})
+    return {"exists": True, "clipped": size > USAGE_BYTES, "answers": answers}
