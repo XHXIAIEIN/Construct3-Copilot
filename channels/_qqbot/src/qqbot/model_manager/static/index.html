@@ -99,13 +99,14 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .ticks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;margin-top:4px;font-size:11px;color:var(--muted);text-align:center;white-space:nowrap}.hours+.ticks{gap:2px}
 .toolrow{display:grid;grid-template-columns:minmax(0,1fr) 56px 88px minmax(72px,160px);gap:12px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:13px}
 .toolrow:first-child{border-top:0;padding-top:0;font-size:12px;color:var(--muted)}.toolrow .num{text-align:right;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.toolrow .num small{margin-right:6px;font-size:11px;color:var(--muted)}
 .meter{display:flex;align-items:center;gap:8px}.meter .track{flex:1;height:6px;border-radius:3px;background:var(--hover)}.meter .fill{height:100%;border-radius:3px;background:var(--danger)}
 .meter span{width:34px;text-align:right;color:var(--text2);font-variant-numeric:tabular-nums}.toolrow:first-child .meter span{width:auto}
 .tip{position:fixed;z-index:20;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px 10px;font-size:12px;color:var(--text2);white-space:nowrap}.tip b{display:block;color:var(--text);font-weight:500}
 @media(max-width:720px){
   .app{grid-template-columns:1fr}nav{position:static;height:auto;margin:0;border-radius:0;border-width:0 0 1px;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--border);padding:8px 12px;overflow-x:auto}
   .brand{padding:0 8px 0 0}.side-toggle{display:none!important}.app.side-collapsed nav{display:flex}main{padding:16px}header{flex-direction:column}header>div:first-child{flex-basis:auto}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
-  .toolrow{grid-template-columns:56px 104px minmax(80px,1fr);row-gap:2px}.toolrow>:first-child{grid-column:1/-1}.toolrow:first-child{display:none}.toolrow .num{text-align:left}
+  .toolrow{grid-template-columns:56px 104px minmax(80px,1fr);row-gap:2px}.toolrow>:first-child{grid-column:1/-1}.toolrow:first-child{display:none}.toolrow .num{text-align:left}.toolrow .calls::before{content:"调用 "}.toolrow .fail::before{content:"失败 "}.toolrow .fail{display:flex;align-items:baseline;white-space:pre}.toolrow .fail small{order:2;margin:0 0 0 6px}
   .kpis{grid-template-columns:1fr 1fr}.kpi:nth-child(3){border-left:0}.kpi:nth-child(n+3){border-top:1px solid var(--border)}.kpi .v{font-size:20px}
   .logbox{height:calc(100vh - 290px)}.tools select{flex:1}
   .row{flex-wrap:wrap}.row .what{flex-basis:100%}.facts{grid-template-columns:1fr}.facts dd{border-top:0;padding-top:0}
@@ -581,8 +582,9 @@ function drawTools(tasks,all){
   $("tools").replaceChildren(head,...(rows.length?rows.map(r=>{
     const row=make("div","toolrow"),meter=make("div","meter"),track=make("div","track"),fill=make("div","fill"),rate=Math.round(r.failed/r.calls*100);
     fill.style.width=rate+"%";track.append(fill);meter.append(track,make("span","",rate+"%"));
-    row.append(make("span","",r.tool==="conversation"?"整次回答":r.tool),make("span","num",`${r.calls} 次`),
-      make("span","num",r.failed?`${r.failed} 次`+(r.interrupted?`（中断 ${r.interrupted}）`:""):"—"),meter);
+    const failed=make("span","num fail",r.failed?String(r.failed):"—");
+    if(r.interrupted)failed.prepend(make("small","",`中断 ${r.interrupted}`));
+    row.append(make("span","",r.tool==="conversation"?"回答":r.tool),make("span","num calls",String(r.calls)),failed,meter);
     return row;
   }):[make("div","empty","这段时间没有记录。")]));
 }
