@@ -103,7 +103,10 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .tracebtn{flex:none;min-height:0;padding:0 5px;border:0;border-radius:4px;font:12px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;color:var(--text2);text-decoration:underline;text-underline-offset:2px}
 .trace{margin:6px 0 0;padding:5px 10px;border-left:2px solid var(--border2);border-radius:0 6px 6px 0;background:var(--hover);color:var(--text);font:12px/1.65 ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei",monospace}.trace.bad{color:var(--danger)}
 .trace .step{display:flex;gap:8px}.trace .n{flex:none;min-width:3ch;text-align:right;color:var(--muted)}.trace .st{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}.trace b{font-weight:600}
-.only-issues .logline:not([data-level]),.only-issues .logday,.only-issues .turn{display:none}
+/* one line per start of the QQ process: when it started and how long it took to connect */
+.logboot{display:flex;gap:8px;align-items:center;padding:3px 14px;color:var(--muted);font:12px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif}
+.logboot::after{content:"";flex:1;border-top:1px solid var(--border)}.logboot.bad{color:var(--warn)}
+.only-issues .logline:not([data-level]),.only-issues .logday,.only-issues .turn,.only-issues .logboot:not(.bad){display:none}
 .logbox .empty.bad{color:var(--danger)}.logbox .empty{font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;font-size:14px}
 .jump{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--surface);border-color:var(--border);box-shadow:var(--shadow);font-size:13px}
 .jump:hover:enabled{background:var(--surface);color:var(--text)}
@@ -446,14 +449,17 @@ function levelOf(line){
 const PYLOG=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?:[,.]\d+)? (?:\S+ )?(DEBUG|INFO|WARNING|ERROR|CRITICAL) (.*)$/,
   BOTPY=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?:[,.]\d+)?\t\[(\w+)\]\t\S*\t(.*)$/,PLAIN=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?:[,.]\d+)? (.*)$/,
   // channels.core.chat writes "<chat> asks|reply|tools|attachment: ...", channels.model.usage "usage: <chat with _> ..."
-  SID=/^(usage: )?((?:c2c|group)[:_][\w:]+) (?:(asks|reply|tools|attachment): )?(.*)$/,
-  KINDS={asks:"问",reply:"答",tools:"工具",attachment:"附件",usage:"用量"},LEVELS={WARNING:"警告",WARN:"警告",ERROR:"错误",CRITICAL:"严重"},
+  SID=/^(usage: )?((?:c2c|group)[:_][\w:]+) (?:(asks|reply|tools|attachment|note): )?(.*)$/,
+  KINDS={asks:"问",reply:"答",tools:"工具",attachment:"附件",usage:"用量",note:"提示"},
+  // channels/platforms/qq/bot.py: written once as the process starts, and when the gateway connects
+  BOOT="QQ gateway connection starting",READY="QQ gateway ready event received",LEVELS={WARNING:"警告",WARN:"警告",ERROR:"错误",CRITICAL:"严重"},
   // the tools line ends with the command that prints its turn; the panel reads the same turn from /api/turns
   TURNREF=/ \(python -m channels\.logs --turn (\d{8}-\d{6}-[0-9a-f]{4})\)$/,
   USAGE=/calls (\d+) prompt (\d+) \(cache hit \d+\) completion (\d+) in (\d+) s(?: model (\S+))?/,
   FILE_IN=/, ([\w.+-]+)\/([\w.+-]+), (\d+) bytes/,FILE_OUT=/^sent file (\d+) bytes/,WEEK="日一二三四五六",LONG=400;
-// logTurns: the turn each chat has open, so the chat's later lines (files, usage, tools, reply) fill that turn's row
-let logDay="",logTurns=new Map();
+// logTurns: the turn each chat has open, so the chat's later lines (files, usage, tools, reply) fill that turn's row.
+// logBoot: the start still waiting for its connection.
+let logDay="",logTurns=new Map(),logBoot=null;
 // "c2c:<openid>", usage's "c2c_<openid>", "group:<group>:<member>": the kind of chat and each id's first four
 // characters. The whole ids stay in the tooltip, and bot.log keeps them for files.py --user/--group.
 function who(sid){
@@ -471,8 +477,22 @@ function wan(n){ n=Number(n);return n>=10000?`${(n/10000).toFixed(1).replace(/\.
 function kb(n){ n=Number(n);return n>=1048576?`${(n/1048576).toFixed(1)} MB`:`${Math.max(1,Math.round(n/1024))} KB`; }
 function stamp(p,title){ const time=make("span","lt");time.title=title;time.append(p.time.slice(0,5),make("span","sec",p.time.slice(5)));return time; }  // a phone shows hh:mm
 function withDay(p,node){ if(!p||p.day===logDay)return [node];logDay=p.day;return [make("div","logday",dayLabel(p.day)),node]; }
+function seconds(time){ const [h,m,sec]=time.split(":").map(Number);return h*3600+m*60+sec; }
+function connected(boot,p){ const took=seconds(p.time)-seconds(boot.time);return `QQbot 启动 · ${took>=0&&took<600?`${took} 秒后`:""}连上`; }
+// A start and its connection make one divider; a start followed by another start never connected.
+function bootRows(p,line){
+  if(p.msg===READY&&logBoot){
+    setText(logBoot.label,connected(logBoot,p));logBoot=null;return [];
+  }
+  if(logBoot){logBoot.node.classList.add("bad");setText(logBoot.label,"QQbot 启动 · 没有连上");}
+  const node=make("div","logboot"),label=make("span","",p.msg===READY?"QQ 网关重新连上":"QQbot 启动 · 正在连接…");
+  node.append(stamp(p,line.slice(0,line.length-p.msg.length).trim()),label);
+  logBoot=p.msg===BOOT?{node,label,time:p.time}:null;
+  return withDay(p,node);
+}
 function logRows(line,level){
   const p=parseLog(line),s=p&&SID.exec(p.msg);
+  if(p&&!level&&(p.msg===BOOT||p.msg===READY))return bootRows(p,line);
   if(s&&!level){
     const key=s[2].replaceAll("_",":"),kind=s[1]?"usage":s[3]||"";
     if(kind==="asks")return withDay(p,newTurn(key,p,s[4]));
@@ -504,6 +524,7 @@ function fillTurn(t,kind,msg){
   if(kind==="reply")t.reply=msg.replaceAll(" / ","\n");  // chat.py puts " / " where the reply had a line break
   else if(kind==="usage")t.usage=USAGE.exec(msg)||{raw:msg};
   else if(kind==="attachment"){const f=FILE_IN.exec(msg);t.files.push(f?`${f[1]==="image"?"图片 "+f[2].toUpperCase():f[1]+"/"+f[2]} · ${kb(f[3])}`:msg);}
+  else if(kind==="note")t.extra.append(make("div","",`中途提示：${msg}`));
   else if(kind==="tools"){const ref=TURNREF.exec(msg);t.turn=ref?ref[1]:"";t.tools=ref?msg.slice(0,ref.index):msg;}
   else{const f=FILE_OUT.exec(msg);if(f)t.sent.push(kb(f[1]));else t.extra.append(make("div","",msg));}
   renderTurn(t);
@@ -569,7 +590,7 @@ async function refreshLog(){
 }
 function appendLog(data){
   const box=$("log-box"),lines=$("log-lines"),follow=data.reset||logOffset===null||logFollow;
-  if(data.reset){lines.replaceChildren();logLevel="";logDay="";logTurns=new Map();}
+  if(data.reset){lines.replaceChildren();logLevel="";logDay="";logTurns=new Map();logBoot=null;}
   logOffset=data.offset;
   if(!data.lines.length)return;
   const fragment=document.createDocumentFragment();
@@ -581,7 +602,7 @@ function appendLog(data){
   else{box.scrollTop-=before-box.scrollHeight;$("log-jump").hidden=false;}
 }
 function pickLog(id){
-  logId=id;logOffset=null;logLevel="";logDay="";logTurns=new Map();logFollow=true;$("log-lines").replaceChildren();$("log-jump").hidden=true;
+  logId=id;logOffset=null;logLevel="";logDay="";logTurns=new Map();logBoot=null;logFollow=true;$("log-lines").replaceChildren();$("log-jump").hidden=true;
   try{localStorage.setItem("panel-log",id);}catch{}
   refreshLog();
 }
