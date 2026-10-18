@@ -107,11 +107,12 @@ def test_image_is_a_note_for_a_text_model(tmp_path):
 
 def test_run_sends_images_after_the_question():
     from copilot.providers.construct3.agent import Run
+    from copilot.providers.construct3.reply import LENGTH_NOTE
     run = Run("question", [], None, False, None, None, [{"media_type": "image/jpeg", "data": "eA=="}])
     assert run.messages[-1]["content"] == [
-        {"type": "text", "text": "question"},
+        {"type": "text", "text": "question" + LENGTH_NOTE},
         {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,eA=="}}]
-    assert Run("question", [], None, False, None, None).messages[-1]["content"] == "question"
+    assert Run("question", [], None, False, None, None).messages[-1]["content"] == "question" + LENGTH_NOTE
 
 
 def test_attachment_log_leads_with_session_key(tmp_path, caplog):

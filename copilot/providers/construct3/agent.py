@@ -12,7 +12,7 @@ from pathlib import Path
 from . import services as copilot
 from .record import fixed_lines, settle
 MAX_STEPS = 10
-from .reply import ASKED_EVENTS, BUILD_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten
+from .reply import ASKED_EVENTS, BUILD_NOTE, LENGTH_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten
 
 log = logging.getLogger("copilot.construct3.agent")
 from . import plugin as kb
@@ -56,6 +56,8 @@ class Run:
             self.build = True
             question += BUILD_NOTE
             self.trace.append("build ask")
+        else:
+            question += LENGTH_NOTE
         content = [{"type": "text", "text": question}, *({"type": "image_url", "image_url": {
             "url": f"data:{i['media_type']};base64,{i['data']}"}} for i in images)] if images else question
         self.messages = [*(history or []), {"role": "user", "content": content}]
@@ -302,7 +304,10 @@ class Agent:
     def _final(self, run: Run, text: str) -> str:
         """The checked answer, shortened. A rewrite for length renames things (2026-10-09: 设置对象速率 came back
         as 设定对象时间速率), so a short version that fails the check is dropped for the checked long one."""
-        short = shorten(self._complete, run.messages, text, run.trace, run.asked, sent=run.send)
+        # the rewrite reads the question and the draft, not the tool results, which made each rewrite one more call
+        # of the whole conversation (2026-10-18)
+        brief = [*(m for m in run.messages[:1] if m["role"] == "system"), {"role": "user", "content": run.question}]
+        short = shorten(self._complete, brief, text, run.trace, run.asked, sent=run.send)
         if short == text or not kb.check(run.messages, short, run.project, self._json):
             return short
         run.trace.append("short version failed the check; long one sent")

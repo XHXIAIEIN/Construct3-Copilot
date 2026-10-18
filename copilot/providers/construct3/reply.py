@@ -39,6 +39,10 @@ BUILD_ASK = re.compile(r"(?:做|制作|生成|重做|写)[^。！？\n]{0,40}(�
                        r"|example project|make (me )?(a|an) (example|demo|project)", re.I)
 # a bare "c3p" or "工程文件" means the held project when one is held, a new one when none is
 BUILD_ASK_BARE = re.compile(r"c3p|工程文件|项目文件", re.I)
+# the length rule again at the question, the last thing the model reads before its tools: in the system prompt
+# alone it left drafts of 200 to 500 characters, each rewritten by one more call (2026-10-18)
+LENGTH_NOTE = (f"\n(Answer in at most {REPLY_MAX} characters; numbered steps the person must do may take "
+               f"{STEPS_MAX}, events they asked you to write {EVENTS_MAX}.)")
 BUILD_NOTE = ("\n(The person asks for an example or a project file: make it with the project tools (design_guide, "
               "check_design, new_project_from_spec) and it is sent after your reply. Words alone do not answer it.)")
 PROMISE = re.compile(r"(文件|c3p|工程|项目|例子)[^。！\n]*((发|传)(给|到)?你|发送|发来|发出|稍后|随后)"
