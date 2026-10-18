@@ -52,8 +52,8 @@ BUILD_NOTE = ("\n(The person asks for an example or a project file: make it with
 # flat trapezoid, the request in their design being only "给我做一个示例"
 IMAGE_BUILD_NOTE = ("\n(The example is to look like the image. Before the design, look at the image again and write "
                     "in the design's request what it shows: each part, its shape and how it sits (flat, receding, "
-                    "hanging straight down, in front of another), and its colors. Build every part; what the tools "
-                    "cannot draw, such as a texture, is left for later.)")
+                    "hanging straight down, in front of another), and its colors. Build every part; a texture or a "
+                    "picture with content is a TiledBg in the checker, tinted to its colour.)")
 # a how-to question that an example shows better than steps in words (plugin.presearch decides): the example is
 # made the way a requested one is, and the reply only says what to look at in it
 SHOW_NOTE = ("\n(Answer with a small example that shows this: make it with the project tools (design_guide, "
