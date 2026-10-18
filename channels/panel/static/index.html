@@ -5,16 +5,19 @@
 <title>QQbot 模型</title>
 <style>
 :root{
-  --page:#f5f4ef;--surface:#ffffff;--side:#efeee8;--hover:rgba(31,30,29,.05);--selected:rgba(31,30,29,.08);
-  --text:#1f1e1d;--text2:#6b6a64;--muted:#9a9890;--border:rgba(31,30,29,.12);--border2:rgba(31,30,29,.22);
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei UI","Microsoft YaHei",monospace;
+  /* --muted stays at 4.5:1 on the page and the surface: times and counts are read, not decoration */
+  --page:#f5f4ef;--surface:#ffffff;--side:#efeee8;--hover:rgba(31,30,29,.045);--selected:rgba(31,30,29,.08);--sunk:#f8f7f3;
+  --text:#1f1e1d;--text2:#5f5d57;--muted:#6f6d66;--faint:#c4c2ba;--border:rgba(31,30,29,.1);--border2:rgba(31,30,29,.2);
   --primary:#1f1e1d;--on-primary:#faf9f5;--accent:#2c6fd6;
   --ok:#2f6b3f;--ok-bg:#e5efe2;--warn:#8a5a00;--warn-bg:#f6ecd4;--danger:#b5402f;--danger-bg:#f8e6e2;--info:#2a5aa8;--info-bg:#e4ecf8;--private:#2a78d6;--group:#eb6834;
   --shadow:0 8px 24px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.08);
-  color-scheme:light;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);
+  color-scheme:light;font:14px/1.5 var(--sans);color:var(--text);
 }
 @media (prefers-color-scheme:dark){:root{
-  --page:#151515;--surface:#1f1e1d;--side:#1a1a19;--hover:rgba(255,255,255,.06);--selected:rgba(255,255,255,.1);
-  --text:#f0efec;--text2:#a6a49c;--muted:#78766f;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);
+  --page:#151515;--surface:#1f1e1d;--side:#1a1a19;--hover:rgba(255,255,255,.05);--selected:rgba(255,255,255,.1);--sunk:#252423;
+  --text:#f0efec;--text2:#adaba3;--muted:#8f8d85;--faint:#4a4945;--border:rgba(255,255,255,.09);--border2:rgba(255,255,255,.2);
   --primary:#f0efec;--on-primary:#151515;--accent:#6c9fec;
   --ok:#8fc49a;--ok-bg:#1f3324;--warn:#e0b45c;--warn-bg:#3a2e14;--danger:#ec8f80;--danger-bg:#3d201b;--info:#9dbcf0;--info-bg:#1d2a40;--private:#3987e5;--group:#d95926;
   --shadow:0 8px 24px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.3);color-scheme:dark;
@@ -74,43 +77,70 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .chev{margin-left:auto;margin-right:6px;width:7px;height:7px;border-right:1.5px solid var(--text2);border-bottom:1.5px solid var(--text2);transform:rotate(45deg);transition:transform .15s}
 .group.collapsed .chev{transform:rotate(-45deg)}.group.collapsed .list{display:none}.searching .group.collapsed .list{display:block}
 .check{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;white-space:nowrap}.check input,.tools .check input{width:auto;min-height:0;margin:0;padding:0;accent-color:var(--primary)}
+/* ---- logs. Every row shares one grid: the time, a marker column, then the text, so the eye runs down one edge.
+   What people said is set in the sans face; what the program wrote stays monospace and a step quieter. */
 .logwrap{position:relative}
-.logbox{height:calc(100vh - 250px);min-height:300px;overflow:auto;padding:6px 0;font:12px/1.65 ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei",monospace}
-.logbox{--lt:60px;contain:inline-size}  /* a long unbroken line scrolls inside, never widens the page */
-.logline{display:flex;gap:8px;padding:1px 14px 1px 12px;border-left:2px solid transparent}
-.lt{flex:none;width:var(--lt);color:var(--muted);font:12px/1.65 ui-monospace,"Cascadia Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
-.logline .lm{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.logbox{height:calc(100vh - 140px);min-height:320px;overflow:auto;padding:0 2px 16px;font:13px/20px var(--sans)}
+.logbox{--lt:52px;--gut:12px;--mk:20px;contain:inline-size}  /* a long unbroken line scrolls inside, never widens the page */
+.app:has(#status:not([hidden])) .logbox{height:calc(100vh - 200px)}  /* the box ends at the window's bottom, below the status bar when one shows */
+.logbox::-webkit-scrollbar{width:12px}.logbox::-webkit-scrollbar-button{display:none}
+.logbox::-webkit-scrollbar-thumb{background:var(--border2);background-clip:padding-box;border:3px solid transparent;border-radius:6px}.logbox::-webkit-scrollbar-thumb:hover{background-color:var(--muted)}
+.lt{flex:none;width:var(--lt);margin-right:var(--mk);color:var(--muted);font:12px/20px var(--sans);font-variant-numeric:tabular-nums}
+.logline,.logboot{position:relative;display:flex;align-items:baseline;padding:1px var(--gut);border-radius:8px}
+.logline .lm{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text2);font:12px/20px var(--mono)}
 .long:not(.open){display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.long.open{cursor:pointer}
-.logline .lk{flex:none;font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif}.logline .lk:empty{display:none}
+.logline .lk{flex:none;margin-right:8px;padding:0 6px;border-radius:4px;font:11px/18px var(--sans)}.logline .lk:empty{display:none}
 .sid{white-space:nowrap;color:var(--muted)}
-.logday{position:sticky;top:-6px;z-index:1;padding:8px 14px 4px;background:var(--surface);color:var(--text2);font:12px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif}
-.logline[data-level=warn]{color:var(--warn);border-left-color:var(--warn)}
-.logline[data-level=error]{color:var(--danger);background:var(--danger-bg);border-left-color:var(--danger)}
-/* a turn: one summary line, opened in place to the whole reply, the counts and the tool trace */
-.turn{border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:-1px;font:13px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
-.turnhead{display:flex;gap:8px;align-items:baseline;width:100%;min-height:0;padding:6px 14px;border:0;border-radius:0;text-align:left;white-space:normal;font:inherit}
-.turnhead .sum{flex:1 1 0;width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.turnhead b{font-weight:600}.turnhead .snip{color:var(--text2)}
-.turnhead .meta{flex:none;font-size:12px;color:var(--muted);white-space:nowrap}.turnhead .meta::after{content:" ▸"}
-.turn.open .sum{white-space:normal}.turn.open .snip{display:none}.turn.open .meta::after{content:" ▾"}
-.turnbody{padding:0 14px 12px calc(22px + var(--lt))}
-.turnbody .info{font-size:12px;color:var(--muted);margin-bottom:6px}
-.turnbody .reply{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75}
-.turnbody .tools{display:flex;gap:8px;align-items:baseline;margin-top:8px;font-size:12px;color:var(--text2)}.turnbody .tools:empty{display:none}
-/* the tool names stay one line and scroll sideways, however many there are */
-.turnbody .names{flex:1 1 0;width:0;overflow-x:auto;white-space:nowrap;font:12px/1.8 ui-monospace,"Cascadia Mono",Consolas,monospace}
-.turnbody .names::-webkit-scrollbar{height:4px}.turnbody .names::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}.turnbody .names::-webkit-scrollbar-button{display:none}
-.turnbody .extra{font:12px/1.65 ui-monospace,"Cascadia Mono",Consolas,monospace;color:var(--muted)}
-.tracebtn{flex:none;min-height:0;padding:0 5px;border:0;border-radius:4px;font:12px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;color:var(--text2);text-decoration:underline;text-underline-offset:2px}
-.trace{margin:6px 0 0;padding:5px 10px;border-left:2px solid var(--border2);border-radius:0 6px 6px 0;background:var(--hover);color:var(--text);font:12px/1.65 ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei",monospace}.trace.bad{color:var(--danger)}
-.trace .step{display:flex;gap:8px}.trace .n{flex:none;min-width:3ch;text-align:right;color:var(--muted)}.trace .st{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}.trace b{font-weight:600}
-/* one line per start of the QQ process: when it started and how long it took to connect */
-.logboot{display:flex;gap:8px;align-items:center;padding:3px 14px;color:var(--muted);font:12px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif}
-.logboot::after{content:"";flex:1;border-top:1px solid var(--border)}.logboot.bad{color:var(--warn)}
+.logline[data-level] .lm{color:var(--text)}
+.logline[data-level=warn] .lt{color:var(--warn)}.logline[data-level=warn] .lk{background:var(--warn-bg);color:var(--warn)}
+.logline[data-level=error]{background:var(--danger-bg)}.logline[data-level=error] .lt{color:var(--danger)}.logline[data-level=error] .lk{background:var(--danger);color:var(--surface)}
+/* a traceback's lines make one tinted block */
+.logline[data-level=error]:has(+ .logline[data-level=error]){border-bottom-left-radius:0;border-bottom-right-radius:0}
+.logline[data-level=error]+.logline[data-level=error]{border-top-left-radius:0;border-top-right-radius:0}
+/* the day stays at the top while its rows scroll under it */
+.logday{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;margin:0 -2px;padding:16px calc(2px + var(--gut)) 8px;background:linear-gradient(var(--page) calc(100% - 8px),transparent);color:var(--text2);font:12px/18px var(--sans);letter-spacing:.02em}
+.logday::after{content:"";flex:1;height:1px;background:var(--border)}
+/* a turn is a card: the question and the start of the answer, opened in place to the whole reply, the counts and the
+   tool trace. Starts and the program's lines stay on the page between the cards. */
+.turn{position:relative;margin:8px 0;border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:0 1px 2px rgba(31,30,29,.04);font:14px/22px var(--sans);transition:border-color .12s,box-shadow .12s}
+.turn:not(.open):hover{border-color:var(--border2)}.turn.open{box-shadow:0 2px 10px rgba(31,30,29,.06)}
+.turnhead{display:flex;align-items:baseline;width:100%;min-height:0;padding:11px var(--gut) 12px calc(var(--gut) - 1px);border:0;border-radius:11px;text-align:left;white-space:normal;font:inherit}
+.turnhead:hover:enabled{background:none}
+/* the marker is blue for a private chat and orange for a group, as on the stats page; it pulses while the answer is coming */
+.turnhead::before{content:"";position:absolute;left:calc(var(--gut) + var(--lt) + 4px);top:18px;width:7px;height:7px;border-radius:50%;background:var(--private)}
+.turn[data-chat=group] .turnhead::before{background:var(--group)}
+.turn.pending .turnhead::before{animation:pulse 1.2s ease-in-out infinite}@keyframes pulse{50%{opacity:.25}}
+.turnhead .sum{flex:1 1 0;min-width:0;display:flex;flex-direction:column}
+.turnhead b,.turnhead .snip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.turnhead b{font-weight:400}
+.turnhead .snip{font-size:13px;line-height:20px;color:var(--text2)}.turnhead .snip:empty{display:none}
+.turnhead .meta{flex:none;display:flex;align-items:center;margin-left:16px;font-size:12px;color:var(--muted);white-space:nowrap}
+.turnhead .meta::after,.tracebtn::after{content:"";width:5px;height:5px;margin:0 2px 0 4px;border-right:1.5px solid;border-bottom:1.5px solid;transform:translateY(-1px) rotate(-45deg);transition:transform .15s}
+.turn.open .meta::after,.tracebtn[aria-expanded=true]::after{transform:translateY(-2px) rotate(45deg)}
+.turnhead .model:not(:empty)::before{content:"·";margin:0 5px}.turnhead .meta::after{margin-left:12px}
+.turn.open b{white-space:normal}.turn.open .snip{display:none}
+.turnbody{padding:0 var(--gut) 16px calc(var(--gut) + var(--lt) + var(--mk) - 1px)}
+.turnbody .info{margin:-4px 0 10px;font-size:12px;line-height:18px;color:var(--muted)}
+.turnbody .reply{max-width:46em;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.85}
+.turntools{display:flex;gap:10px;align-items:baseline;margin-top:14px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;line-height:20px;color:var(--muted)}.turntools:empty{display:none}
+/* the tool names stay one line and scroll sideways, however many there are; the right edge fades into what is hidden */
+.turntools .names{flex:1 1 0;width:0;overflow-x:auto;white-space:nowrap;color:var(--text2);font:12px/20px var(--mono);-webkit-mask-image:linear-gradient(to left,transparent,#000 28px);mask-image:linear-gradient(to left,transparent,#000 28px)}
+.turntools .names::-webkit-scrollbar{height:4px}.turntools .names::-webkit-scrollbar-button{display:none}
+.turntools .names::-webkit-scrollbar-thumb{background:transparent;border-radius:2px}.turntools .names:hover::-webkit-scrollbar-thumb{background:var(--border2)}
+.turnbody .extra{margin-top:8px;font:12px/20px var(--mono);color:var(--muted)}.turnbody .extra:empty{display:none}
+.tracebtn{flex:none;display:inline-flex;align-items:center;gap:4px;min-height:0;margin-right:-6px;padding:0 6px;border:0;border-radius:4px;font:12px/20px var(--sans);color:var(--text2)}
+.tracebtn:hover:enabled{color:var(--text)}
+.trace{margin:10px 0 0;padding:8px 12px;border-radius:8px;background:var(--sunk);font:12px/20px var(--mono)}.trace.bad{color:var(--danger)}
+.trace .step{display:flex;gap:10px;padding:2px 0}.trace .n{flex:none;min-width:3ch;text-align:right;color:var(--muted)}.trace .st{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}.trace b{font-weight:600}
+/* one row per start of the QQ process: when it started and how long it took to connect */
+.logboot{padding:3px var(--gut);color:var(--muted);font:12px/20px var(--sans)}
+.logboot::before{content:"";position:absolute;left:calc(var(--gut) + var(--lt) + 5px);top:10px;width:7px;height:7px;box-sizing:border-box;border:1.5px solid var(--faint);border-radius:50%}
+.logboot.bad{color:var(--warn)}.logboot.bad::before{border-color:currentColor}
 .only-issues .logline:not([data-level]),.only-issues .logday,.only-issues .turn,.only-issues .logboot:not(.bad){display:none}
-.logbox .empty.bad{color:var(--danger)}.logbox .empty{font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;font-size:14px}
-.jump{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--surface);border-color:var(--border);box-shadow:var(--shadow);font-size:13px}
-.jump:hover:enabled{background:var(--surface);color:var(--text)}
-.logmeta{margin-top:8px}.logmeta.bad{color:var(--danger)}
+.logbox .empty{padding:64px 16px;font:14px/1.6 var(--sans)}.logbox .empty.bad{color:var(--danger)}
+.jump{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);padding:6px 16px;border-color:transparent;border-radius:999px;background:var(--primary);color:var(--on-primary);box-shadow:var(--shadow);font-size:13px}
+.jump:hover:enabled{background:var(--primary);opacity:.9}
+.logmeta{margin-top:10px;padding:0 4px}.logmeta.bad{color:var(--danger)}
+@media (prefers-reduced-motion:reduce){.turn.pending .turnhead::before{animation:none}.turn,.turnhead .meta::after,.tracebtn::after{transition:none}}
 .seg{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--border2);border-radius:8px}
 .seg button{border:0;min-height:28px;padding:3px 14px;border-radius:6px;color:var(--text2)}.seg button[aria-pressed=true]{background:var(--selected);color:var(--text)}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
@@ -136,7 +166,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
   .brand{padding:0 8px 0 0}.side-toggle{display:none!important}.app.side-collapsed nav{display:flex}main{padding:16px}header{flex-direction:column}header>div:first-child{flex-basis:auto}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
   .toolrow{grid-template-columns:56px 104px minmax(80px,1fr);row-gap:2px}.toolrow>:first-child{grid-column:1/-1}.toolrow:first-child{display:none}.toolrow .num{text-align:left}.toolrow .calls::before{content:"调用 "}.toolrow .fail::before{content:"失败 "}.toolrow .fail{display:flex;align-items:baseline;white-space:pre}.toolrow .fail small{order:2;margin:0 0 0 6px}
   .kpis{grid-template-columns:1fr 1fr}.kpis .kpi{border-left:1px solid var(--border)}.kpis .kpi:nth-child(2n+1){border-left:0}.kpis .kpi:nth-child(n+3){border-top:1px solid var(--border)}.kpi .v{font-size:20px}
-  .logbox{height:calc(100vh - 290px);--lt:38px}.lt .sec{display:none}.tools select{flex:1}
+  .logbox{height:calc(100dvh - 212px);--lt:38px;--gut:8px;--mk:16px}.app:has(#status:not([hidden])) .logbox{height:calc(100dvh - 270px)}.turnhead .model{display:none}.lt .sec{display:none}.tools select{flex:1}
   .row{flex-wrap:wrap}.row .what{flex-basis:100%}.facts{grid-template-columns:1fr}.facts dd{border-top:0;padding-top:0}
 }
 </style>
@@ -165,7 +195,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 
     <section data-page="logs" hidden>
       <div class="logwrap">
-        <div class="list logbox" id="log-box" tabindex="0" aria-label="日志内容"><div id="log-lines"></div></div>
+        <div class="logbox" id="log-box" tabindex="0" aria-label="日志内容"><div id="log-lines"></div></div>
         <button type="button" class="jump" id="log-jump" hidden>有新日志 · 回到底部</button>
       </div>
       <div class="muted logmeta" id="log-meta"></div>
@@ -512,9 +542,9 @@ function logRows(line,level){
 function newTurn(key,p,question){
   const chat=who(key),node=make("div","turn"),head=make("button","turnhead"),body=make("div","turnbody");
   const t={node,chat,files:[],sent:[],usage:null,reply:null,tools:"",turn:"",
-    sum:make("span","sum"),snip:make("span","snip"),meta:make("span","meta"),info:make("div","info"),text:make("div","reply"),toolRow:make("div","tools"),extra:make("div","extra")};
-  head.type="button";head.setAttribute("aria-expanded","false");body.hidden=true;
-  t.sum.append(make("b","",question),t.snip);
+    sum:make("span","sum"),snip:make("span","snip"),meta:make("span","meta"),took:make("span"),model:make("span","model"),info:make("div","info"),text:make("div","reply"),toolRow:make("div","turntools"),extra:make("div","extra")};
+  head.type="button";head.setAttribute("aria-expanded","false");body.hidden=true;node.dataset.chat=key.startsWith("group")?"group":"c2c";
+  t.sum.append(make("b","",question),t.snip);t.meta.append(t.took,t.model);
   head.append(stamp(p,`${p.day} ${p.time} · ${chat.title}`),t.sum,t.meta);
   body.append(t.info,t.text,t.toolRow,t.extra);
   node.append(head,body);
@@ -535,12 +565,12 @@ function renderTurn(t){
   info.push(...t.files);
   if(t.sent.length)info.push(`发出 ${t.sent.length} 个文件 · ${t.sent.join("、")}`);
   setText(t.info,info.join(" · "));
-  setText(t.meta,[u&&!u.raw?`${u[4]} 秒`:t.reply===null?"回答中…":"",u?.[5]||""].filter(Boolean).join(" · "));
-  setText(t.snip,t.reply?" — "+t.reply.replace(/\s+/g," ").slice(0,120):"");
-  setText(t.text,t.reply??"");
+  setText(t.took,u&&!u.raw?`${u[4]} 秒`:t.reply===null?"回答中…":"");setText(t.model,u?.[5]||"");  // a phone hides the model
+  setText(t.snip,t.reply?t.reply.replace(/\s+/g," ").slice(0,160):"");
+  setText(t.text,t.reply??"");t.node.classList.toggle("pending",t.reply===null);
   if(t.tools&&!t.toolRow.childElementCount){
     t.toolRow.append(make("span","","工具"),make("span","names",t.tools.split(", ").join(" · ")));
-    if(t.turn)t.toolRow.append(Object.assign(make("button","tracebtn","轨迹 ▸"),{type:"button",title:`python -m channels.logs --turn ${t.turn}`}));
+    if(t.turn)t.toolRow.append(Object.assign(make("button","tracebtn","轨迹"),{type:"button",title:`python -m channels.logs --turn ${t.turn}`}));
     if(t.turn)t.toolRow.lastChild.dataset.turn=t.turn;
   }
 }
@@ -627,7 +657,7 @@ function traceStep(step,i){
 // The trace is read once, on the first open; a failed read is tried again on the next open.
 async function toggleTrace(button){
   const body=button.closest(".turnbody")||button.parentElement,open=button.getAttribute("aria-expanded")!=="true";
-  button.setAttribute("aria-expanded",open);button.textContent=open?"轨迹 ▾":"轨迹 ▸";
+  button.setAttribute("aria-expanded",open);
   let box=body.querySelector(".trace");
   if(box&&!box.classList.contains("bad")){box.hidden=!open;return;}
   box?.remove();
@@ -774,7 +804,7 @@ function showPage(name){
   page=titles[name]?name:"models";
   document.querySelectorAll("section[data-page]").forEach(s=>s.hidden=s.dataset.page!==page);
   document.querySelectorAll("nav a").forEach(a=>a.dataset.page===page?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
-  document.querySelectorAll(".tools").forEach(t=>t.hidden=t.dataset.for!==page);
+  document.querySelectorAll(".tools[data-for]").forEach(t=>t.hidden=t.dataset.for!==page);
   setText($("title"),titles[page]);closeMenu();$("now").hidden=page!=="models"||!$("now").textContent;
   if(page==="logs")refreshLog();
   if(page==="stats"){renderStats();refreshStats(true);}
