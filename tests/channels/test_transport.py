@@ -74,6 +74,21 @@ class ChatSerializationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(order, ["first", "other", "second"])
 
 
+class ChatHistoryTests(unittest.IsolatedAsyncioTestCase):
+    async def test_history_outlives_a_restart(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            application = Mock()
+            application.handle.return_value = {"text": "用网格变形"}
+            before = chat.Chats(application, data_dir=Path(tmp), channel="qq")
+            await before.ask("c2c:placeholder", "这种斜切效果怎么做", group=False, attachments=[], notify=None)
+            after = chat.Chats(application, data_dir=Path(tmp), channel="qq")
+            await after.ask("c2c:placeholder", "给我做一个示例", group=False, attachments=[], notify=None)
+            self.assertEqual(application.handle.call_args.args[0]["history"], [
+                {"role": "user", "content": "这种斜切效果怎么做"}, {"role": "assistant", "content": "用网格变形"}])
+            await after.ask("c2c:other", "你好", group=False, attachments=[], notify=None)
+            self.assertEqual(application.handle.call_args.args[0]["history"], [])
+
+
 class CodeStampTests(unittest.TestCase):
     """The receipt's code stamp against the files on disk: the panel's reminder that a restart is due."""
 

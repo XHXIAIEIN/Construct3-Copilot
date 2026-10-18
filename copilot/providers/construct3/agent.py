@@ -12,7 +12,7 @@ from pathlib import Path
 from . import services as copilot
 from .record import fixed_lines, settle
 MAX_STEPS = 10
-from .reply import (ASKED_EVENTS, BUILD_NOTE, LENGTH_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten,
+from .reply import (ASKED_EVENTS, BUILD_NOTE, IMAGE_BUILD_NOTE, LENGTH_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten,
                     step_lines)
 
 log = logging.getLogger("copilot.construct3.agent")
@@ -55,7 +55,7 @@ class Run:
         self.build = project is not None
         if session is not None and is_build_ask(question, project is not None):
             self.build = True
-            question += BUILD_NOTE
+            question += BUILD_NOTE + (IMAGE_BUILD_NOTE if images else "")
             self.trace.append("build ask")
         else:
             question += LENGTH_NOTE

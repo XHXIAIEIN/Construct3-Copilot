@@ -67,7 +67,7 @@ def test_image_reaches_a_model_that_reads_images(tmp_path):
     application.agent.answer = Mock(return_value=("ok", []))
     attachment = {"filename": "photo.png", "content_type": "image/png", "size": 5, "url": "https://example.test/p"}
     with patch("copilot.providers.construct3.attachments.download", return_value=b"image") as download:
-        application.handle({"text": "这种斜切效果怎么做", "session_id": "c2c:placeholder", "session_dir": tmp_path,
+        application.handle({"text": "这种斜切效果怎么做", "session_id": "c2c:placeholder", "session_dir": tmp_path / "c2c_placeholder",
                             "attachments": [attachment]})
     download.assert_called_once()
     question = application.agent.answer.call_args.args[0]
@@ -79,7 +79,7 @@ def test_image_goes_with_the_questions_after_it(tmp_path):
     application = Application(Mock(), model="model-placeholder", vision=True)
     application.agent.answer = Mock(return_value=("ok", []))
     attachment = {"filename": "photo.png", "content_type": "image/png", "size": 5, "url": "https://example.test/p"}
-    request = {"session_id": "c2c:placeholder", "session_dir": tmp_path}
+    request = {"session_id": "c2c:placeholder", "session_dir": tmp_path / "c2c_placeholder"}
     with patch("copilot.providers.construct3.attachments.download", return_value=b"image"):
         application.handle({**request, "text": "这种斜切效果怎么做", "attachments": [attachment]})
     image = [{"media_type": "image/png", "data": "aW1hZ2U="}]
@@ -93,12 +93,25 @@ def test_image_goes_with_the_questions_after_it(tmp_path):
     assert application.agent.answer.call_args.kwargs["images"] == []
 
 
+def test_image_outlives_a_restart(tmp_path):
+    attachment = {"filename": "photo.png", "content_type": "image/png", "size": 5, "url": "https://example.test/p"}
+    request = {"session_id": "c2c:placeholder", "session_dir": tmp_path / "c2c_placeholder"}
+    before = Application(Mock(), model="model-placeholder", vision=True)
+    before.agent.answer = Mock(return_value=("ok", []))
+    with patch("copilot.providers.construct3.attachments.download", return_value=b"image"):
+        before.handle({**request, "text": "这种斜切效果怎么做", "attachments": [attachment]})
+    after = Application(Mock(), model="model-placeholder", vision=True)
+    after.agent.answer = Mock(return_value=("ok", []))
+    after.handle({**request, "text": "给我做一个示例"})
+    assert after.agent.answer.call_args.kwargs["images"] == [{"media_type": "image/png", "data": "aW1hZ2U="}]
+
+
 def test_image_is_a_note_for_a_text_model(tmp_path):
     application = Application(Mock(), model="model-placeholder")
     application.agent.answer = Mock(return_value=("ok", []))
     attachment = {"filename": "photo.png", "content_type": "image/png", "size": 5, "url": "https://example.test/p"}
     with patch("copilot.providers.construct3.attachments.download") as download:
-        application.handle({"text": "这种斜切效果怎么做", "session_id": "c2c:placeholder", "session_dir": tmp_path,
+        application.handle({"text": "这种斜切效果怎么做", "session_id": "c2c:placeholder", "session_dir": tmp_path / "c2c_placeholder",
                             "attachments": [attachment]})
     download.assert_not_called()
     assert "a .png file that you cannot read" in application.agent.answer.call_args.args[0]
@@ -113,6 +126,14 @@ def test_run_sends_images_after_the_question():
         {"type": "text", "text": "question" + LENGTH_NOTE},
         {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,eA=="}}]
     assert Run("question", [], None, False, None, None).messages[-1]["content"] == "question" + LENGTH_NOTE
+
+
+def test_build_with_an_image_asks_for_what_the_image_shows(tmp_path):
+    from copilot.providers.construct3.agent import Run
+    from copilot.providers.construct3.reply import BUILD_NOTE, IMAGE_BUILD_NOTE
+    run = Run("给我做一个示例", [], None, False, tmp_path, None, [{"media_type": "image/png", "data": "eA=="}])
+    assert run.messages[-1]["content"][0]["text"] == "给我做一个示例" + BUILD_NOTE + IMAGE_BUILD_NOTE
+    assert Run("给我做一个示例", [], None, False, tmp_path, None).messages[-1]["content"] == "给我做一个示例" + BUILD_NOTE
 
 
 def test_attachment_log_leads_with_session_key(tmp_path, caplog):

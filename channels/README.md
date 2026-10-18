@@ -68,6 +68,8 @@ var/             本地配置、日志、会话与备份（不进 git）
 5. 面板目前只启停 `PANEL` 指定的一个平台（QQ）。要同时运行多个平台，需要每个平台各有一份启动回执；第二个平台接入时再做。
 请求包含消息、会话、历史、附件和通知回调；返回值提供 `text`、`files` 与 `trace`，可以再带一个 `record`。
 
+每个聊天最近 3 轮问答存在 `var/sessions/_history/`，最近一张图和它还要跟着的提问数存在 `var/sessions/_images/`，bot 重启后接着用。
+
 `app.py` 默认从 Copilot 仓库的相邻目录加载 Construct3-Agent-Skills 和 Construct3-RAG，可用 `.env` 的 `C3BOT_SKILLS` 和 `CONSTRUCT3_RAG` 指定。
 Construct 的工具循环、工程解析、生成与交付规则实现在 `copilot/providers/construct3/`。
 编辑器脚本由 Agent-Skills 提供，schema 与知识数据由 RAG 提供。
