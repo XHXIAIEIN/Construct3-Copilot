@@ -60,6 +60,14 @@ class PanelTests(unittest.TestCase):
         self.control.switch.assert_not_called()
         release.set()
 
+    def test_restart_needs_no_model(self):
+        done = threading.Event()
+        self.control.restart.side_effect = lambda: done.set() or {"ok": True, "message": "restarted"}
+        with self.request({"action": "restart"}) as response:
+            self.assertEqual(response.status, 202)
+        self.assertTrue(done.wait(2))
+        self.control.restart.assert_called_once_with()
+
     def test_unknown_action_is_rejected(self):
         with self.assertRaises(urllib.error.HTTPError) as error:
             self.request({"action": "shell"})

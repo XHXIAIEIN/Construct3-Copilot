@@ -159,7 +159,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
     <section data-page="settings" hidden>
       <dl class="list facts">
         <dt>模型服务</dt><dd><span id="ollama-state">读取中…</span><button id="start" hidden>启动 Ollama</button></dd>
-        <dt>QQbot</dt><dd id="gateway-state">读取中…</dd>
+        <dt>QQbot</dt><dd><span id="gateway-state">读取中…</span><button id="restart">重启</button></dd>
         <dt>Ollama 地址</dt><dd id="ollama-url">—</dd>
         <dt>模型配置文件</dt><dd><code id="config">—</code></dd>
       </dl>
@@ -632,12 +632,14 @@ function renderChrome(){
   // A count is only the live bot's: one left by a process that is gone says nothing.
   const answering=state.gateway?.alive&&Number.isInteger(state.gateway.active_answers)&&state.gateway.active_answers>0?state.gateway.active_answers:0;
   setText($("gateway-state"),gw.replace("QQbot ","")+(answering?`，正在回答 ${answering} 个`:""));setText($("ollama-url"),state.ollama.url||"—");setText($("config"),state.config_path||"var/models.json");
+  const restartArmed=armedFor("restart","gateway");setText($("restart"),restartArmed?"确认重启":"重启");$("restart").classList.toggle("confirm",restartArmed);
+  $("restart").title=restartArmed?"再点一次确认：QQbot 会断开几秒，按当前 .env 和代码重新启动":"按当前 .env 和代码重新启动 QQbot";setProp($("restart"),"disabled",busy||answering>0);
   setProp($("api-add"),"disabled",busy);setProp($("refresh"),"disabled",refreshing);setProp($("api-submit"),"disabled",busy);
 }
 function renderAll(){ if(!state)return;renderChrome();renderLocal();renderApis(); }
 function jobText(j){
   if(j.state!=="running")return j.message;
-  return {start:"正在启动 Ollama…",warm:`正在加载 ${j.model}…`,switch:`正在切换到 ${j.model}，QQbot 会重启…`,api_switch:"正在切换接口，QQbot 会重启…",
+  return {start:"正在启动 Ollama…",restart:"正在重启 QQbot…",warm:`正在加载 ${j.model}…`,switch:`正在切换到 ${j.model}，QQbot 会重启…`,api_switch:"正在切换接口，QQbot 会重启…",
     api_save:"正在保存接口…",api_delete:"正在删除接口…",api_balance:"正在查询余额…"}[j.action]||"正在处理…";
 }
 async function refresh(){
@@ -677,6 +679,7 @@ async function act(action,model){
 }
 $("search").addEventListener("input",()=>{$("groups").classList.toggle("searching",!!$("search").value);renderLocal();renderApis();});$("refresh").addEventListener("click",refresh);
 $("api-add").addEventListener("click",()=>editApi());$("start").addEventListener("click",()=>act("start"));
+$("restart").addEventListener("click",()=>{ if(armedFor("restart","gateway")){armed=null;act("restart");}else arm("restart","gateway"); });
 refresh();setInterval(()=>{refresh();refreshLog();refreshStats();},3000);
 </script>
 </html>

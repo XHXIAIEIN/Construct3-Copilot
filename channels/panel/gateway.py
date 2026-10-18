@@ -152,7 +152,7 @@ class Gateway:
         except ControlError:
             raise ControlError("无法确认会话是否空闲，已保留现有服务。") from None
         if alive:
-            raise ControlError("QQ 助手仍有运行中的会话，请等回答完成后再切换。")
+            raise ControlError("QQ 助手仍有运行中的会话，请等回答完成后再切换或重启。")
 
     def stop(self, processes: list[dict]) -> None:
         checked = []
