@@ -483,6 +483,21 @@ def _design_file(session: Path) -> Path:
     return MARKS / (_mark_file(session).stem + ".design.json")
 
 
+NOTHING_LATER = "nothing left out"  # the one item of a design's "later" that builds the whole request (game_model.py)
+
+
+def left_for_later(session: Path) -> list[str]:
+    """What the design kept for session leaves out of the request. check_design asks the model to name these when
+    it reports; a reply to "还原一模一样的效果图" built a stand-in for the picture and did not say so (2026-10-18)."""
+    try:
+        later = json.loads(_design_file(session).read_text(encoding="utf-8")).get("later")
+    except (OSError, ValueError, AttributeError):
+        return []
+    if not isinstance(later, list):
+        return []
+    return [v.strip() for v in later if isinstance(v, str) and v.strip() and v.strip() != NOTHING_LATER]
+
+
 # The last refusal of each kind per session: a model sent one refused design 32 times unchanged (2026-10-04)
 _refused: dict[tuple[str, str], tuple[str, str]] = {}
 

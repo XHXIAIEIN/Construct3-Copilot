@@ -12,6 +12,7 @@ The host agent loop consumes these tools, callbacks and validation rules:
 - tool_trace(name, arguments, result): the trace line of one tool call
 - mend_arguments(name, arguments): the JSON of a call whose arguments did not parse, or None
 - is_new(project), runtime_verified(project), pack(project): project origin, editor evidence and prepared archive
+- left_for_later(session): what the design kept for a new project leaves out of the request
 - CHECK_FAILED, PROJECT_STEPS: the message after a failed check, the extra steps a sent project allows
 """
 from __future__ import annotations
@@ -61,6 +62,7 @@ BUILD_TOOLS = ("new_project_from_", "check_design", "patch_spec")  # a trace tha
 
 is_new = newproject.is_new
 runtime_verified = newproject.runtime_verified
+left_for_later = newproject.left_for_later
 
 
 def pack(project: Path) -> Path:

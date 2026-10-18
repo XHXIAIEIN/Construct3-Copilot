@@ -19,6 +19,7 @@ log = logging.getLogger("copilot.construct3")
 DOWNLOAD_MAX = 30 * 1024 * 1024
 UNPACK_MAX = 200 * 1024 * 1024
 QUESTION_MAX = 500
+EARLIER_IMAGE_TURNS = 3  # the questions after an image it still goes with, as many turns as the chat history keeps
 
 def unpack_project(url: str, filename: str, target: Path) -> tuple[Path | None, str]:
     """Download a .c3p, .zip or .capx. A Construct 3 project (a zip of the folder project) is unpacked and its
@@ -67,6 +68,8 @@ class Application:
                            bad_request_error=bad_request_error)
         self.vision = vision
         self.projects = {}
+        # key -> the images of the last message that had some, and how many later questions they still go with
+        self.earlier_images: dict[str, tuple[list[dict], int]] = {}
 
     def describe(self):
         """The fields this application adds to an answer's record (handle's "record") and how to count them."""
@@ -134,6 +137,16 @@ class Application:
                 sent = sent or "图片"
             else:
                 unread.append(suffix or "无扩展名")
+        if images:
+            self.earlier_images[key] = (images, EARLIER_IMAGE_TURNS)
+        elif key in self.earlier_images and question:
+            # history keeps only text, so "还原一模一样的效果图" after a screenshot was built without it (2026-10-18)
+            images, left = self.earlier_images[key]
+            if left > 1:
+                self.earlier_images[key] = (images, left - 1)
+            else:
+                del self.earlier_images[key]
+            extra += "\n(The image sent earlier in this chat comes with this message again.)"
         if unread and question:
             # without the note the model answered "没看懂" to a question about a file it never saw (2026-10-04)
             readable = "Construct 3 projects, text files and images under 5 MB" if self.vision else \

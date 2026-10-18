@@ -96,6 +96,36 @@ class AdapterTests(unittest.TestCase):
         self.assertFalse(run.send)
 
 
+    def test_design_names_what_it_left_for_later(self):
+        session = self.root / "session"
+        with patch.object(newproject, "MARKS", self.root / "marks"):
+            self.assertEqual(newproject.left_for_later(session), [])
+            newproject.MARKS.mkdir()
+            design = newproject._design_file(session)
+            design.write_text(json.dumps({"later": ["原图没放进来，用纯色代替"]}, ensure_ascii=False), encoding="utf-8")
+            self.assertEqual(newproject.left_for_later(session), ["原图没放进来，用纯色代替"])
+            design.write_text(json.dumps({"later": [newproject.NOTHING_LATER]}), encoding="utf-8")
+            self.assertEqual(newproject.left_for_later(session), [])
+
+
+    def test_built_reply_names_what_was_left_for_later(self):
+        agent = Agent.__new__(Agent)
+        agent.usage = copilot.NullUsage()
+        project = self.root / "session"
+
+        def build(run):
+            run.trace.append("new_project_from_spec({})")
+            run.project, run.send = project, True
+            return "示例做好了。"
+
+        kb = "copilot.providers.construct3.agent.kb"
+        with patch.object(agent, "_answer", side_effect=build), patch(f"{kb}.is_new", return_value=True),                 patch(f"{kb}.runtime_verified", return_value=True), patch(f"{kb}.pack", return_value=self.root / "a.c3p"),                 patch(f"{kb}.edits.edit_count", return_value=0),                 patch(f"{kb}.left_for_later", return_value=["原图没放进来，用纯色代替"]):
+            text, trace = agent._answer_in_session("做个示例", None, None, False, [], project, None)
+        self.assertTrue(text.startswith("示例做好了。"))
+        self.assertIn("这次没做：原图没放进来，用纯色代替", text)
+        self.assertIn("left for later named", trace)
+
+
     def test_preview_nonzero_and_timeout_are_refusals(self):
         with patch.object(newproject, "EDITOR_CHECK", True):
             for code in (1, 2, 3, 124):
