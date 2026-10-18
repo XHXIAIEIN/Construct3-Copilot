@@ -8,6 +8,8 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .codestamp import CodeStamp
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -17,12 +19,14 @@ class GatewayReceipt:
     def __init__(self, data_dir: Path) -> None:
         self.path = data_dir / "runtime" / "gateway.json"
         self.pid = os.getpid()
+        self.code = CodeStamp().stamp()  # once, as the process starts: the code it has imported
         self.record: dict | None = None
         self._lock = threading.Lock()  # answers run in worker threads
 
     def starting(self) -> None:
         with self._lock:
-            self.record = {"status": "starting", "pid": self.pid, "started_at": utc_now(), "active_answers": 0}
+            self.record = {"status": "starting", "pid": self.pid, "started_at": utc_now(), "active_answers": 0,
+                           "code": self.code}
             self._write()
 
     def ready(self) -> None:

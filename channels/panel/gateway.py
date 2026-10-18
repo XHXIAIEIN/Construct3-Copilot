@@ -11,6 +11,7 @@ import subprocess
 import time
 from pathlib import Path
 
+from ..core.codestamp import CodeStamp
 from ..core.receipt import utc_now
 from ..platforms import PANEL, PLATFORMS, Platform
 from .base import ControlError, detached, parse_date, same_path
@@ -45,6 +46,7 @@ class Gateway:
         self.python = repo / ".venv" / "Scripts" / "python.exe"
         self.env = env
         self.data = data
+        self.code = CodeStamp(repo)
 
     def process(self, pid: int) -> dict | None:
         if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 0:
@@ -109,9 +111,22 @@ class Gateway:
     def receipt(self) -> dict:
         try:
             value = json.loads((self.data() / "runtime" / "gateway.json").read_text(encoding="utf-8"))
-            return {key: value[key] for key in ("status", "pid", "started_at", "ready_at", "active_answers") if key in value}
+            return {key: value[key] for key in ("status", "pid", "started_at", "ready_at", "active_answers", "code") if key in value}
         except (OSError, ValueError, TypeError):
             return {}
+
+    def code_change(self, receipt: dict) -> dict:
+        """Whether the process the receipt names runs older code than this checkout now has. The receipt's code
+        stamp decides; a receipt from before stamps falls back to files modified after its start. changed: the
+        files a restart would pick up, newest first; empty when only their content was compared."""
+        try:
+            started = parse_date(receipt["started_at"]).timestamp()
+        except (AttributeError, KeyError, TypeError, ValueError):
+            return {"stale": False, "changed": []}
+        changed = self.code.changed_after(started)
+        code = receipt.get("code")
+        stale = code != self.code.stamp() if isinstance(code, str) else bool(changed)
+        return {"stale": stale, "changed": changed if stale else []}
 
     def identity(self, receipt: dict) -> list[dict]:
         if not isinstance(receipt.get("pid"), int) or isinstance(receipt.get("pid"), bool) or receipt["pid"] <= 0:

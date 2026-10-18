@@ -76,7 +76,8 @@ class ModelControl:
                 "current": {"base_url": public_base, "model": model.model,
                             "reasoning": env.get("C3BOT_REASONING", "none")},
                 "ollama": {"online": online, "url": local_url(config["url"])}, "models": models,
-                "gateway": {**receipt, "alive": alive, "identity_verified": verified}, "config_path": str(self.config_path)}
+                "gateway": {**receipt, "alive": alive, "identity_verified": verified,
+                            **({"code_change": self.gateway.code_change(receipt)} if alive else {})}, "config_path": str(self.config_path)}
 
     def start(self) -> dict:
         with self.lock:
