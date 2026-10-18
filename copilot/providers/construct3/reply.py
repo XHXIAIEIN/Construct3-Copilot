@@ -54,6 +54,11 @@ IMAGE_BUILD_NOTE = ("\n(The example is to look like the image. Before the design
                     "in the design's request what it shows: each part, its shape and how it sits (flat, receding, "
                     "hanging straight down, in front of another), and its colors. Build every part; a texture or a "
                     "picture with content is a TiledBg in the checker, tinted to its colour.)")
+# a how-to question that an example shows better than steps in words (plugin.presearch decides): the example is
+# made the way a requested one is, and the reply only says what to look at in it
+SHOW_NOTE = ("\n(Answer with a small example that shows this: make it with the project tools (design_guide, "
+             "check_design, new_project_from_spec) and it is sent after your reply. In the reply, name the way in "
+             f"one sentence and what to look at in the example, in at most {SENT_MAX} characters.)")
 PROMISE = re.compile(r"(文件|c3p|工程|项目|例子)[^。！\n]*((发|传)(给|到)?你|发送|发来|发出|稍后|随后)"
                      r"|(发|传)(给|到)?你[^。！\n]*(文件|c3p|工程|例子)")
 

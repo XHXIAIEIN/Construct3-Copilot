@@ -167,6 +167,31 @@ def test_reply_limit_steps_up_with_what_the_reply_needs():
     assert f"under {EVENTS_MAX} characters" in asked[-1]
 
 
+def test_a_how_to_question_is_shown_in_an_example(tmp_path):
+    from copilot.providers.construct3.agent import Run
+    from copilot.providers.construct3.reply import IMAGE_BUILD_NOTE, LENGTH_NOTE, SHOW_NOTE
+    run = Run("怎么做斜切效果？", [], None, False, tmp_path, None)
+    assert run.show_example() and run.build and run.shown
+    assert run.messages[-1]["content"] == "怎么做斜切效果？" + SHOW_NOTE and "show ask" in run.trace
+    pictured = Run("这种效果怎么做？", [], None, False, tmp_path, None, [{"media_type": "image/png", "data": "eA=="}])
+    assert pictured.show_example() and pictured.messages[-1]["content"][0]["text"].endswith(SHOW_NOTE + IMAGE_BUILD_NOTE)
+    # no folder to make it in, a project of their own, or an example already asked for
+    assert not Run("怎么做斜切效果？", [], None, False, None, None).show_example()
+    held = Run("怎么做斜切效果？", [], tmp_path, False, tmp_path, None)
+    assert not held.show_example() and held.messages[-1]["content"].endswith(LENGTH_NOTE)
+    assert not Run("做个斜切的例子", [], None, False, tmp_path, None).show_example()
+
+
+def test_presearch_says_whether_to_show():
+    from unittest.mock import patch
+    from copilot.providers.construct3 import plugin
+    with patch.object(plugin, "run_script", return_value="found"):
+        assert plugin.presearch("怎么做斜切效果呢？", lambda m: {"words": ["mesh"], "show": True}) == (
+            ["mesh"], "found", True)
+        assert plugin.presearch("lerp 受帧率影响吗？", lambda m: {"words": ["lerp"]})[2] is False
+        assert plugin.presearch("lerp 受帧率影响吗？", lambda m: {"words": ["lerp"], "show": "yes"})[2] is False
+
+
 def test_numbered_steps_each_take_a_line():
     from copilot.providers.construct3.reply import step_lines
     inline = "要用网格变形：1. 右键精灵 → 网格，行列都填 2。2. 把上边两点往里拖。3、如果有接缝，就把行数调多。"
