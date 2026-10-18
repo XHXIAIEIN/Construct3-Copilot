@@ -22,6 +22,9 @@ class ModelSettings:
     protocol: str
     timeout: int
     request_options: dict = field(default_factory=dict)
+    # the tool loop of an answer that makes or changes a project: thinking on, with room and time for it
+    project_options: dict = field(default_factory=dict)
+    project_timeout: int = 120
     local: bool = False
     zhipu: bool = False
     siliconflow: bool = False
@@ -40,14 +43,35 @@ def from_settings(settings: dict) -> ModelSettings:
                 else {"enable_thinking": False, "max_tokens": 6000} if siliconflow
                 else {"thinking": {"type": "disabled"}, "max_tokens": 6000} if zhipu
                 else {"thinking": {"type": "disabled"}} if "api.deepseek.com" in base_url else {})
+    protocol = protocol_of({"protocol": settings.get("C3BOT_API_PROTOCOL"), "base_url": base_url})
+    # thinking on, for making or changing a project; Claude Opus 5.5 always thinks, so there only its effort goes up
+    # (default medium). A model none of these names gets nothing, as before
+    effort = settings.get("C3BOT_REASONING")
+    think = ({"reasoning_effort": effort if effort and effort != "none" else "medium", "max_tokens": 16000} if local
+             else {"enable_thinking": True, "max_tokens": 16000} if siliconflow
+             else {"thinking": {"type": "enabled"}, "max_tokens": 16000} if zhipu
+             else {"thinking": {"type": "enabled"}, "max_tokens": 16000} if "api.deepseek.com" in base_url
+             else {"thinking": {"type": "adaptive"}, "output_config": {"effort": "high"}, "max_tokens": 16000}
+             if protocol == "anthropic" else {})
     if settings.get("C3BOT_EXTRA_BODY"):
         no_think = json.loads(settings["C3BOT_EXTRA_BODY"])
+        think = no_think  # a switch set by hand holds for every answer unless the project one is set too
+    if settings.get("C3BOT_EXTRA_BODY_PROJECT"):
+        think = json.loads(settings["C3BOT_EXTRA_BODY_PROJECT"])
+    # C3BOT_THINKING: auto (default) thinks for projects only, off never asks for it, on asks for it in every call
+    mode = (settings.get("C3BOT_THINKING") or "auto").strip().lower()
+    if mode == "off":
+        think = no_think
+    elif mode == "on":
+        no_think = think
+    timeout = 600 if local else 300 if siliconflow or zhipu else 120  # a local model reads a long prompt slowly
     return ModelSettings(
         base_url=base_url,
         model=settings.get("C3BOT_MODEL") or settings.get("DEEPSEEK_MODEL") or "deepseek-flash",
-        protocol=protocol_of({"protocol": settings.get("C3BOT_API_PROTOCOL"), "base_url": base_url}),
-        timeout=600 if local else 300 if siliconflow or zhipu else 120,  # a local model reads a long prompt slowly
-        request_options=no_think, local=local, zhipu=zhipu, siliconflow=siliconflow,
+        protocol=protocol, timeout=timeout,
+        request_options=no_think, project_options=think,
+        project_timeout=timeout if think == no_think else max(timeout, 600),
+        local=local, zhipu=zhipu, siliconflow=siliconflow,
         # logs of a TTS server sharing the GPU, separated by ";"; empty: never wait
         yield_logs=tuple(p for p in (settings.get("C3BOT_YIELD_LOGS") or "").split(";") if p),
     )

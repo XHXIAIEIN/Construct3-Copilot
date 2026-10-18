@@ -36,7 +36,9 @@ def create_application(*, settings: dict, data_dir: Path, usage: Usage | None = 
     model = model_settings.from_settings(settings)
     usage = usage or Usage(data_dir)
     application = Application(create_client(model, settings, usage), model=model.model,
-                              request_options=model.request_options, timeout=model.timeout, usage=usage,
+                              request_options=model.request_options, timeout=model.timeout,
+                              project_options=model.project_options, project_timeout=model.project_timeout,
+                              usage=usage,
                               bad_request_error=BadRequestError,
                               # every Claude model reads images; an OpenAI-compatible server may serve one that does not
                               vision=model.protocol == "anthropic")

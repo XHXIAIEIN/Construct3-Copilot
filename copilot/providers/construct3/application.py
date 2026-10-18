@@ -59,10 +59,12 @@ def load_archive(data: bytes, filename: str, target: Path, depth: int = 0) -> tu
 
 
 class Application:
-    def __init__(self, client, *, model, request_options=None, timeout=120, usage=None, bad_request_error=(),
-                 vision=False):
+    def __init__(self, client, *, model, request_options=None, timeout=120, project_options=None,
+                 project_timeout=None, usage=None, bad_request_error=(), vision=False):
         """vision: the model reads images, which then reach it with the question instead of a note."""
-        self.agent = Agent(client, model=model, request_options=request_options, timeout=timeout, usage=usage, bad_request_error=bad_request_error)
+        self.agent = Agent(client, model=model, request_options=request_options, timeout=timeout,
+                           project_options=project_options, project_timeout=project_timeout, usage=usage,
+                           bad_request_error=bad_request_error)
         self.vision = vision
         self.projects = {}
 
