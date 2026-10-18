@@ -175,7 +175,7 @@ class Agent:
         run = Run(question, history, project, group, session, notify, images)
         if calls is not None:
             run.calls = calls
-        text = ""
+        text, tried = "", False
         try:
             text = self._answer(run)
             tried = any(t.startswith(kb.BUILD_TOOLS) for t in run.trace)
@@ -198,6 +198,11 @@ class Agent:
             text, dropped = drop_promise(text)
             if dropped:
                 run.trace.append("promise of a file dropped")
+        if outbox and run.session and tried and run.project and kb.is_new(run.project):
+            later = kb.left_for_later(run.session)
+            if later:
+                text += "\n这次没做：" + "；".join(later)
+                run.trace.append("left for later named")
         if outbox and run.project and kb.is_new(run.project) and not kb.runtime_verified(run.project):
             text += "\n工程通过结构检查，尚未在编辑器中验证运行。"
         text, note = scrub(text)
