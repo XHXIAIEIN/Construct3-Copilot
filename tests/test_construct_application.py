@@ -7,7 +7,7 @@ import zipfile
 
 import pytest
 
-from copilot.providers.construct3.application import Application, load_archive
+from copilot.providers.construct3.application import EARLIER_IMAGE_TURNS, Application, load_archive
 from copilot.providers.construct3.reply import is_build_ask
 
 
@@ -73,6 +73,24 @@ def test_image_reaches_a_model_that_reads_images(tmp_path):
     question = application.agent.answer.call_args.args[0]
     assert question == "这种斜切效果怎么做（随这条消息发来了图片）"
     assert application.agent.answer.call_args.kwargs["images"] == [{"media_type": "image/png", "data": "aW1hZ2U="}]
+
+
+def test_image_goes_with_the_questions_after_it(tmp_path):
+    application = Application(Mock(), model="model-placeholder", vision=True)
+    application.agent.answer = Mock(return_value=("ok", []))
+    attachment = {"filename": "photo.png", "content_type": "image/png", "size": 5, "url": "https://example.test/p"}
+    request = {"session_id": "c2c:placeholder", "session_dir": tmp_path}
+    with patch("copilot.providers.construct3.attachments.download", return_value=b"image"):
+        application.handle({**request, "text": "这种斜切效果怎么做", "attachments": [attachment]})
+    image = [{"media_type": "image/png", "data": "aW1hZ2U="}]
+    for _ in range(EARLIER_IMAGE_TURNS):
+        application.handle({**request, "text": "帮我做一个示例，还原一模一样的效果图"})
+        assert application.agent.answer.call_args.kwargs["images"] == image
+        assert "image sent earlier" in application.agent.answer.call_args.args[0]
+    application.handle({**request, "text": "再改一下颜色"})
+    assert application.agent.answer.call_args.kwargs["images"] == []
+    application.handle({"session_id": "c2c:other", "session_dir": tmp_path, "text": "这种斜切效果怎么做"})
+    assert application.agent.answer.call_args.kwargs["images"] == []
 
 
 def test_image_is_a_note_for_a_text_model(tmp_path):
