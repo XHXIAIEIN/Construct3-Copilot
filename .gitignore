@@ -43,3 +43,6 @@ qdrant_storage/
 # Channels runtime data and credentials
 channels/var/
 channels/.env
+
+# Removed files, kept locally
+.trash/

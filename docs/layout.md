@@ -18,7 +18,6 @@ tests/
   channels/                      通道和面板的离线测试，含边界测试
   e2e/construct3/                经 QQ 通道的终端入口执行的 C3 交互验证脚本
 docs/                            接口与使用说明
-.claude/                         Claude 客户端插件入口
 ```
 
 `Construct3-Agent-Skills` 提供编辑器脚本和生成辅助函数。
