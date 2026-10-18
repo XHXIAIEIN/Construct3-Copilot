@@ -4,7 +4,7 @@ botpy 1.2 uploads only by public URL; this PC has none, so the file goes up in p
 upload_prepare -> PUT each part to its presigned URL -> upload_part_finish per part -> files with upload_id,
 which returns file_info for the message. The upload sends no message, so a passive reply is still free.
 
-    python -m channels.qq.files FILE --user OPENID      send FILE as an active C2C message (needs QQ_APPID, QQ_SECRET)
+    python -m channels.platforms.qq.files FILE --user OPENID      send FILE as an active C2C message (needs QQ_APPID, QQ_SECRET)
 """
 from __future__ import annotations
 
@@ -126,7 +126,7 @@ def token_auth(token) -> Auth:
 
 def main() -> None:
     from botpy.robot import Token
-    from ..settings import load
+    from ...settings import load
 
     settings = load()
     parser = argparse.ArgumentParser(description="send a file as an active message to a user or a group")

@@ -1,0 +1,3 @@
+# the QQ platform: the open platform's SDK and its file upload
+qq-botpy>=1.2
+aiohttp>=3.9

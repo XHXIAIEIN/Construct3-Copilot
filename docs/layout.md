@@ -11,8 +11,9 @@ channels/
   settings.py                    读取 channels/.env，由入口读一次后显式传下去；数据目录只在这里算
   app.py                         唯一接到 copilot 的地方：造模型客户端，再造 Construct 应用
   model/                         模型连接：设置、OpenAI 兼容和 Anthropic 客户端、用量、GPU 让位
-  core/                          与平台无关的部分：启动回执、回答记录
-  qq/                            QQ 通道：连接、文件上传、终端提问（--cli）
+  core/                          与平台无关的部分：一问一答（chat.py）、平台入口和 --cli（entry.py）、启动回执、回答记录
+  platforms/                     一个文件夹一个平台；__init__.py 是面板读的平台登记表
+    qq/                          QQ：连接、引用消息、分段回复、文件上传
   panel/                         面板：模型切换（Ollama、.env、QQ 进程各一个模块）、接口配置、日志与统计
 tests/
   channels/                      通道和面板的离线测试，含边界测试
@@ -25,7 +26,8 @@ docs/                            接口与使用说明
 Copilot 的 Construct 插件通过显式参数接收这些安装位置及运行数据目录。
 每个进程绑定一个宿主，避免会话之间混用路径。
 
-`copilot/` 不 import `channels`；`channels/` 里只有 `app.py` import `copilot`，由 `tests/channels/test_boundaries.py` 检查。
+`copilot/` 不 import `channels`；`channels/` 里只有 `app.py` import `copilot`。
+`core/` 和 `model/` 不 import 平台和面板，平台之间互不 import，面板只读平台登记表。这些都由 `tests/channels/test_boundaries.py` 检查。
 `channels/app.py` 把模型客户端和运行位置交给 Copilot 的 Construct 应用，其余通道模块只认得一个有 `handle(request)` 的对象。
 生成器子进程继承任务编号和同一运行器的数据目录，因此工具调用归属于父任务。
 

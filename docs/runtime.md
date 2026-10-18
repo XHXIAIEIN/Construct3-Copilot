@@ -46,11 +46,11 @@ CONSTRUCT3_RAG=D:/code/Construct3-RAG
 ```powershell
 .venv/Scripts/python -m pip install -r requirements.txt -r channels/requirements.txt
 .venv/Scripts/python -m pytest tests/channels
-.venv/Scripts/python -m channels.qq
+.venv/Scripts/python -m channels.platforms.qq
 ```
 
 日常从 `channels/start.cmd` 打开面板，由面板启动或重启 QQ 通道。
-`python -m channels.qq --cli "问题"` 在终端问一次，打印回复和工具调用，不连接 QQ。
+`python -m channels.platforms.qq --cli "问题"` 在终端问一次，打印回复和工具调用，不连接 QQ。
 
 QQ 的一次对话对应一个父任务，各项工具调用是它的子任务。
 机器人会话通过消息入口和 Copilot 会话锁串行处理。

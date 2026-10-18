@@ -10,7 +10,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 import asyncio
-from channels.qq import bot
+from channels.core import chat
+from channels.platforms.qq import bot
 from channels.core.receipt import GatewayReceipt
 
 
@@ -53,7 +54,7 @@ class ChatSerializationTests(unittest.IsolatedAsyncioTestCase):
         release = asyncio.Event()
         order = []
 
-        @bot.serialized_sessions
+        @chat.serialized_sessions
         async def handle(key, label):
             order.append(label)
             if label == "first":

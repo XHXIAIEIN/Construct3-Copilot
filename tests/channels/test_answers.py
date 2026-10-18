@@ -89,20 +89,20 @@ class AnswerLogTests(unittest.TestCase):
         self.assertEqual(json.loads(receipt.path.read_text(encoding="utf-8"))["active_answers"], 0)
 
     def test_cli_writes_its_answer_and_leaves_the_receipt(self):
-        from channels.qq.bot import ask_cli
+        from channels.core.entry import ask_cli
         usage = Usage(self.data)
         with redirect_stdout(io.StringIO()):
-            ask_cli(Recording(usage, {"tools": []}), "example", data_dir=self.data, usage=usage)
+            ask_cli(Recording(usage, {"tools": []}), "example", channel="qq", data_dir=self.data, usage=usage)
         line = self.lines()[0]
         self.assertEqual((line["chat"], line["session"], line["calls"], line["app"]), ("cli", "cli", 2, {"tools": []}))
         self.assertFalse((self.data / "runtime" / "gateway.json").exists())
         with redirect_stdout(io.StringIO()), self.assertRaises(RuntimeError):
-            ask_cli(Recording(fail=True), "example", data_dir=self.data)
+            ask_cli(Recording(fail=True), "example", channel="qq", data_dir=self.data)
         self.assertEqual(self.lines()[-1]["ok"], False)
 
     def test_qq_message_writes_one_line_after_its_file_is_sent(self):
         import botpy
-        from channels.qq import bot
+        from channels.platforms.qq import bot
         clients, usage = [], Usage(self.data)
         made = self.data / "made.c3p"
         made.write_bytes(b"x" * 10)

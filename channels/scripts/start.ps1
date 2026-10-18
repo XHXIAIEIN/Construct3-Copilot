@@ -13,7 +13,7 @@ if ($LASTEXITCODE -ne 0 -or -not $botData) { throw 'The data folder could not be
 $processes = @(Get-CimInstance Win32_Process)
 $launchers = @($processes | Where-Object {
     $_.ExecutablePath -eq $botPython -and $_.CommandLine -notmatch '--cli' -and
-    $_.CommandLine -match '-m\s+channels\.(qq|grader)\b'
+    $_.CommandLine -match '-m\s+channels\.(platforms\.qq|qq|grader)\b'  # channels.qq: started before the move
 })
 $ownedIds = @($launchers | ForEach-Object { $_.ProcessId })
 $processes | Where-Object { $_.ParentProcessId -in $ownedIds -and $_.Name -eq 'python.exe' } |
@@ -28,10 +28,10 @@ if ($Ollama) {
         if ($LASTEXITCODE -ne 0) { throw 'Ollama could not start. Open the model panel to check its settings.' }
     } finally { Pop-Location }
 }
-$services = @('qq')
+$services = @('platforms.qq')
 if ($Grader) { $services += 'grader' }
 foreach ($serviceName in $services) {
-    $logName = if ($serviceName -eq "qq") { "bot" } else { "grader" }
+    $logName = if ($serviceName -eq 'platforms.qq') { 'bot' } else { 'grader' }
     $logDirectory = Join-Path $botData "logs\$logName"
     New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
     Start-Process -FilePath $botPython -ArgumentList '-u', '-m', "channels.$serviceName" -WorkingDirectory $repo -WindowStyle Hidden `

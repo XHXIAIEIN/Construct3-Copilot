@@ -1,19 +1,16 @@
-"""Read the tail of the bot's and the panel's own logs, with the credentials the panel knows about removed."""
+"""Read the tail of the platforms', the model's and the panel's own logs, with the credentials the panel knows about removed."""
 from __future__ import annotations
 
 import json
 import re
 
+from ..platforms import PLATFORMS
 from .api_profiles import SEEDS, key_names
 
-# The only files the panel shows: (id, label, base, path). "data" is the bot's data folder (QQBOT_DATA, default var/),
-# "home" the project folder. Clients name a log by id and never send a path.
-LOGS = [
-    ("bot", "QQ 对话", "data", "logs/bot/bot.log"),
-    ("answers", "QQ 回答记录", "data", "logs/qq/answers.jsonl"),
-    ("bot-output", "QQ 进程输出", "data", "logs/bot/model-control.err.log"),
-    ("bot-service", "QQ 进程输出（start.ps1）", "data", "logs/bot/service.stderr.log"),
-    ("botpy", "QQ 连接", "data", "logs/bot/botpy.log"),
+# The only files the panel shows: (id, label, base, path). "data" is the channels' data folder (QQBOT_DATA, default
+# var/), "home" the project folder. Each platform lists its own (channels/platforms/__init__.py); the rest are the
+# model's and the panel's. Clients name a log by id and never send a path.
+LOGS = [(ident, label, "data", path) for platform in PLATFORMS.values() for ident, label, path in platform.logs] + [
     ("usage", "用量", "data", "logs/bot/usage.log"),
     ("panel", "面板", "home", "var/logs/models/panel.log"),
     ("panel-output", "面板错误输出", "home", "var/logs/models/panel.stderr.log"),

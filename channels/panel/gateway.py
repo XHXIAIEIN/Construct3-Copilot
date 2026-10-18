@@ -1,4 +1,4 @@
-"""The QQ channel's process: find it, check it is the one its receipt names, stop it, start it and wait for ready.
+"""The process of the platform the panel runs (channels/platforms PANEL, now QQ): find it, check it is the one its receipt names, stop it, start it and wait for ready.
 
 The channel writes <data>/runtime/gateway.json (channels/core/receipt.py); the panel trusts it only for a process
 that is alive, runs this checkout's Python and was created when the receipt says it started."""
@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 
 from ..core.receipt import utc_now
+from ..platforms import PANEL, PLATFORMS, Platform
 from .base import ControlError, detached, parse_date, same_path
 
 
@@ -36,8 +37,9 @@ def _command_args(command: str) -> list[str]:
 class Gateway:
     READY_TIMEOUT = 20
 
-    def __init__(self, home: Path, repo: Path, env, data):
+    def __init__(self, home: Path, repo: Path, env, data, platform: Platform = PLATFORMS[PANEL]):
         """env and data: callables returning the current .env values and data folder, which a switch changes."""
+        self.platform = platform
         self.home = home
         self.repo = repo
         self.python = repo / ".venv" / "Scripts" / "python.exe"
@@ -93,11 +95,14 @@ class Gateway:
             raise ControlError("无法确认 QQ 是否已运行，已保留现有服务。") from None
 
     def is_channel(self, process: dict) -> bool:
-        """python -m channels.qq, or the bot.py of the qqbot checkout this folder used to be."""
+        """python -m with the platform's module or one it had before a move, or the bot.py of the qqbot checkout
+        this folder used to be."""
         args = _command_args(process.get("CommandLine") or "")[1:]
         if args and args[0] == "-u":
             args = args[1:]
-        if args == ["-m", "channels.qq"] or args == ["bot.py"]:
+        if args[:1] == ["-m"] and len(args) == 2 and args[1] in (self.platform.module, *self.platform.legacy_modules):
+            return True
+        if args == ["bot.py"]:
             return True
         return len(args) == 1 and Path(args[0]).is_absolute() and same_path(args[0], self.home / "bot.py")
 
@@ -166,16 +171,18 @@ class Gateway:
                 raise ControlError("QQ 进程未能停止，请检查本地服务。")
 
     def launch(self):
-        """Start python -m channels.qq with the .env settings removed from its environment, so it reads .env."""
-        if not self.python.is_file() or not (self.home / "qq" / "bot.py").is_file():
+        """Start python -m <the platform's module> with the .env settings removed from its environment, so it
+        reads .env."""
+        entry = self.repo.joinpath(*self.platform.module.split("."), "__main__.py")
+        if not self.python.is_file() or not entry.is_file():
             raise ControlError("QQ 启动文件或项目 Python 不完整。")
         env = os.environ.copy()
         for key in set(self.env()) | {key for key in env if key.startswith(("C3BOT_", "QQBOT_"))}:
             env.pop(key, None)
         env.update(PYTHONUNBUFFERED="1", PYTHONUTF8="1", PYTHONPATH=str(self.repo))
-        logs = self.data() / "logs" / "bot"
+        logs = self.data() / self.platform.process_logs
         started = utc_now()
-        process = detached([str(self.python), "-u", "-m", "channels.qq"], env,
+        process = detached([str(self.python), "-u", "-m", self.platform.module], env,
                            logs / "model-control.out.log", logs / "model-control.err.log", cwd=self.home)
         process._control_started_at = started
         return process

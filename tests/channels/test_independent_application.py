@@ -22,12 +22,13 @@ class Echo:
 
 class IndependentApplicationTests(unittest.TestCase):
     def test_cli_passes_the_request_and_prints_the_delivery(self):
-        from channels.qq.bot import ask_cli
+        from channels.core.entry import ask_cli
+        from channels.platforms.qq.bot import chunks
         application = Echo()
         out = io.StringIO()
         (REPO / ".tmp").mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=REPO / ".tmp") as folder, redirect_stdout(out):
-            ask_cli(application, "example", data_dir=Path(folder))
+            ask_cli(application, "example", channel="qq", data_dir=Path(folder), split=chunks)
             self.assertTrue((Path(folder) / "logs" / "qq" / "answers.jsonl").is_file())
         request = application.requests[0]
         self.assertEqual((request["text"], request["session_id"], request["history"], request["attachments"]),
@@ -38,7 +39,7 @@ class IndependentApplicationTests(unittest.TestCase):
     def test_transport_model_and_panel_load_without_copilot_or_a_model_client(self):
         code = '''
 import json, sys
-import channels.qq.bot, channels.qq.files, channels.core.receipt, channels.panel.server, channels.model.settings
+import channels.platforms.qq.bot, channels.platforms.qq.files, channels.core.receipt, channels.panel.server, channels.model.settings
 print(json.dumps(sorted(m for m in sys.modules if m == "copilot" or m.startswith("copilot.") or m == "openai")))
 '''
         result = subprocess.run([sys.executable, "-c", code], cwd=REPO, capture_output=True, text=True, timeout=20)

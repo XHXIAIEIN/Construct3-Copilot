@@ -1,20 +1,19 @@
-"""QQ transport for any application with handle(request); channels/qq/__main__.py passes it in."""
+"""QQ transport for any application with handle(request); __main__.py passes it in. What is not QQ's own (the
+daily limit, history, session folders, the answer log) is channels/core/chat.py."""
 from __future__ import annotations
 
 import json
 import asyncio
 import logging
 import re
-from collections import defaultdict, deque
-from datetime import date
-from functools import wraps
 from pathlib import Path
 from types import SimpleNamespace
 
 import aiohttp
 
-from ..core import answers as answer_log
-from ..core.receipt import GatewayReceipt
+from ...core import answers as answer_log
+from ...core.chat import Chats, serialized_sessions
+from ...core.receipt import GatewayReceipt
 from . import files as qqfile
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -34,14 +33,8 @@ for _handler in logging.getLogger().handlers:
 
 CHUNK = 1500
 MAX_REPLIES = 4  # a C2C message takes at most 4 passive replies, a group message 5
-HISTORY_TURNS = 3
 URL = re.compile(r"https?://\S+")
-QUESTION_MAX = 500  # characters passed to the model
-DAILY_LIMIT = 30  # questions per user per day
-
-
-def safe_name(key):
-    return re.sub(r"[^A-Za-z0-9_-]", "_", key)
+QUESTION_MAX = 500  # characters of a quoted message passed to the model
 
 
 def chunks(text: str) -> list[str]:
@@ -50,32 +43,12 @@ def chunks(text: str) -> list[str]:
     return parts[:MAX_REPLIES]
 
 
-def serialized_sessions(handler):
-    """Keep a chat's attachment, project and reply changes in message order."""
-    locks: dict[str, asyncio.Lock] = {}
-
-    @wraps(handler)
-    async def locked(key: str, *args, **kwargs):
-        async with locks.setdefault(key, asyncio.Lock()):
-            return await handler(key, *args, **kwargs)
-
-    return locked
-
-
 def chat_of(key: str) -> str:
     return "private" if key.startswith("c2c:") else "group"
 
 
-def size_of(path: Path) -> int | None:
-    try:
-        return path.stat().st_size
-    except OSError:
-        return None
-
-
 def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
     """usage: the model client's token counter, which the answer log reads; None leaves the counts at 0."""
-    sessions = data_dir / "sessions"
     log_dir = data_dir / "logs" / "bot"
     log_dir.mkdir(parents=True, exist_ok=True)
     handler = logging.FileHandler(log_dir / "bot.log", encoding="utf-8")
@@ -85,21 +58,16 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
     import botpy
     from botpy.message import C2CMessage, GroupMessage
 
-    history: dict[str, deque] = defaultdict(lambda: deque(maxlen=HISTORY_TURNS * 2))
-    asked: dict[tuple[str, date], int] = defaultdict(int)  # questions per chat and day
     gateway = GatewayReceipt(data_dir)
-    answers = answer_log.AnswerLog(data_dir, "qq")
+    chats = Chats(application, data_dir=data_dir, channel="qq", usage=usage, receipt=gateway)
 
     @serialized_sessions
     async def handle(key: str, question: str, reply, attachments=(), send_file=None) -> None:
         """send_file(path, msg_seq) sends a file as a reply to the same message."""
-        log.info("%s asks: %s", key, question)
-        asked[(key, date.today())] += 1
-        if asked[(key, date.today())] > DAILY_LIMIT:
-            log.info("daily limit reached for %s", key)
-            await reply(content=f"今天的 {DAILY_LIMIT} 个问题已经用完，明天再来。", msg_seq=1)
+        refusal = chats.admit(key, question)
+        if refusal:
+            await reply(content=refusal, msg_seq=1)
             return
-        outbox: list[Path] = []  # files the answer sends after its text
         notes: list[str] = []  # the busy note sent while the answer is being made, a passive reply of its own
         loop = asyncio.get_running_loop()
 
@@ -107,22 +75,11 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
             notes.append(note)
             log.info("note: %s", note)
             asyncio.run_coroutine_threadsafe(reply(content=note, msg_seq=len(notes)), loop)
-        answer = await asyncio.to_thread(answer_log.handle, application, {
-            "text": question, "session_id": key, "session_dir": sessions / safe_name(key),
-            "history": list(history[key]), "group": key.startswith("group:"), "notify": notify,
-            "attachments": [{"filename": a.filename or "", "url": a.url or "", "content_type": a.content_type or "", "size": a.size or 0} for a in attachments],
-        }, usage=usage, receipt=gateway)
-        if answer.error is None:
-            text, trace = answer.result.get("text", ""), answer.result.get("trace", [])
-            outbox = [Path(p) for p in answer.result.get("files", [])]
-        else:
-            log.error("application failed", exc_info=answer.error)
-            text, trace = "应用处理失败，请稍后重试。", []
-        log.info("%s tools: %s", key, trace)
-        log.info("%s reply: %s", key, text.replace("\n", " / "))
-        history[key].extend([{"role": "user", "content": question}, {"role": "assistant", "content": text}])
-        files = outbox[:1] if send_file else []
-        parts = chunks(text)[: MAX_REPLIES - len(files) - len(notes)]  # the file and the note are replies to the same message too
+        turn = await chats.ask(key, question, group=key.startswith("group:"), notify=notify, attachments=[
+            {"filename": a.filename or "", "url": a.url or "", "content_type": a.content_type or "", "size": a.size or 0}
+            for a in attachments])
+        files = turn.files[:1] if send_file else []
+        parts = chunks(turn.text)[: MAX_REPLIES - len(files) - len(notes)]  # the file and the note are replies to the same message too
         for seq, part in enumerate(parts, start=len(notes) + 1):
             await reply(content=part, msg_seq=seq)
         sent = set()
@@ -135,9 +92,8 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
                 log.warning("%s file send failed: %s", key, exc)
                 if seq < MAX_REPLIES:
                     await reply(content="文件未发送成功，请稍后重试。", msg_seq=seq + 1)
-        answers.write(answer, chat=chat_of(key), session=key,
-                      files_in=[answer_log.file_fact(a.filename, a.size) for a in attachments],
-                      files_out=[answer_log.file_fact(p.name, size_of(p), sent=p in sent) for p in outbox])
+        chats.record(turn, chat=chat_of(key), session=key, sent=sent,
+                     files_in=[answer_log.file_fact(a.filename, a.size) for a in attachments])
 
     # botpy 1.2 drops msg_elements, where a quoted message (message_type 103) carries its content and files,
     # so keep each event's raw payload by message id
@@ -198,7 +154,7 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
         async def deliver_pending(self, message: GroupMessage) -> bool:
             """A text and a file left for a group in sessions/_pending/<group_openid>.json, sent as the reply to
             the next @ there and then deleted: the open platform refuses this bot's active group messages."""
-            path = sessions / "_pending" / f"{message.group_openid}.json"
+            path = chats.sessions / "_pending" / f"{message.group_openid}.json"
             if not path.is_file():
                 return False
             pending = json.loads(path.read_text(encoding="utf-8"))
@@ -229,22 +185,3 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
     log.info("QQ gateway connection starting")
     client.run(appid=settings["QQ_APPID"], secret=settings["QQ_SECRET"])
 
-
-def ask_cli(application, question: str, *, data_dir: Path, project: Path | None = None,
-            session: Path | None = None, usage=None) -> None:
-    """Ask once in the terminal; print the tool calls, the reply as QQ would split it, and the files. The answer
-    goes to the QQ answer log as chat "cli", its files as not sent; the gateway receipt is the running bot's and
-    is left alone."""
-    answer = answer_log.handle(application, {
-        "text": question, "session_id": "cli", "session_dir": session or data_dir / "sessions" / "cli",
-        "history": [], "group": False, "attachments": [], "project": project,
-        "notify": lambda note: print(f"[note] {note}")}, usage=usage)
-    result = answer.result
-    answer_log.AnswerLog(data_dir, "qq").write(
-        answer, chat="cli", session="cli", files_in=[],
-        files_out=[answer_log.file_fact(Path(p).name, size_of(Path(p)), sent=False) for p in result.get("files", [])])
-    if answer.error is not None:
-        raise answer.error
-    for trace in result.get("trace", []): print(f"[tool] {trace}")
-    print("\n=====\n".join(chunks(result.get("text", ""))))
-    for path in result.get("files", []): print(f"[file] {path}")

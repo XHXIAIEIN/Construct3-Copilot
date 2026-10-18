@@ -34,8 +34,10 @@ start.cmd        日常启动入口，打开面板
 settings.py      读取 .env，由入口读一次后显式传下去；数据目录只在这里算，面板和 start.ps1 都用它
 app.py           唯一接到 Copilot 的地方：造模型客户端，再造 Construct 应用
 model/           模型连接：设置、OpenAI 兼容和 Anthropic 客户端、用量、GPU 让位
-core/            与平台无关的部分：启动回执、回答记录
-qq/              QQ 通道：连接、文件上传
+core/            与平台无关的部分：chat.py 一问一答（限额、历史、会话目录、回答记录），
+                 entry.py 平台入口和 --cli，以及启动回执
+platforms/       一个文件夹一个平台，__init__.py 是面板读的平台登记表
+  qq/            QQ：连接、引用消息、分段回复、文件上传，自带 requirements.txt
 panel/           面板：control.py 编排切换，ollama.py、envfile.py、gateway.py 分管
                  Ollama 服务、.env 改写和 QQ 进程；另有接口配置、日志与统计
 grader.py        应用自带的回复审查器
@@ -49,8 +51,20 @@ var/             本地配置、日志、会话与备份（不进 git）
 
 ## 边界
 
-`copilot/` 不 import `channels`；`channels/` 里只有 `app.py` import `copilot`。`tests/channels/test_boundaries.py` 检查这两条。
+`copilot/` 不 import `channels`；`channels/` 里只有 `app.py` import `copilot`。
+`core/` 和 `model/` 不 import 平台和面板，平台之间互不 import，面板只读平台登记表、不碰平台代码。
+`tests/channels/test_boundaries.py` 检查这些规则。
 其余模块只认得一个有 `handle(request)` 的对象。
+
+## 接入新平台
+
+1. 在 `platforms/` 下建 `<名字>/`，写 `__main__.py`：调用 `core.entry.main("<名字>", run, split=...)`。
+   `run` 负责连接平台；`split` 把回复切成该平台能发的段落，`--cli` 也按它打印。
+2. 收到消息时依次调用 `core.chat.Chats` 的 `admit`（每日限额）和 `ask`（调用应用）；按平台的方式发出回复和文件，再调用 `record` 写回答记录。
+   连上平台后用 `core.receipt.GatewayReceipt` 记录启动和就绪。
+3. 平台自己的依赖写进 `<名字>/requirements.txt`，再在 `channels/requirements.txt` 里加一行 `-r`。
+4. 在 `platforms/__init__.py` 登记模块名、显示名和要在面板展示的日志。
+5. 面板目前只启停 `PANEL` 指定的一个平台（QQ）。要同时运行多个平台，需要每个平台各有一份启动回执；第二个平台接入时再做。
 请求包含消息、会话、历史、附件和通知回调；返回值提供 `text`、`files` 与 `trace`，可以再带一个 `record`。
 
 `app.py` 默认从 Copilot 仓库的相邻目录加载 Construct3-Agent-Skills 和 Construct3-RAG，可用 `.env` 的 `C3BOT_SKILLS` 和 `CONSTRUCT3_RAG` 指定。
@@ -62,7 +76,7 @@ Construct 的工具循环、工程解析、生成与交付规则实现在 `copil
 在仓库根目录运行：
 
 ```powershell
-.venv/Scripts/python -m channels.qq --cli "System Wait 的作用是什么？"
+.venv/Scripts/python -m channels.platforms.qq --cli "System Wait 的作用是什么？"
 .venv/Scripts/python -m pytest tests/channels
 channels/scripts/start.ps1 -Ollama
 channels/scripts/start.ps1 -Stop

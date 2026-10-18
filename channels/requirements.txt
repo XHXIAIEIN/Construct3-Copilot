@@ -1,5 +1,4 @@
-# channels/: QQ transport, model clients, panel. copilot/ itself needs only the standard library.
-qq-botpy>=1.2
+# channels/: model clients and the panel, plus each platform's own. copilot/ itself needs only the standard library.
 openai>=1
 python-dotenv>=1
-aiohttp>=3.9
+-r platforms/qq/requirements.txt

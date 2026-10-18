@@ -21,8 +21,9 @@ class ModelControlTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(dir=scratch)
         self.addCleanup(self.temp.cleanup)
         self.home = Path(self.temp.name)
-        (self.home / "qq").mkdir(parents=True)
-        (self.home / "qq" / "bot.py").write_text("", encoding="utf-8")
+        entry = self.home / "channels" / "platforms" / "qq" / "__main__.py"
+        entry.parent.mkdir(parents=True)
+        entry.write_text("", encoding="utf-8")
         self.original = (b"# configuration\nQQ_SECRET=private-placeholder\nKEEP=yes\nC3BOT_MODEL=old-model\n"
                          b"C3BOT_BASE_URL=http://127.0.0.1:11434/v1\nC3BOT_API_KEY=old-placeholder\n"
                          b"C3BOT_EXTRA_BODY='{\n  \"thinking\": true\n}'\n")
@@ -226,9 +227,13 @@ class ModelControlTests(unittest.TestCase):
                 self.control.gateway.identity(self.receipt)
 
     def test_module_launcher_is_accepted_and_cli_mode_is_refused(self):
-        self.parent["CommandLine"] = f'"{self.control.python}" -u -m channels.qq'
-        self.assertTrue(self.control.gateway.is_channel(self.parent))
-        self.parent["CommandLine"] += ' --cli "placeholder"'
+        for module in ("channels.platforms.qq", "channels.qq"):  # channels.qq: a process started before the move
+            with self.subTest(module=module):
+                self.parent["CommandLine"] = f'"{self.control.python}" -u -m {module}'
+                self.assertTrue(self.control.gateway.is_channel(self.parent))
+                self.parent["CommandLine"] += ' --cli "placeholder"'
+                self.assertFalse(self.control.gateway.is_channel(self.parent))
+        self.parent["CommandLine"] = f'"{self.control.python}" -u -m channels.panel'
         self.assertFalse(self.control.gateway.is_channel(self.parent))
 
     def test_reused_pid_is_not_stopped(self):
@@ -244,7 +249,7 @@ class ModelControlTests(unittest.TestCase):
         with patch.dict(os.environ, {"C3BOT_EXTRA_BODY": "stale", "C3BOT_MODEL": "stale", "QQ_SECRET": "stale"}), patch("channels.panel.gateway.detached") as detached:
             self.control.gateway.launch()
         argv, env = detached.call_args.args[:2]
-        self.assertEqual(argv, [str(self.control.python), "-u", "-m", "channels.qq"])
+        self.assertEqual(argv, [str(self.control.python), "-u", "-m", "channels.platforms.qq"])
         self.assertNotIn("C3BOT_MODEL", env)
         self.assertNotIn("C3BOT_EXTRA_BODY", env)
         self.assertNotIn("QQ_SECRET", env)
