@@ -3,10 +3,13 @@
     python -m channels.logs                         the last 10 turns: time, question, files, cost, tools, reply
     python -m channels.logs --since 23:00           turns from 23:00 today (or "2026-10-18", "2026-10-18 23:00")
     python -m channels.logs --session E5DB --failed  turns of a chat whose key contains E5DB and that failed
+    python -m channels.logs --skipped               only the messages given no answer, each with the reply it followed
     python -m channels.logs --turn 20261018-231714-a1b2              one turn in full, its trace one step a line
     python -m channels.logs --turn 20261018-231714-a1b2 --grep new_project --width 0   only those steps, uncut
 
-A turn written before turn ids existed shows its counts only; its question, reply and trace are in bot.log.
+The list also shows the messages given no answer (skipped.jsonl, such as a "哦哦" after a reply), in time order
+among the turns. A turn written before turn ids existed shows its counts only; its question, reply and trace are in
+bot.log.
 """
 from __future__ import annotations
 
@@ -15,9 +18,11 @@ import re
 import sys
 from datetime import date, datetime
 
-from .core.answers import read_answers, read_turns, trace_summary
+from .core.answers import read_answers, read_skipped, read_turns, trace_summary
 
 OLD = "（旧记录：问题、回复和工具轨迹只在 bot.log）"
+# skipped.jsonl's "skipped", as channels/core/chat.py writes it
+REASONS = {"ack": "只表示收到，没回复也没调模型"}
 
 
 def local_time(line: dict) -> datetime | None:
@@ -94,6 +99,15 @@ def summary(line: dict, turn: dict | None, width: int) -> str:
     return "\n".join(rows)
 
 
+def skipped(line: dict, width: int) -> str:
+    when = local_time(line)
+    reason = line.get("skipped")
+    after = cut(line.get("after", ""), width) or "（这个会话还没有回复）"
+    return "\n".join([(f"[{when:%Y-%m-%d %H:%M:%S}] " if when else "")
+                      + f"未回答  {line.get('chat')} {line.get('session')}  {REASONS.get(reason, reason)}",
+                      f"  消息：{cut(line.get('message', ''), width)}", f"  上一条回复的最后一句：{after}"])
+
+
 def detail(line: dict, turn: dict | None, width: int, grep: str | None) -> str:
     rows = [head(line), f"文件：收 {files(line.get('files_in', []))}；发 {files(line.get('files_out', []))}"]
     if line.get("app"):
@@ -117,7 +131,9 @@ def main(argv=None) -> None:
     parser.add_argument("--last", type=int, default=10, help="how many turns, newest last (default 10, 0 for all)")
     parser.add_argument("--since", type=parse_since, help="turns from this local time")
     parser.add_argument("--session", help="turns of chats whose key contains this")
-    parser.add_argument("--failed", action="store_true", help="only answers whose handle raised")
+    only = parser.add_mutually_exclusive_group()
+    only.add_argument("--failed", action="store_true", help="only answers whose handle raised")
+    only.add_argument("--skipped", action="store_true", help="only messages given no answer")
     parser.add_argument("--turn", help="one turn in full")
     parser.add_argument("--grep", help="with --turn: only trace steps matching this regular expression")
     parser.add_argument("--width", type=int, help="characters per question, reply or step (default 200 in the list, "
@@ -139,20 +155,25 @@ def main(argv=None) -> None:
                      400 if args.width is None else args.width, args.grep))
         return
 
+    if args.failed:
+        lines = [l for l in lines if not l.get("ok")]
+    elif args.skipped:
+        lines = read_skipped(data_dir, args.channel)
+    else:  # an answer's line is written once it is sent, so a skip sorts after the reply it followed
+        lines = sorted(lines + read_skipped(data_dir, args.channel), key=lambda l: local_time(l) or datetime.min)
     if args.since:
         lines = [l for l in lines if (local_time(l) or datetime.min) >= args.since]
     if args.session:
         lines = [l for l in lines if args.session in str(l.get("session", ""))]
-    if args.failed:
-        lines = [l for l in lines if not l.get("ok")]
     if args.last:
         lines = lines[-args.last:]
     if not lines:
-        print(f"no turns in logs/{args.channel}/answers.jsonl for this filter")
+        print(f"nothing in logs/{args.channel}/answers.jsonl or skipped.jsonl for this filter")
         return
     turns = read_turns(data_dir, args.channel, [l["turn"] for l in lines if l.get("turn")])
     width = 200 if args.width is None else args.width
-    print("\n\n".join(summary(l, turns.get(l.get("turn")), width) for l in lines))
+    print("\n\n".join(skipped(l, width) if "skipped" in l else summary(l, turns.get(l.get("turn")), width)
+                      for l in lines))
 
 
 if __name__ == "__main__":

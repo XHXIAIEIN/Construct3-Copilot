@@ -64,7 +64,7 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
     @serialized_sessions
     async def handle(key: str, question: str, reply, attachments=(), send_file=None) -> None:
         """send_file(path, msg_seq) sends a file as a reply to the same message."""
-        if chats.acknowledged(key, question, attachments=attachments):
+        if chats.acknowledged(key, question, chat=chat_of(key), attachments=attachments):
             return
         refusal = chats.admit(key, question)
         if refusal:

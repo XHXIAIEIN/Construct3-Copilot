@@ -1,4 +1,5 @@
-"""Count the channels' answer logs (<data>/logs/<channel>/answers.jsonl) with a few atomic operations.
+"""Count the channels' answer logs (<data>/logs/<channel>/answers.jsonl) with a few atomic operations. The messages
+given no answer, in skipped.jsonl beside it, are no answers and are not counted.
 
 A metric is a declaration, not code: an op (count, sum, avg, rate) over the answers, after where (keep the ones
 whose fields equal the given values, or one of a list), each (one item per element of a list field, whose own

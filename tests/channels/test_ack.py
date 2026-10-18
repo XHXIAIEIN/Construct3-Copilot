@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from channels.core import ack, chat
+from channels.core import ack, answers, chat
 
 PLAIN = "会。改成 lerp(a,b,1-0.01^dt) 就不受影响。"  # a reply of 2026-10-19 that asks and offers nothing
 # 2026-10-16 22:43: after this reply "1" meant "do it" and the bot built the game again
@@ -81,16 +81,25 @@ class ChatAcknowledgedTests(unittest.IsolatedAsyncioTestCase):
             chats = chat.Chats(application, data_dir=Path(tmp), channel="qq", daily_limit=1)
             await chats.ask("c2c:a", "lerp 每帧用会受帧率影响吗？", group=False, attachments=[], notify=None)
             with self.assertLogs("channels.core.chat", "INFO") as logged:
-                self.assertTrue(chats.acknowledged("c2c:a", "哦哦"))
+                self.assertTrue(chats.acknowledged("c2c:a", "哦哦", chat="private"))
             self.assertIn("c2c:a ack: 哦哦", logged.output[-1])
-            self.assertFalse(chats.acknowledged("c2c:a", "哦哦", attachments=[object()]))
+            self.assertFalse(chats.acknowledged("c2c:a", "哦哦", chat="private", attachments=[object()]))
             self.assertEqual(len(chats.recent("c2c:a")), 2)
             self.assertIsNone(chats.admit("c2c:a", "那 dt 是什么"))  # the day's one question is still there
 
             application.handle.return_value = {"text": INVITE}
             await chats.ask("c2c:b", "做个贪吃蛇", group=False, attachments=[], notify=None)
-            self.assertFalse(chats.acknowledged("c2c:b", "1"))
-            self.assertTrue(chats.acknowledged("c2c:a", "1"))  # another chat's reply does not count
+            self.assertFalse(chats.acknowledged("c2c:b", "1", chat="private"))
+            self.assertTrue(chats.acknowledged("c2c:a", "1", chat="private"))  # another chat's reply does not count
+            self.assertTrue(chats.acknowledged("group:G:M", "谢谢", chat="group"))  # a chat with no reply yet
+
+            # each message given no answer is in skipped.jsonl with the sentence the rule read, and only those
+            skipped = answers.read_skipped(Path(tmp), "qq")
+            self.assertEqual([(s["chat"], s["session"], s["skipped"], s["message"], s["after"]) for s in skipped],
+                             [("private", "c2c:a", "ack", "哦哦", "改成 lerp(a,b,1-0.01^dt) 就不受影响。"),
+                              ("private", "c2c:a", "ack", "1", "改成 lerp(a,b,1-0.01^dt) 就不受影响。"),
+                              ("group", "group:G:M", "ack", "谢谢", "")])
+            self.assertRegex(skipped[0]["at"], r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.*Z$")
 
 
 if __name__ == "__main__":
