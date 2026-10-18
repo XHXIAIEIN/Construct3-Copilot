@@ -7,9 +7,9 @@
 :root{
   --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
   --mono:ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei UI","Microsoft YaHei",monospace;
-  /* --muted stays at 4.5:1 on the surface: times and counts are read, not decoration */
+  /* --muted stays at 4.5:1 on the page and the surface: times and counts are read, not decoration */
   --page:#f5f4ef;--surface:#ffffff;--side:#efeee8;--hover:rgba(31,30,29,.045);--selected:rgba(31,30,29,.08);--sunk:#f8f7f3;
-  --text:#1f1e1d;--text2:#5f5d57;--muted:#737169;--faint:#c4c2ba;--border:rgba(31,30,29,.1);--border2:rgba(31,30,29,.2);
+  --text:#1f1e1d;--text2:#5f5d57;--muted:#6f6d66;--faint:#c4c2ba;--border:rgba(31,30,29,.1);--border2:rgba(31,30,29,.2);
   --primary:#1f1e1d;--on-primary:#faf9f5;--accent:#2c6fd6;
   --ok:#2f6b3f;--ok-bg:#e5efe2;--warn:#8a5a00;--warn-bg:#f6ecd4;--danger:#b5402f;--danger-bg:#f8e6e2;--info:#2a5aa8;--info-bg:#e4ecf8;--private:#2a78d6;--group:#eb6834;
   --shadow:0 8px 24px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.08);
@@ -80,11 +80,11 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 /* ---- logs. Every row shares one grid: the time, a marker column, then the text, so the eye runs down one edge.
    What people said is set in the sans face; what the program wrote stays monospace and a step quieter. */
 .logwrap{position:relative}
-.logbox{height:calc(100vh - 140px);min-height:320px;overflow:auto;padding:0 8px 16px;font:13px/20px var(--sans)}
+.logbox{height:calc(100vh - 140px);min-height:320px;overflow:auto;padding:0 2px 16px;font:13px/20px var(--sans)}
 .logbox{--lt:52px;--gut:12px;--mk:20px;contain:inline-size}  /* a long unbroken line scrolls inside, never widens the page */
 .app:has(#status:not([hidden])) .logbox{height:calc(100vh - 200px)}  /* the box ends at the window's bottom, below the status bar when one shows */
 .logbox::-webkit-scrollbar{width:12px}.logbox::-webkit-scrollbar-button{display:none}
-.logbox::-webkit-scrollbar-thumb{background:var(--border2);background-clip:padding-box;border:4px solid transparent;border-radius:6px}.logbox::-webkit-scrollbar-thumb:hover{background-color:var(--muted)}
+.logbox::-webkit-scrollbar-thumb{background:var(--border2);background-clip:padding-box;border:3px solid transparent;border-radius:6px}.logbox::-webkit-scrollbar-thumb:hover{background-color:var(--muted)}
 .lt{flex:none;width:var(--lt);margin-right:var(--mk);color:var(--muted);font:12px/20px var(--sans);font-variant-numeric:tabular-nums}
 .logline,.logboot{position:relative;display:flex;align-items:baseline;padding:1px var(--gut);border-radius:8px}
 .logline .lm{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text2);font:12px/20px var(--mono)}
@@ -98,15 +98,16 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .logline[data-level=error]:has(+ .logline[data-level=error]){border-bottom-left-radius:0;border-bottom-right-radius:0}
 .logline[data-level=error]+.logline[data-level=error]{border-top-left-radius:0;border-top-right-radius:0}
 /* the day stays at the top while its rows scroll under it */
-.logday{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;margin:0 -8px;padding:16px calc(8px + var(--gut)) 8px;background:linear-gradient(var(--surface) calc(100% - 8px),transparent);color:var(--text2);font:12px/18px var(--sans);letter-spacing:.02em}
+.logday{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;margin:0 -2px;padding:16px calc(2px + var(--gut)) 8px;background:linear-gradient(var(--page) calc(100% - 8px),transparent);color:var(--text2);font:12px/18px var(--sans);letter-spacing:.02em}
 .logday::after{content:"";flex:1;height:1px;background:var(--border)}
-/* a turn: the question and the start of the answer, opened in place to the whole reply, the counts and the tool trace */
-.turn{position:relative;margin:2px 0;border-radius:10px;font:14px/22px var(--sans);transition:background-color .12s}
-.turn:not(.open):hover{background:var(--hover)}.turn.open{margin:6px 0 10px;background:var(--sunk)}
-.turnhead{display:flex;align-items:baseline;width:100%;min-height:0;padding:9px var(--gut) 10px;border:0;border-radius:10px;text-align:left;white-space:normal;font:inherit}
+/* a turn is a card: the question and the start of the answer, opened in place to the whole reply, the counts and the
+   tool trace. Starts and the program's lines stay on the page between the cards. */
+.turn{position:relative;margin:8px 0;border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:0 1px 2px rgba(31,30,29,.04);font:14px/22px var(--sans);transition:border-color .12s,box-shadow .12s}
+.turn:not(.open):hover{border-color:var(--border2)}.turn.open{box-shadow:0 2px 10px rgba(31,30,29,.06)}
+.turnhead{display:flex;align-items:baseline;width:100%;min-height:0;padding:11px var(--gut) 12px calc(var(--gut) - 1px);border:0;border-radius:11px;text-align:left;white-space:normal;font:inherit}
 .turnhead:hover:enabled{background:none}
 /* the marker is blue for a private chat and orange for a group, as on the stats page; it pulses while the answer is coming */
-.turnhead::before{content:"";position:absolute;left:calc(var(--gut) + var(--lt) + 5px);top:17px;width:7px;height:7px;border-radius:50%;background:var(--private)}
+.turnhead::before{content:"";position:absolute;left:calc(var(--gut) + var(--lt) + 4px);top:18px;width:7px;height:7px;border-radius:50%;background:var(--private)}
 .turn[data-chat=group] .turnhead::before{background:var(--group)}
 .turn.pending .turnhead::before{animation:pulse 1.2s ease-in-out infinite}@keyframes pulse{50%{opacity:.25}}
 .turnhead .sum{flex:1 1 0;min-width:0;display:flex;flex-direction:column}
@@ -117,7 +118,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .turn.open .meta::after,.tracebtn[aria-expanded=true]::after{transform:translateY(-2px) rotate(45deg)}
 .turnhead .model:not(:empty)::before{content:"·";margin:0 5px}.turnhead .meta::after{margin-left:12px}
 .turn.open b{white-space:normal}.turn.open .snip{display:none}
-.turnbody{padding:0 var(--gut) 16px calc(var(--gut) + var(--lt) + var(--mk))}
+.turnbody{padding:0 var(--gut) 16px calc(var(--gut) + var(--lt) + var(--mk) - 1px)}
 .turnbody .info{margin:-4px 0 10px;font-size:12px;line-height:18px;color:var(--muted)}
 .turnbody .reply{max-width:46em;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.85}
 .turntools{display:flex;gap:10px;align-items:baseline;margin-top:14px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;line-height:20px;color:var(--muted)}.turntools:empty{display:none}
@@ -128,7 +129,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .turnbody .extra{margin-top:8px;font:12px/20px var(--mono);color:var(--muted)}.turnbody .extra:empty{display:none}
 .tracebtn{flex:none;display:inline-flex;align-items:center;gap:4px;min-height:0;margin-right:-6px;padding:0 6px;border:0;border-radius:4px;font:12px/20px var(--sans);color:var(--text2)}
 .tracebtn:hover:enabled{color:var(--text)}
-.trace{margin:10px 0 0;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font:12px/20px var(--mono)}.trace.bad{color:var(--danger)}
+.trace{margin:10px 0 0;padding:8px 12px;border-radius:8px;background:var(--sunk);font:12px/20px var(--mono)}.trace.bad{color:var(--danger)}
 .trace .step{display:flex;gap:10px;padding:2px 0}.trace .n{flex:none;min-width:3ch;text-align:right;color:var(--muted)}.trace .st{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}.trace b{font-weight:600}
 /* one row per start of the QQ process: when it started and how long it took to connect */
 .logboot{padding:3px var(--gut);color:var(--muted);font:12px/20px var(--sans)}
@@ -165,7 +166,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
   .brand{padding:0 8px 0 0}.side-toggle{display:none!important}.app.side-collapsed nav{display:flex}main{padding:16px}header{flex-direction:column}header>div:first-child{flex-basis:auto}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
   .toolrow{grid-template-columns:56px 104px minmax(80px,1fr);row-gap:2px}.toolrow>:first-child{grid-column:1/-1}.toolrow:first-child{display:none}.toolrow .num{text-align:left}.toolrow .calls::before{content:"调用 "}.toolrow .fail::before{content:"失败 "}.toolrow .fail{display:flex;align-items:baseline;white-space:pre}.toolrow .fail small{order:2;margin:0 0 0 6px}
   .kpis{grid-template-columns:1fr 1fr}.kpis .kpi{border-left:1px solid var(--border)}.kpis .kpi:nth-child(2n+1){border-left:0}.kpis .kpi:nth-child(n+3){border-top:1px solid var(--border)}.kpi .v{font-size:20px}
-  .logbox{height:calc(100vh - 290px);--lt:38px;--gut:8px;--mk:16px}.app:has(#status:not([hidden])) .logbox{height:calc(100vh - 342px)}.turnhead .model{display:none}.lt .sec{display:none}.tools select{flex:1}
+  .logbox{height:calc(100dvh - 212px);--lt:38px;--gut:8px;--mk:16px}.app:has(#status:not([hidden])) .logbox{height:calc(100dvh - 270px)}.turnhead .model{display:none}.lt .sec{display:none}.tools select{flex:1}
   .row{flex-wrap:wrap}.row .what{flex-basis:100%}.facts{grid-template-columns:1fr}.facts dd{border-top:0;padding-top:0}
 }
 </style>
@@ -194,7 +195,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 
     <section data-page="logs" hidden>
       <div class="logwrap">
-        <div class="list logbox" id="log-box" tabindex="0" aria-label="日志内容"><div id="log-lines"></div></div>
+        <div class="logbox" id="log-box" tabindex="0" aria-label="日志内容"><div id="log-lines"></div></div>
         <button type="button" class="jump" id="log-jump" hidden>有新日志 · 回到底部</button>
       </div>
       <div class="muted logmeta" id="log-meta"></div>
