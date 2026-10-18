@@ -14,17 +14,18 @@ from datetime import datetime
 from pathlib import Path
 
 from .services import DATA, RAG, get_runtime
-LOG = DATA / "logs" / "bot" / "bot.log"
+# The channel's answer log and, under each line's turn id, the question, reply and trace. copilot/ does not import
+# channels/, so the two JSON files are read here; channels/core/answers.py writes them.
+ANSWERS = DATA / "logs" / "qq" / "answers.jsonl"
+TURNS = ANSWERS.with_name("turns.jsonl")
 SESSIONS = DATA / "sessions"
 REVIEWS = DATA / "reviews"
-OFFSET = REVIEWS / ".offset"
+OFFSET = REVIEWS / ".answers-offset"  # .offset counted bytes of bot.log
 GRADER = os.environ.get("GRADER", "codex")  # the claude CLI's login expired on 2026-10-09; GRADER=claude after a /login
 CODEX_MODEL = os.environ.get("CODEX_MODEL", "gpt-5.6-sol")  # config.toml's default is refused on a ChatGPT account
 TIMEOUT = 20 * 60  # seconds for one grade; a project question runs scripts in the editor's data
 POLL = 5
 
-LINE = re.compile(r"^(\S+ \S+) (?:qqbot|c3bot) INFO (\S+) (asks|tools|reply): (.*)$")
-SKIP_REPLIES = ("出错了，稍后再试。",)
 
 log = logging.getLogger("grader")
 
@@ -103,11 +104,48 @@ def write(item: dict, verdict: str) -> None:
     day = REVIEWS / f"{item['when'][:10]}.md"
     with day.open("a", encoding="utf-8") as f:
         f.write(f"## {item['when']} {item['key']}\n\n**问：** {item['question']}\n\n**答：** {item['reply']}\n\n"
-                f"工具：`{item['tools'][:600]}`\n\n{verdict}\n\n---\n\n")
+                f"工具：`{item['tools'][:600].replace(chr(10), ' | ')}`\n\n{verdict}\n\n---\n\n")
     first = verdict.splitlines()[0] if verdict else "?"
     with (REVIEWS / "summary.tsv").open("a", encoding="utf-8") as f:
         f.write(f"{item['when']}\t{item['key']}\t{first}\t{item['question'][:60]}\n")
     log.info("%s %s -> %s", item["when"], item["key"], first)
+
+
+def turn_of(turn: str) -> dict | None:
+    """The question, reply and trace written under turn; the channel appends it just after the answer's line, so a
+    miss is looked for again for a few polls."""
+    for attempt in range(3):
+        try:
+            with TURNS.open(encoding="utf-8", errors="replace") as f:
+                for raw in f:
+                    if f'"{turn}"' in raw[:60]:  # "turn" is the first key; a whole line can be a long trace
+                        try:
+                            return json.loads(raw)
+                        except ValueError:
+                            break
+        except OSError:
+            pass
+        if attempt < 2:
+            time.sleep(POLL)
+    return None
+
+
+def item_of(line: dict, earlier: deque) -> dict | None:
+    """What one answer's grade needs, None for a line not to grade: no turn (written before turn ids), a failed
+    answer, a terminal question or a turn that cannot be found."""
+    if not line.get("turn") or not line.get("ok") or line.get("chat") == "cli":
+        return None
+    turn = turn_of(line["turn"])
+    if turn is None:
+        log.warning("turn %s is not in %s; not graded", line["turn"], TURNS)
+        return None
+    key = str(line.get("session", "")).replace(":", "_")  # the session folder's spelling
+    when = datetime.fromisoformat(str(line["at"]).replace("Z", "+00:00")).astimezone().strftime("%Y-%m-%d %H:%M:%S")
+    snap = snapshot(key, datetime.now().strftime("%Y%m%d-%H%M%S"))
+    return {"key": key, "when": when, "question": turn.get("question", ""),
+            "earlier": "\n".join(f"Q: {q}\nA: {a}" for q, a in earlier) or "(none)",
+            "tools": "\n".join(turn.get("trace", [])) or "(none)", "reply": turn.get("reply", "").replace("\n", " / "),
+            "snap": str(snap) if snap else "none"}
 
 
 def main() -> None:
@@ -121,44 +159,31 @@ def main() -> None:
     elif OFFSET.exists():
         offset = int(OFFSET.read_text())
     else:
-        offset = LOG.stat().st_size if LOG.exists() else 0
-    pending: dict[str, deque] = defaultdict(deque)  # key -> asks waiting for their reply
-    tools: dict[str, str] = {}
+        offset = ANSWERS.stat().st_size if ANSWERS.exists() else 0
     turns: dict[str, deque] = defaultdict(lambda: deque(maxlen=2))
-    log.info("grader %s from byte %d of %s", GRADER, offset, LOG)
+    log.info("grader %s from byte %d of %s", GRADER, offset, ANSWERS)
     while True:
-        size = LOG.stat().st_size
+        size = ANSWERS.stat().st_size if ANSWERS.exists() else 0
         if size < offset:  # the log was rotated or truncated
             offset = 0
         if size == offset:
             time.sleep(POLL)
             continue
-        with LOG.open("rb") as f:
+        with ANSWERS.open("rb") as f:
             f.seek(offset)
             chunk = f.read()
         end = chunk.rfind(b"\n") + 1  # a line still being written waits for the next read
         lines = chunk[:end].decode("utf-8", errors="replace").splitlines()
         offset += end
-        for line in lines:
-            m = LINE.match(line)
-            if not m:
+        for raw in lines:
+            try:
+                line = json.loads(raw)
+            except ValueError:
                 continue
-            when, key, kind, text = m.groups()
-            key = key.replace(":", "_")  # the session folder's spelling
-            if kind == "asks":
-                pending[key].append((when, text))
-            elif kind == "tools":
-                tools[key] = text
-            elif pending[key]:
-                asked_at, question = pending[key].popleft()
-                if text in SKIP_REPLIES:
-                    continue
-                stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-                snap = snapshot(key, stamp)
-                earlier = "\n".join(f"Q: {q}\nA: {a}" for q, a in turns[key]) or "(none)"
-                item = {"key": key, "when": asked_at, "question": question, "earlier": earlier,
-                        "tools": tools.pop(key, "[]"), "reply": text, "snap": str(snap) if snap else "none"}
-                turns[key].append((question, text))
+            key = str(line.get("session", "")).replace(":", "_")
+            item = item_of(line, turns[key]) if isinstance(line, dict) else None
+            if item is not None:
+                turns[key].append((item["question"], item["reply"]))
                 write(item, grade(item))
             OFFSET.write_text(str(offset))
         OFFSET.write_text(str(offset))

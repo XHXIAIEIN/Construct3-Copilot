@@ -40,7 +40,8 @@ platforms/       一个文件夹一个平台，__init__.py 是面板读的平台
   qq/            QQ：连接、引用消息、分段回复、文件上传，自带 requirements.txt
 panel/           面板：control.py 编排切换，ollama.py、envfile.py、gateway.py 分管
                  Ollama 服务、.env 改写和 QQ 进程；另有接口配置、日志与统计
-grader.py        应用自带的回复审查器
+grader.py        应用自带的回复审查器，读 answers.jsonl 和 turns.jsonl
+logs.py          按回合读回答记录：python -m channels.logs
 models.example.json  var/models.json 的示例
 scripts/         维护命令
 .env             本地凭据、模型与应用设置（不进 git）
@@ -94,6 +95,18 @@ Construct 应用的任务与文件记录保存在 `var/copilot/`。
 每次回答，通道往 `var/logs/<通道>/answers.jsonl` 追加一行，QQ 是 `logs/qq/`，`--cli` 也写在这里，聊天类型记为 `cli`。
 通道只写基础字段：时间、通道、聊天类型、会话、用时、模型调用数和词元、收发文件（只记类型和大小，不记文件名）、`handle` 是否正常返回。
 应用返回的 `record` 原样放在 `app` 下，通道不解读它。
+每行带一个回合号 `turn`。这一轮的问题、回复和完整工具轨迹按回合号写进同一目录的 `turns.jsonl`。超过 32MB 时改名为 `turns.1.jsonl`，只保留这一份旧文件。
+`bot.log` 的 `tools:` 行只记工具名的顺序和回合号，以前这一行会塞下整条轨迹，最长 160KB。
+
+查回答用 `python -m channels.logs`，不要去 grep `bot.log`：
+
+```powershell
+python -m channels.logs --since 23:00                     # 每轮一段：时间、问题、收发文件、用量、工具、回复
+python -m channels.logs --session E5DB --failed           # 某个会话里失败的回答
+python -m channels.logs --turn <回合号> --grep new_project  # 一轮的完整轨迹，只列匹配的步骤
+```
+
+轨迹截断时保留 `->` 后面工具返回的内容，截掉的是前面的参数。`--width 0` 不截。加回合号之前的记录只有计数，问题和回复要去 `bot.log` 里找。
 
 应用的 `describe()` 声明自己加了哪些字段、怎么统计。`app.py` 启动时把它写到 `var/runtime/app.json`，通道停着时这份声明仍在。
 面板只实现原子操作：`count`、`sum`、`avg`、`rate`，加上 `where`（过滤）、`each`（展开列表字段）、`by`（分组）和 `split`（按布尔拆成两份）。

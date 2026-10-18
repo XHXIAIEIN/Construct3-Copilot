@@ -47,10 +47,13 @@ def serialized_sessions(handler):
 
 @dataclass
 class Turn:
-    """What the application answered, ready to send: its text (FAILED when handle raised) and its files."""
+    """What the application answered, ready to send: its text (FAILED when handle raised) and its files, with the
+    turn id and the question the answer log keeps them under."""
     answer: answer_log.Answer
     text: str = ""
     files: list[Path] = field(default_factory=list)
+    id: str = ""
+    question: str = ""
 
 
 class Chats:
@@ -83,13 +86,16 @@ class Chats:
             "text": question, "session_id": key, "session_dir": self.sessions / safe_name(key),
             "history": list(self.history[key]), "group": group, "notify": notify, "attachments": attachments,
         }, usage=self.usage, receipt=self.receipt)
+        turn_id = answer_log.new_turn_id()
         if answer.error is None:
-            turn = Turn(answer, answer.result.get("text", ""), [Path(p) for p in answer.result.get("files", [])])
+            turn = Turn(answer, answer.result.get("text", ""), [Path(p) for p in answer.result.get("files", [])],
+                        turn_id, question)
             trace = answer.result.get("trace", [])
         else:
             log.error("application failed", exc_info=answer.error)
-            turn, trace = Turn(answer, FAILED), []
-        log.info("%s tools: %s", key, trace)
+            turn, trace = Turn(answer, FAILED, id=turn_id, question=question), []
+        # the whole trace can be 100 KB; it goes to turns.jsonl with the answer's line
+        log.info("%s tools: %s (python -m channels.logs --turn %s)", key, answer_log.trace_summary(trace), turn_id)
         log.info("%s reply: %s", key, turn.text.replace("\n", " / "))
         self.history[key].extend([{"role": "user", "content": question}, {"role": "assistant", "content": turn.text}])
         return turn
@@ -97,4 +103,5 @@ class Chats:
     def record(self, turn: Turn, *, chat: str, session: str, files_in: list[dict], sent: set[Path]) -> dict:
         """The answer's line, written once the platform has sent what it could. chat: "private", "group" or "cli"."""
         return self.log.write(turn.answer, chat=chat, session=session, files_in=files_in,
+                              turn=turn.id or None, question=turn.question, reply=turn.text,
                               files_out=[answer_log.file_fact(p.name, size_of(p), sent=p in sent) for p in turn.files])
