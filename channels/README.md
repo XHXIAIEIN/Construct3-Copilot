@@ -1,0 +1,76 @@
+# channels
+
+`channels/` 是 Copilot 的消息通道：维护 QQ 连接、传递消息与附件，连接模型，并把消息交给 Construct 应用。
+它原来是独立的 qqbot 仓库，2026-10-18 连同提交历史并入 Copilot。
+
+双击 `start.cmd` 打开模型管理页。页面列出本地 Ollama 已安装的模型，支持启动服务、加载模型，以及切换模型并重启 QQ 通道。
+模型 API 设置写入 `.env`，服务地址、程序路径与模型目录写入 `var/models.json`。
+每次切换都会备份 `.env`。
+
+“API 接口”分组导入 `.env` 中已有的接口，支持添加、编辑、删除与切换。
+接口资料放在 `var/apis.json`，密钥通过名称引用 `.env`。编辑时密钥留空会保留原值。
+当前使用的接口需先切换后再编辑或删除。删除记录会保留本地备份。
+
+DeepSeek 余额从官方接口查询，显示币种、金额、账户状态和查询时间。
+其他接口支持手动标记未知、充足、偏低或耗尽，查询失败会单独显示。
+[硅基流动官方公告](https://docs.siliconflow.cn/docs/release-notes/overview)已停止旧的余额查询接口。
+添加接口时填写服务地址及模型名称。Claude 官方地址自动使用 Anthropic 原生协议。
+自定义服务可在“接口协议”中选择 OpenAI 兼容或 Anthropic 原生。
+原生调用遵循 [Anthropic Messages 接口](https://platform.claude.com/docs/en/api/messages/create)，保留工具回合与签名内容。
+
+## 安装与启动
+
+在 Copilot 仓库根目录用 Python 3.10+ 创建 `.venv`，安装通道的依赖：
+
+```powershell
+.venv/Scripts/python -m pip install -r channels/requirements.txt
+```
+
+复制 `channels/.env.example` 为 `channels/.env`，填写 QQ 凭据。双击 `channels/start.cmd`，选择模型并点击“切换并重启 QQbot”。
+`config/models.example.json` 展示服务配置格式。
+
+```text
+start.cmd        日常启动入口，打开面板
+settings.py      读取 .env，由入口读一次后显式传下去
+app.py           唯一接到 Copilot 的地方：造模型客户端，再造 Construct 应用
+model/           模型连接：设置、OpenAI 兼容和 Anthropic 客户端、用量、GPU 让位
+core/            与平台无关的部分：启动回执
+qq/              QQ 通道：连接、文件上传
+panel/           面板：模型切换、接口配置、日志与统计
+grader.py        应用自带的回复审查器
+config/          配置示例
+scripts/         维护命令
+.env             本地凭据、模型与应用设置（不进 git）
+var/             本地配置、日志、会话与备份（不进 git）
+```
+
+离线测试在仓库根目录的 `tests/channels/`。
+
+## 边界
+
+`copilot/` 不 import `channels`；`channels/` 里只有 `app.py` import `copilot`。`tests/channels/test_boundaries.py` 检查这两条。
+其余模块只认得一个有 `handle(request)` 的对象。
+请求包含消息、会话、历史、附件和通知回调；返回值提供 `text`、`files` 与 `trace`。
+
+`app.py` 默认从 Copilot 仓库的相邻目录加载 Construct3-Agent-Skills 和 Construct3-RAG，可用 `.env` 的 `C3BOT_SKILLS` 和 `CONSTRUCT3_RAG` 指定。
+Construct 的工具循环、工程解析、生成与交付规则实现在 `copilot/providers/construct3/`。
+编辑器脚本由 Agent-Skills 提供，schema 与知识数据由 RAG 提供。
+
+## 维护
+
+在仓库根目录运行：
+
+```powershell
+.venv/Scripts/python -m channels.qq --cli "System Wait 的作用是什么？"
+.venv/Scripts/python -m pytest tests/channels
+channels/scripts/start.ps1 -Ollama
+channels/scripts/start.ps1 -Stop
+```
+
+`scripts/start.ps1` 启动 QQ 连接。`-Grader` 同时启动应用提供的回复审查器。
+`-Stop` 停止本仓库的连接及审查器。日常操作使用 `start.cmd`。
+
+模型页面日志保存在 `var/logs/models/`，QQ 日志保存在 `var/logs/bot/`。
+`var/runtime/gateway.json` 记录 READY 事件和进程身份，页面核对进程后显示连接状态。
+Construct 应用的任务与文件记录保存在 `var/copilot/`。QQ 上传结果另记在连接日志中。
+`QQBOT_DATA` 可设置运行数据目录（相对路径从 `channels/` 算起），`C3BOT_DATA` 兼容已有配置。
