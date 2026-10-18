@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QQbot 模型</title>
+<style>
+:root{
+  --page:#f5f4ef;--surface:#ffffff;--side:#efeee8;--hover:rgba(31,30,29,.05);--selected:rgba(31,30,29,.08);
+  --text:#1f1e1d;--text2:#6b6a64;--muted:#9a9890;--border:rgba(31,30,29,.12);--border2:rgba(31,30,29,.22);
+  --primary:#1f1e1d;--on-primary:#faf9f5;--accent:#2c6fd6;
+  --ok:#2f6b3f;--ok-bg:#e5efe2;--warn:#8a5a00;--warn-bg:#f6ecd4;--danger:#b5402f;--danger-bg:#f8e6e2;--info:#2a5aa8;--info-bg:#e4ecf8;--private:#2a78d6;--group:#eb6834;
+  --shadow:0 8px 24px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.08);
+  color-scheme:light;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);
+}
+@media (prefers-color-scheme:dark){:root{
+  --page:#151515;--surface:#1f1e1d;--side:#1a1a19;--hover:rgba(255,255,255,.06);--selected:rgba(255,255,255,.1);
+  --text:#f0efec;--text2:#a6a49c;--muted:#78766f;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);
+  --primary:#f0efec;--on-primary:#151515;--accent:#6c9fec;
+  --ok:#8fc49a;--ok-bg:#1f3324;--warn:#e0b45c;--warn-bg:#3a2e14;--danger:#ec8f80;--danger-bg:#3d201b;--info:#9dbcf0;--info-bg:#1d2a40;--private:#3987e5;--group:#d95926;
+  --shadow:0 8px 24px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.3);color-scheme:dark;
+}}
+*{box-sizing:border-box}body{margin:0;background:var(--page)}[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+button{border:1px solid var(--border2);background:transparent;border-radius:8px;padding:5px 12px;min-height:32px;cursor:pointer;white-space:nowrap}
+button:hover:enabled{background:var(--hover)}button:disabled{color:var(--muted);cursor:default}
+button.primary{background:var(--primary);color:var(--on-primary);border-color:transparent}button.primary:hover:enabled{opacity:.88;background:var(--primary)}
+button.ghost{border-color:transparent}button.confirm{border-color:var(--danger);color:var(--danger)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+input,select{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;min-height:34px;min-width:0}
+.app{display:grid;grid-template-columns:200px minmax(0,1fr);min-height:100vh}
+nav{background:var(--side);border:1px solid var(--border);border-radius:14px;padding:16px 10px;display:flex;flex-direction:column;gap:2px}
+/* a floating card that stays the window's height while the page scrolls */
+nav{position:sticky;top:12px;height:calc(100vh - 24px);margin:12px 0 12px 12px;align-self:start}
+.brand{font-weight:600;padding:0 4px 10px 10px;font-size:15px;display:flex;align-items:center;justify-content:space-between}
+.side-toggle{border-color:transparent;min-height:28px;padding:5px 6px;color:var(--text2);display:inline-flex;align-items:center}
+.app.side-collapsed{grid-template-columns:minmax(0,1fr)}.app.side-collapsed nav{display:none}.app:not(.side-collapsed) #side-show{display:none}
+.title-row{display:flex;gap:8px;align-items:flex-start}.title-row #side-show{margin:-1px 0 0 -8px}
+nav a{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:8px;color:var(--text2);text-decoration:none}
+nav a:hover{background:var(--hover)}nav a[aria-current=page]{background:var(--selected);color:var(--text)}nav a small{color:var(--muted)}
+main{padding:28px 32px;max-width:960px;width:100%}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px 16px;margin-bottom:16px}header>div:first-child{flex:1 1 300px;min-width:0}.tools{flex-shrink:0}
+h1{font-size:22px;font-weight:500;margin:0 0 2px}.sub{color:var(--text2);font-size:13px}.sub.warn{color:var(--warn)}.muted{color:var(--muted);font-size:12px}
+.status{display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:8px;margin-bottom:16px;background:var(--hover);color:var(--text2);font-size:13px}
+.status[data-state=running]{background:var(--info-bg);color:var(--info)}.status[data-state=failed]{background:var(--danger-bg);color:var(--danger)}.status[data-state=completed]{background:var(--ok-bg);color:var(--ok)}
+.status span{flex:1}.status button{min-height:26px;padding:2px 10px;font-size:12px}
+.list{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--border)}.row:first-child{border-top:0}
+.row .what{flex:1;min-width:0}.row .name{font-weight:500;overflow-wrap:anywhere}.row .sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .note{font-size:12px;color:var(--warn);margin-top:2px}.row .note:empty{display:none}
+.badge{font-size:12px;padding:1px 8px;border-radius:6px;white-space:nowrap}.badge:empty{display:none}
+.badge[data-tone=current]{background:var(--info-bg);color:var(--info)}.badge[data-tone=ok]{background:var(--ok-bg);color:var(--ok)}
+.badge[data-tone=warn]{background:var(--warn-bg);color:var(--warn)}.badge[data-tone=danger]{background:var(--danger-bg);color:var(--danger)}.badge[data-tone=plain]{background:var(--hover);color:var(--text2)}
+.more{border-color:transparent;padding:4px 8px;color:var(--text2);font-size:16px;line-height:1}
+.empty{padding:28px 16px;text-align:center;color:var(--text2)}.empty button{margin-top:10px}
+.tools{display:flex;gap:8px}.tools input{width:200px}
+.menu{position:fixed;z-index:10;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:4px;min-width:180px}
+.menu button{display:block;width:100%;text-align:left;border:0;border-radius:6px;padding:6px 10px;min-height:30px}
+.menu button.danger{color:var(--danger)}.menu .why{padding:2px 10px 6px;font-size:12px;color:var(--muted);max-width:240px}
+dialog{border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--text);padding:0;width:min(560px,calc(100vw - 32px));box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog form{padding:20px 22px;display:flex;flex-direction:column;gap:14px}dialog h2{font-size:17px;font-weight:500;margin:0}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px}.field>span{color:var(--text2)}.field small{color:var(--muted);font-size:12px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+fieldset{border:1px solid var(--border);border-radius:10px;padding:12px;margin:0;display:flex;flex-direction:column;gap:10px}legend{padding:0 4px;color:var(--text2);font-size:13px}
+.hint{font-size:12px;color:var(--warn)}.hint:empty{display:none}
+.error{font-size:13px;color:var(--danger);background:var(--danger-bg);padding:8px 10px;border-radius:8px}.error:empty{display:none}
+.dialog-actions{display:flex;justify-content:flex-end;gap:8px}
+details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] summary{margin-bottom:8px}
+.facts{display:grid;grid-template-columns:140px minmax(0,1fr);gap:0}.facts>*{padding:11px 14px;border-top:1px solid var(--border)}
+.facts>:nth-child(-n+2){border-top:0}.facts dt{color:var(--text2)}.facts dd{margin:0;overflow-wrap:anywhere;display:flex;justify-content:space-between;gap:8px;align-items:center}
+
+.group{margin-bottom:20px}.group-head{display:flex;width:100%;align-items:center;gap:8px;border:0;border-radius:6px;padding:4px 4px 8px;min-height:0;font-weight:500;text-align:left}
+.group-head:hover:enabled{background:transparent}.group-head small{color:var(--muted);font-weight:400}
+.chev{margin-left:auto;margin-right:6px;width:7px;height:7px;border-right:1.5px solid var(--text2);border-bottom:1.5px solid var(--text2);transform:rotate(45deg);transition:transform .15s}
+.group.collapsed .chev{transform:rotate(-45deg)}.group.collapsed .list{display:none}.searching .group.collapsed .list{display:block}
+.check{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;white-space:nowrap}.check input,.tools .check input{width:auto;min-height:0;margin:0;padding:0;accent-color:var(--primary)}
+.logwrap{position:relative}
+.logbox{height:calc(100vh - 250px);min-height:300px;overflow:auto;padding:6px 0;font:12px/1.65 ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei",monospace}
+.logline{padding:0 14px 0 12px;border-left:2px solid transparent;white-space:pre-wrap;overflow-wrap:anywhere}
+.logline[data-level=warn]{color:var(--warn);border-left-color:var(--warn)}
+.logline[data-level=error]{color:var(--danger);background:var(--danger-bg);border-left-color:var(--danger)}
+.only-issues .logline:not([data-level]){display:none}
+.logbox .empty.bad{color:var(--danger)}.logbox .empty{font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;font-size:14px}
+.jump{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--surface);border-color:var(--border);box-shadow:var(--shadow);font-size:13px}
+.jump:hover:enabled{background:var(--surface);color:var(--text)}
+.logmeta{margin-top:8px}.logmeta.bad{color:var(--danger)}
+.seg{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--border2);border-radius:8px}
+.seg button{border:0;min-height:28px;padding:3px 14px;border-radius:6px;color:var(--text2)}.seg button[aria-pressed=true]{background:var(--selected);color:var(--text)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.kpi{position:relative;display:block;text-align:left;white-space:normal;border:0;border-left:1px solid var(--border);border-radius:0;padding:14px 16px 16px;min-height:0}.kpi:first-child{border-left:0}
+.kpi[aria-pressed=true]{background:var(--hover)}.kpi[aria-pressed=true]::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:2px;border-radius:2px;background:var(--info)}
+.kpi .k{font-size:12px;color:var(--text2)}.kpi .v{font-size:24px;font-weight:500;line-height:1.35}.kpi .v small{font-size:13px;font-weight:400;color:var(--text2);margin:0 4px 0 2px}
+.kpi .n{font-size:12px;color:var(--muted);word-break:keep-all}
+.chart{padding:14px 16px 10px;margin-bottom:12px}.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:500;margin-bottom:12px}.chart-head small{color:var(--muted);font-weight:400;font-size:12px}
+.bars{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;height:120px;border-bottom:1px solid var(--border)}.bars.hours{height:72px;gap:2px}
+.cell{display:flex;align-items:flex-end;height:100%}.bar{width:100%;min-height:2px;background:var(--info);border-radius:4px 4px 0 0}.bar.zero{background:var(--border);border-radius:0}.cell:hover .bar{opacity:.7}
+.bar.split{display:flex;flex-direction:column-reverse;gap:2px;background:none;overflow:hidden}.bar.split i{min-height:2px}.bar.split .u,.legend .u{background:var(--border2)}.bar.split .p,.legend .p{background:var(--private)}.bar.split .g,.legend .g{background:var(--group)}
+.chart-head .side{display:flex;gap:12px;align-items:baseline}.legend{display:flex;gap:10px;font-size:12px;color:var(--text2);font-weight:400}.legend span{display:inline-flex;align-items:center;gap:4px}.legend i{width:8px;height:8px;border-radius:2px}
+.ticks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;margin-top:4px;font-size:11px;color:var(--muted);text-align:center;white-space:nowrap}.hours+.ticks{gap:2px}
+.toolrow{display:grid;grid-template-columns:minmax(0,1fr) 56px 88px minmax(72px,160px);gap:12px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:13px}
+.toolrow:first-child{border-top:0;padding-top:0;font-size:12px;color:var(--muted)}.toolrow .num{text-align:right;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.toolrow .num small{margin-right:6px;font-size:11px;color:var(--muted)}
+.meter{display:flex;align-items:center;gap:8px}.meter .track{flex:1;height:6px;border-radius:3px;background:var(--hover)}.meter .fill{height:100%;border-radius:3px;background:var(--danger)}
+.meter span{width:34px;text-align:right;color:var(--text2);font-variant-numeric:tabular-nums}.toolrow:first-child .meter span{width:auto}
+.tip{position:fixed;z-index:20;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:6px 10px;font-size:12px;color:var(--text2);white-space:nowrap}.tip b{display:block;color:var(--text);font-weight:500}
+@media(max-width:720px){
+  .app{grid-template-columns:1fr}nav{position:static;height:auto;margin:0;border-radius:0;border-width:0 0 1px;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--border);padding:8px 12px;overflow-x:auto}
+  .brand{padding:0 8px 0 0}.side-toggle{display:none!important}.app.side-collapsed nav{display:flex}main{padding:16px}header{flex-direction:column}header>div:first-child{flex-basis:auto}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
+  .toolrow{grid-template-columns:56px 104px minmax(80px,1fr);row-gap:2px}.toolrow>:first-child{grid-column:1/-1}.toolrow:first-child{display:none}.toolrow .num{text-align:left}.toolrow .calls::before{content:"调用 "}.toolrow .fail::before{content:"失败 "}.toolrow .fail{display:flex;align-items:baseline;white-space:pre}.toolrow .fail small{order:2;margin:0 0 0 6px}
+  .kpis{grid-template-columns:1fr 1fr}.kpi:nth-child(3){border-left:0}.kpi:nth-child(n+3){border-top:1px solid var(--border)}.kpi .v{font-size:20px}
+  .logbox{height:calc(100vh - 290px)}.tools select{flex:1}
+  .row{flex-wrap:wrap}.row .what{flex-basis:100%}.facts{grid-template-columns:1fr}.facts dd{border-top:0;padding-top:0}
+}
+</style>
+<div class="app" id="app">
+  <nav aria-label="页面">
+    <div class="brand">QQbot<button type="button" class="side-toggle" id="side-hide" aria-label="收起侧栏" title="收起侧栏"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="M6 2.5v11"/></svg></button></div>
+    <a href="#models" data-page="models">模型 <small id="model-count"></small></a>
+    <a href="#logs" data-page="logs">日志</a>
+    <a href="#stats" data-page="stats">统计</a>
+    <a href="#settings" data-page="settings">设置</a>
+  </nav>
+  <main>
+    <header>
+      <div class="title-row"><button type="button" class="side-toggle" id="side-show" aria-label="展开侧栏" title="展开侧栏"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="M6 2.5v11"/></svg></button><div><h1 id="title">模型</h1><div class="sub warn" id="now" hidden></div></div></div>
+      <div class="tools" data-for="models" hidden><input id="search" type="search" placeholder="搜索模型或接口" aria-label="搜索模型或接口"><button id="api-add">添加接口</button><button id="refresh" class="ghost">刷新</button></div>
+      <div class="tools" data-for="stats" hidden><div class="seg" role="group" aria-label="时间范围"><button type="button" data-range="day">按天</button><button type="button" data-range="month">按月</button></div></div>
+      <div class="tools" data-for="logs" hidden><select id="log-pick" aria-label="选择日志"></select><label class="check"><input type="checkbox" id="log-issues">只看警告和错误</label></div>
+    </header>
+    <div class="status" id="status" role="status" aria-live="polite"><span id="status-text">正在读取状态…</span><button id="status-close" hidden aria-label="关闭提示">知道了</button></div>
+
+    <section data-page="models" id="groups" hidden>
+      <div class="group" data-group="api"><button class="group-head" type="button" aria-expanded="true" aria-controls="apis">云端 API <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="apis"></div></div>
+      <div class="group" data-group="local"><button class="group-head" type="button" aria-expanded="true" aria-controls="models">本地模型 · Ollama <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="models"></div></div>
+      <div class="group" data-group="todo"><button class="group-head" type="button" aria-expanded="true" aria-controls="apis-todo">待配置 <small></small><span class="chev" aria-hidden="true"></span></button><div class="list" id="apis-todo"></div></div>
+    </section>
+
+    <section data-page="logs" hidden>
+      <div class="logwrap">
+        <div class="list logbox" id="log-box" tabindex="0" aria-label="日志内容"><div id="log-lines"></div></div>
+        <button type="button" class="jump" id="log-jump" hidden>有新日志 · 回到底部</button>
+      </div>
+      <div class="muted logmeta" id="log-meta"></div>
+    </section>
+
+    <section data-page="stats" hidden>
+      <div class="list empty" id="stats-empty">正在读取…</div>
+      <div id="stats-body" hidden>
+        <div class="kpis" id="kpis" role="group" aria-label="回答"></div>
+        <div class="kpis" id="kpis-projects" role="group" aria-label="项目"></div>
+        <div class="list chart"><div class="chart-head"><span id="trend-title"></span><div class="side"><span class="legend" hidden><span><i class="p"></i>私聊</span><span><i class="g"></i>群聊</span><span class="unknown" hidden><i class="u"></i>未知</span></span><small id="trend-range"></small></div></div><div class="bars" id="trend"></div><div class="ticks" id="trend-ticks"></div></div>
+        <div class="list chart"><div class="chart-head"><span>时段</span><div class="side"><span class="legend" hidden><span><i class="p"></i>私聊</span><span><i class="g"></i>群聊</span><span class="unknown" hidden><i class="u"></i>未知</span></span><small>按完成时间</small></div></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
+        <div class="list chart" id="tools-card" hidden><div class="chart-head"><span>工具</span><small id="tools-since"></small></div><div id="tools"></div></div>
+        <div class="muted" id="stats-meta"></div>
+      </div>
+    </section>
+
+    <section data-page="settings" hidden>
+      <dl class="list facts">
+        <dt>模型服务</dt><dd><span id="ollama-state">读取中…</span><button id="start" hidden>启动 Ollama</button></dd>
+        <dt>QQbot</dt><dd id="gateway-state">读取中…</dd>
+        <dt>Ollama 地址</dt><dd id="ollama-url">—</dd>
+        <dt>模型配置文件</dt><dd><code id="config">—</code></dd>
+      </dl>
+    </section>
+  </main>
+</div>
+
+<div class="menu" id="menu" role="menu" hidden></div>
+<div class="tip" id="tip" hidden></div>
+
+<dialog id="api-dialog" aria-labelledby="dialog-title">
+  <form id="api-form" method="dialog">
+    <h2 id="dialog-title">添加接口</h2>
+    <div class="pair">
+      <label class="field"><span>名称</span><input id="api-name" required maxlength="80" placeholder="智谱"></label>
+      <label class="field"><span>模型</span><input id="api-model" maxlength="200" placeholder="glm-4.7-flash"></label>
+    </div>
+    <label class="field"><span>服务地址</span><input id="api-base" type="url" placeholder="https://open.bigmodel.cn/api/anthropic"></label>
+    <label class="field"><span>协议</span>
+      <select id="api-protocol"><option value="auto">自动识别</option><option value="openai">OpenAI 兼容</option><option value="anthropic">Anthropic</option></select>
+      <small>自动识别只把 api.anthropic.com 当作 Anthropic；其他服务商的 Anthropic 兼容地址请选 Anthropic。</small>
+    </label>
+    <fieldset>
+      <legend>密钥</legend>
+      <label class="field"><span>读取 .env 中的变量</span><input id="api-key-env" list="api-key-names" maxlength="128" spellcheck="false" placeholder="DEEPSEEK_API_KEY"></label>
+      <div class="hint" id="key-hint"></div>
+      <label class="field"><span>或填写新密钥</span><input id="api-key" type="password" autocomplete="new-password" placeholder="留空则使用上面的变量"><small>新密钥写入 .env 的 QQBOT_API_&lt;编号&gt;，并改用这个变量。</small></label>
+      <datalist id="api-key-names"></datalist>
+    </fieldset>
+    <details>
+      <summary>更多</summary>
+      <label class="field"><span>手动余额标记</span><select id="api-mark"><option value="unknown">未知</option><option value="available">余额充足</option><option value="low">余额偏低</option><option value="empty">余额耗尽</option></select></label>
+    </details>
+    <div class="error" id="dialog-error" role="alert"></div>
+    <div class="dialog-actions"><button type="button" id="api-cancel">取消</button><button type="submit" class="primary" id="api-submit">保存</button></div>
+  </form>
+</dialog>
+
+<script>
+const token="__PANEL_TOKEN__";
+const $=id=>document.getElementById(id);
+const protocols={openai:"OpenAI 兼容",anthropic:"Anthropic"},marks={available:"余额充足",low:"余额偏低",empty:"余额耗尽"};
+const titles={models:"模型",logs:"日志",stats:"统计",settings:"设置"};
+// editingApi: null while the dialog is closed, "" for a new profile, else the profile id.
+let state=null,job=null,page="",busy=false,refreshing=false,lastJob="",pendingSave=false,editingApi=null,armed=null,armTimer=0,menuFor=null,dismissed="";
+
+// Polls write only what changed, so rows, buttons and the dialog keep their identity between refreshes.
+function setText(node,text){ if(node.textContent!==text)node.textContent=text; }
+function setProp(node,key,value){ if(node[key]!==value)node[key]=value; }
+function make(tag,className="",text=""){ const node=document.createElement(tag);if(className)node.className=className;if(text)node.textContent=text;return node; }
+function sync(list,items,keyOf,create,update,empty){
+  const rows=new Map();
+  for(const row of [...list.children]){ if(row.dataset.key===undefined)row.remove();else rows.set(row.dataset.key,row); }
+  let previous=null;
+  for(const item of items){
+    const key=keyOf(item);let row=rows.get(key);
+    if(row)rows.delete(key);else{row=create();row.dataset.key=key;}
+    update(row,item);
+    const expected=previous?previous.nextSibling:list.firstChild;
+    if(row!==expected)list.insertBefore(row,expected);
+    previous=row;
+  }
+  for(const row of rows.values())row.remove();
+  if(!items.length)list.append(empty());
+}
+function emptyState(text,buttonLabel,onClick){
+  const box=make("div","empty",text);
+  if(buttonLabel){const b=make("button","",buttonLabel);b.addEventListener("click",onClick);box.append(make("br"),b);}
+  return box;
+}
+function rowSkeleton(){
+  const row=make("div","row"),what=make("div","what");
+  what.append(make("div","name"),make("div","sub"),make("div","note"));
+  const badge=make("span","badge"),action=make("button"),more=make("button","more","⋯");
+  action.type=more.type="button";more.setAttribute("aria-haspopup","menu");
+  row.append(what,badge,action,more);return row;
+}
+function fillRow(row,{name,sub,note,badge,tone,action,actionLabel,armedLabel,moreLabel}){
+  const [what,badgeNode,button,more]=row.children,[nameNode,subNode,noteNode]=what.children;
+  setText(nameNode,name);setText(subNode,sub);subNode.title=sub;setText(noteNode,note||"");
+  setText(badgeNode,badge||"");badgeNode.dataset.tone=tone||"plain";
+  const isArmed=armed&&armed.kind===action&&armed.id===row.dataset.key;
+  button.hidden=!actionLabel;setText(button,isArmed?armedLabel:actionLabel||"");setProp(button,"className",isArmed?"confirm":"");
+  setProp(button,"disabled",busy);button.dataset.action=action||"";
+  more.setAttribute("aria-label",moreLabel);
+}
+
+function arm(kind,id){ armed={kind,id};clearTimeout(armTimer);armTimer=setTimeout(()=>{armed=null;renderAll();},5000);renderAll(); }
+function armedFor(kind,id){ return armed&&armed.kind===kind&&armed.id===id; }
+
+function isLocal(url){ try{return ["localhost","127.0.0.1","[::1]"].includes(new URL(url).hostname);}catch{return false;} }
+function running(id){ return busy&&job&&job.model===id; }
+
+// ---- local models
+function renderLocal(){
+  const online=!!state?.ollama?.online,list=state?.models||[],query=$("search").value.toLowerCase();
+  const items=list.filter(m=>m.name.toLowerCase().includes(query));
+  groupCount("local",query?`${items.length} / ${list.length}`:String(list.length),query&&!items.length);
+  sync($("models"),items,m=>m.name,()=>{
+    const row=rowSkeleton();
+    row.children[2].addEventListener("click",()=>{const name=row.dataset.key;armedFor("switch",name)?(armed=null,act("switch",name)):arm("switch",name);});
+    row.children[3].addEventListener("click",e=>openMenu(e.currentTarget,"local",row.dataset.key));
+    return row;
+  },(row,m)=>{
+    const current=state.current?.model===m.name&&isLocal(state.current.base_url);
+    fillRow(row,{name:m.name,sub:[m.parameter_size,m.quantization,m.size?(m.size/1e9).toFixed(1)+" GB":""].filter(Boolean).join(" · ")||"—",
+      note:armedFor("switch",m.name)?"再点一次确认：会写入 .env 并重启 QQbot":"",
+      badge:running(m.name)?"处理中…":current?"正在使用":m.loaded?"已加载":"",tone:running(m.name)?"plain":current?"current":"ok",
+      action:"switch",actionLabel:current||!online?"":"切换",armedLabel:"确认切换",moreLabel:`${m.name} 更多操作`});
+  },()=>!online?emptyState("模型服务未启动。","启动 Ollama",()=>act("start")):emptyState("本机还没有已安装的模型。检查设置里的模型配置文件。"));
+}
+
+// ---- API profiles
+function missing(p){ return [!p.has_key&&"密钥",!p.model&&"模型",!p.base_url&&"服务地址"].filter(Boolean); }
+// One plain sentence per problem; the 待配置 group header already says these profiles cannot be used yet.
+function apiProblem(p){
+  const alt=p.key_alternatives?.[0];
+  if(!p.has_key)return {text:alt?`密钥在 ${alt}，不是 ${p.api_key_env}`:`.env 里没有 ${p.api_key_env||"密钥"}`,fix:alt?"修复":"填写密钥"};
+  if(!p.ready)return {text:"还没填"+missing(p).join("、"),fix:"补全"};
+  if(p.balance_mark==="empty")return {text:"已标记余额耗尽",fix:"编辑"};
+  if(p.balance?.state==="unavailable"&&p.balance_mark!=="available")return {text:"余额查询显示账户不可用",fix:"编辑"};
+  return null;
+}
+function balanceText(p){
+  const b=p.balance,parts=[];
+  if(b?.entries)parts.push(b.entries.map(e=>`${e.currency} ${e.amount}`).join(" / "));
+  else if(b?.state==="error")parts.push("余额查询失败");
+  if(marks[p.balance_mark]&&p.balance_mark!=="empty")parts.push(marks[p.balance_mark]);
+  return parts.join(" · ");
+}
+function profile(id){ return (state?.apis||[]).find(p=>p.id===id); }
+function balanceSupported(p){ return ["https://api.deepseek.com","https://api.deepseek.com/v1"].includes((p.base_url||"").replace(/\/$/,"")); }
+function apiRow(){
+  const row=rowSkeleton();
+  row.children[2].addEventListener("click",()=>apiAction(row.children[2].dataset.action,row.dataset.key));
+  row.children[3].addEventListener("click",e=>openMenu(e.currentTarget,"api",row.dataset.key));
+  return row;
+}
+function fillApi(row,p){
+  const problem=apiProblem(p),proto=p.protocol==="auto"||!p.protocol?`${protocols[p.effective_protocol]||"OpenAI 兼容"}（自动）`:protocols[p.protocol]||p.protocol;
+  const todo=problem&&!p.active,sub=todo?problem.text:[p.model,proto,!problem&&balanceText(p)].filter(Boolean).join(" · ");
+  fillRow(row,{name:p.name,sub,note:armedFor("switch",p.id)?"再点一次确认：会写入 .env 并重启 QQbot":p.active&&problem?problem.text:"",
+    badge:running(p.id)?"处理中…":p.active?"正在使用":"",tone:running(p.id)?"plain":"current",
+    action:p.active?"":problem?"fix":"switch",actionLabel:p.active?"":problem?problem.fix:"切换",armedLabel:"确认切换",moreLabel:`${p.name} 更多操作`});
+}
+function renderApis(){
+  const profiles=state?.apis||[],names=state?.api_key_names||[],datalist=$("api-key-names"),query=$("search").value.toLowerCase();
+  if([...datalist.options].map(o=>o.value).join()!==names.join())datalist.replaceChildren(...names.map(n=>Object.assign(make("option"),{value:n})));
+  const match=profiles.filter(p=>!query||`${p.name} ${p.model}`.toLowerCase().includes(query));
+  // The active profile stays with the usable ones even when it has a problem, so "正在使用" is never filed under 待配置.
+  const usable=match.filter(p=>p.active||!apiProblem(p)),todo=match.filter(p=>!p.active&&apiProblem(p));
+  const total=profiles.filter(p=>p.active||!apiProblem(p)).length,totalTodo=profiles.length-total;
+  groupCount("api",query?`${usable.length} / ${total}`:String(total),query?!usable.length:profiles.length>0&&!total);
+  groupCount("todo",query?`${todo.length} / ${totalTodo}`:String(totalTodo),!todo.length);
+  sync($("apis"),usable,p=>p.id,apiRow,fillApi,()=>emptyState("添加一个 API 接口，机器人就能使用云端模型。","添加接口",()=>editApi()));
+  sync($("apis-todo"),todo,p=>p.id,apiRow,fillApi,()=>make("div"));
+  setText($("model-count"),String(profiles.length+(state?.models||[]).length||""));
+}
+function groupCount(name,text,hide){
+  const group=document.querySelector(`.group[data-group=${name}]`);
+  setText(group.querySelector(".group-head small"),text);group.hidden=!!hide;
+}
+let collapsed=new Set();
+try{collapsed=new Set(JSON.parse(localStorage.getItem("panel-collapsed")||"[]"));}catch{}
+document.querySelectorAll(".group").forEach(group=>{
+  const head=group.querySelector(".group-head"),apply=()=>{const c=collapsed.has(group.dataset.group);group.classList.toggle("collapsed",c);head.setAttribute("aria-expanded",String(!c));};
+  head.addEventListener("click",()=>{
+    const name=group.dataset.group;collapsed.has(name)?collapsed.delete(name):collapsed.add(name);apply();
+    try{localStorage.setItem("panel-collapsed",JSON.stringify([...collapsed]));}catch{}
+  });apply();
+});
+function apiAction(kind,id){
+  const p=profile(id);if(!p)return;
+  if(kind==="fix")return editApi(p,!p.has_key?p.key_alternatives?.[0]:"");
+  if(kind==="switch"){ if(armedFor("switch",id)){armed=null;act("api_switch",id);}else arm("switch",id); }
+}
+
+// ---- row menu
+function openMenu(anchor,kind,id){
+  const menu=$("menu");
+  if(menuFor===anchor){return closeMenu();}
+  menuFor=anchor;menu.replaceChildren();
+  const add=(label,fn,{danger=false,locked=false}={})=>{
+    const b=make("button",danger?"danger":"",label);b.setAttribute("role","menuitem");b.disabled=busy||locked;
+    b.addEventListener("click",()=>{if(fn(b)!=="keep")closeMenu();});menu.append(b);
+  };
+  if(kind==="local"){
+    const m=(state?.models||[]).find(x=>x.name===id);if(!m)return closeMenu();
+    add(m.loaded?"重新加载到内存":"加载到内存",()=>act("warm",id));
+  }else{
+    const p=profile(id);if(!p)return closeMenu();
+    const locked=!!p.active;
+    add("编辑",()=>editApi(p),{locked});
+    if(balanceSupported(p))add("查询余额",()=>act("api_balance",id));
+    add(armedFor("delete",id)?"确认删除":"删除",b=>{
+      if(armedFor("delete",id)){armed=null;act("api_delete",id);return;}
+      arm("delete",id);b.textContent="确认删除：再点一次";clearTimeout(armTimer);armTimer=setTimeout(()=>{armed=null;closeMenu();renderAll();},5000);return "keep";
+    },{danger:true,locked});
+    if(locked)menu.append(make("div","why","正在使用的接口要先切换到其他配置，才能编辑或删除。"));
+  }
+  menu.hidden=false;
+  const r=anchor.getBoundingClientRect(),w=menu.offsetWidth,h=menu.offsetHeight;
+  menu.style.left=Math.max(8,Math.min(r.right-w,innerWidth-w-8))+"px";
+  menu.style.top=(r.bottom+4+h>innerHeight?Math.max(8,r.top-h-4):r.bottom+4)+"px";
+  menu.querySelector("button:enabled")?.focus();
+}
+function closeMenu(){ $("menu").hidden=true;menuFor=null; }
+document.addEventListener("click",e=>{ if(menuFor&&!$("menu").contains(e.target)&&!menuFor.contains(e.target))closeMenu(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape")closeMenu(); });
+addEventListener("scroll",closeMenu,true);addEventListener("resize",closeMenu);
+
+// ---- dialog
+function editApi(p=null,keyEnv=""){
+  editingApi=p?.id||"";
+  setText($("dialog-title"),p?`编辑 ${p.name}`:"添加接口");
+  $("api-name").value=p?.name||"";$("api-model").value=p?.model||"";$("api-base").value=p?.base_url||"";
+  $("api-protocol").value=p?.protocol||"auto";$("api-mark").value=p?.balance_mark||"unknown";
+  $("api-key").value="";$("api-key-env").value=keyEnv||p?.api_key_env||"";
+  setText($("key-hint"),keyEnv?`已改为读取 ${keyEnv}，保存后生效。`:p&&!p.has_key?`.env 中没有 ${p.api_key_env}。从列表选一个已有变量，或填写新密钥。`:"");
+  setText($("dialog-error"),"");
+  $("api-form").querySelector("details").open=p?.balance_mark==="empty";
+  $("api-dialog").showModal();(p?$("api-model"):$("api-name")).focus();
+}
+function closeDialog(){ editingApi=null;pendingSave=false;$("api-key").value="";$("api-dialog").close(); }
+$("api-cancel").addEventListener("click",closeDialog);
+$("api-dialog").addEventListener("cancel",e=>{e.preventDefault();closeDialog();});
+$("api-form").addEventListener("submit",async e=>{
+  e.preventDefault();setText($("dialog-error"),"");pendingSave=true;
+  await act("api_save",{id:editingApi,name:$("api-name").value,model:$("api-model").value,base_url:$("api-base").value,api_key:$("api-key").value,
+    api_key_env:$("api-key-env").value,balance_mark:$("api-mark").value,protocol:$("api-protocol").value});
+});
+
+// ---- logs
+// Appends only: lines already on screen stay put, so reading older lines is never interrupted by a refresh.
+const LOG_KEEP=2000,ERR=/\b(ERROR|CRITICAL|FATAL)\b|\[ERROR\]|level=ERROR|Traceback \(most recent call last\)/,WARN=/\bWARN(ING)?\b|\[WARNING\]|level=WARN/,STAMPED=/^(\d{4}-\d\d-\d\d|time=)/;
+// logFollow: the reader is at the bottom, so new lines and reflows keep the view pinned there.
+// logError: why the last read failed; lines already shown stay, so the reader keeps what was read before.
+const OFFLINE="连不上面板服务，检查它是否还在运行";
+let logId="",logOffset=null,logLevel="",logBusy=false,logAgain=false,logCatalog=null,logFollow=true,logError="";
+try{logId=localStorage.getItem("panel-log")||"";}catch{}
+async function getJSON(url){
+  let r,data={};
+  try{r=await fetch(url,{headers:{"X-Panel-Token":token}});}catch{throw Object.assign(Error(OFFLINE),{offline:true});}
+  try{data=await r.json();}catch{}
+  if(r.ok)return data;
+  // An older panel process serves the new page but has no log endpoint until it restarts.
+  if(r.status===404&&(url==="/api/logs"||url==="/api/usage"))throw Error("面板服务需要重启，重启后才能看日志");
+  throw Error(data.error||"日志读取失败");
+}
+// A timestamped line says its own level near the start; a line without one (traceback, wrapped JSON) belongs to the line above.
+function levelOf(line){
+  if(STAMPED.test(line)){const head=line.slice(0,64);return logLevel=ERR.test(head)?"error":WARN.test(head)?"warn":"";}
+  if(!logLevel&&ERR.test(line))logLevel="error";
+  return logLevel;
+}
+function renderLogPicker(){
+  const pick=$("log-pick"),present=(logCatalog||[]).filter(l=>l.exists);
+  pick.hidden=$("log-issues").parentElement.hidden=!present.length;
+  if(!present.some(l=>l.id===logId))logId=present[0]?.id||"";
+  const want=present.map(l=>l.id+l.label).join();
+  if(pick.dataset.want!==want){pick.dataset.want=want;pick.replaceChildren(...present.map(l=>Object.assign(make("option","",l.label),{value:l.id})));}
+  setProp(pick,"value",logId);
+}
+function renderLogMeta(){
+  const meta=(logCatalog||[]).find(l=>l.id===logId),shown=$("log-lines").children.length;
+  $("log-meta").classList.toggle("bad",!!logError&&!!shown);
+  // Offline is already said by the status bar above, so the note only says what the lines are.
+  setText($("log-meta"),logError?(!shown?"":logError.offline?"下面是之前读到的内容。":`${logError.message}。下面是之前读到的内容。`):meta?.file||"");
+}
+function renderLogEmpty(){
+  const lines=$("log-lines"),issues=$("log-issues").checked,shown=issues?lines.querySelectorAll(".logline[data-level]").length:lines.children.length;
+  let empty=$("log-box").querySelector(".empty");
+  const text=logError&&!lines.children.length?logError.message+"。":!logCatalog?"正在读取日志…":!logCatalog.some(l=>l.exists)?"还没有日志。QQbot 和面板运行后会写在 var/logs 里。"
+    :!lines.children.length?"这个日志还是空的。":issues&&!shown?"最近的日志里没有警告或错误。":"";
+  empty?.classList.toggle("bad",!!logError);
+  if(!text){empty?.remove();return;}
+  if(!empty){empty=make("div","empty");$("log-box").append(empty);}
+  setText(empty,text);
+}
+function atBottom(box){ return box.scrollHeight-box.scrollTop-box.clientHeight<24; }
+async function refreshLog(){
+  if(page!=="logs")return;
+  if(logBusy){logAgain=true;return;}
+  logBusy=true;
+  try{
+    logCatalog=(await getJSON("/api/logs")).logs;renderLogPicker();
+    const id=logId;
+    if(id){
+      const data=await getJSON(`/api/logs/${encodeURIComponent(id)}`+(logOffset===null?"":`?after=${logOffset}`));
+      if(id===logId)appendLog(data);
+    }
+    logError="";
+  }catch(e){logError=e;}
+  finally{renderLogPicker();renderLogEmpty();renderLogMeta();logBusy=false;if(logAgain){logAgain=false;refreshLog();}}
+}
+function appendLog(data){
+  const box=$("log-box"),lines=$("log-lines"),follow=data.reset||logOffset===null||logFollow;
+  if(data.reset){lines.replaceChildren();logLevel="";}
+  logOffset=data.offset;
+  if(!data.lines.length)return;
+  const fragment=document.createDocumentFragment();
+  for(const line of data.lines){const node=make("div","logline",line||" ");const level=levelOf(line);if(level)node.dataset.level=level;fragment.append(node);}
+  lines.append(fragment);
+  const before=box.scrollHeight;
+  while(lines.children.length>LOG_KEEP)lines.firstChild.remove();
+  if(follow){logFollow=true;box.scrollTop=box.scrollHeight;$("log-jump").hidden=true;}
+  else{box.scrollTop-=before-box.scrollHeight;$("log-jump").hidden=false;}
+}
+function pickLog(id){
+  logId=id;logOffset=null;logLevel="";logFollow=true;$("log-lines").replaceChildren();$("log-jump").hidden=true;
+  try{localStorage.setItem("panel-log",id);}catch{}
+  refreshLog();
+}
+$("log-pick").addEventListener("change",e=>pickLog(e.target.value));
+$("log-issues").addEventListener("change",e=>{$("log-box").classList.toggle("only-issues",e.target.checked);renderLogEmpty();pinLog();});
+function pinLog(){ const box=$("log-box");logFollow=true;box.scrollTop=box.scrollHeight;$("log-jump").hidden=true; }
+$("log-box").addEventListener("scroll",e=>{logFollow=atBottom(e.currentTarget);if(logFollow)$("log-jump").hidden=true;});
+$("log-jump").addEventListener("click",pinLog);
+// Wrapping changes with the width, so a resize or the page becoming visible would otherwise leave a follower mid-log.
+const logResize=new ResizeObserver(()=>{if(logFollow)$("log-box").scrollTop=$("log-box").scrollHeight;});
+logResize.observe($("log-lines"));logResize.observe($("log-box"));
+
+// ---- stats
+// Each tile counts one list: answers (usage.log, one line per whole answer, every model call and tool step), or the
+// project files received, sent and built (bot.log). Picking a tile sets what both charts show.
+const sum=(list,key)=>list.reduce((t,x)=>t+x[key],0);
+const METRICS={
+  count:{split:true,of:"answers",label:"回答",value:a=>a.length,fmt:n=>[[n,"次"]],
+    note:a=>{const g=a.filter(x=>x.chat==="group").length;return `私聊 ${a.length-g} · 群聊 ${g}`;}},
+  people:{split:true,of:"answers",label:"人数",value:a=>new Set(a.map(x=>x.who)).size,fmt:n=>[[n,"人"]],
+    note:a=>`人均 ${trim(a.length/new Set(a.map(x=>x.who)).size)} 次`},
+  tokens:{split:true,of:"answers",label:"词元",value:a=>sum(a,"prompt")+sum(a,"completion"),fmt:n=>bigNumber(n),
+    note:a=>`输出 ${plain(bigNumber(sum(a,"completion")))}`},
+  time:{of:"answers",label:"用时（中位）",value:a=>median(a.map(x=>x.seconds)),fmt:n=>duration(n),
+    note:a=>`最长 ${plain(duration(Math.max(...a.map(x=>x.seconds))))}`},
+  received:{split:true,of:"received",label:"用户上传",value:a=>a.length,fmt:n=>[[n,"个"]],note:a=>`共 ${fileSize(sum(a,"bytes"))}`},
+  sent:{split:true,of:"sent",label:"发给用户",value:a=>a.filter(x=>x.ok).length,fmt:n=>[[n,"个"]],
+    note:a=>{const failed=a.filter(x=>!x.ok).length;return failed?`失败 ${failed} 次`:`共 ${fileSize(sum(a,"bytes"))}`;}},
+  builds:{split:true,of:"builds",label:"生成项目",value:a=>a.length,fmt:n=>[[n,"次"]],
+    // "unknown": the log cut the line that says how the build ended.
+    note:a=>{const n=k=>a.filter(x=>x.outcome===k).length,unknown=n("unknown");return `成功 ${n("built")} · 失败 ${n("failed")}`+(unknown?` · 未知 ${unknown}`:"");}},
+  fixes:{split:true,of:"builds",label:"自动修正",value:a=>sum(a,"fixes"),fmt:n=>[[n,"处"]],
+    note:a=>{const n=a.filter(x=>x.fixes).length;return n?`在 ${n} 次生成里`:"";}},
+};
+const ROWS=[["count","people","tokens","time"],["received","sent","builds","fixes"]];
+let statsData=null,statsError=null,statsBusy=false,statsDrawn="",statsTick=0,statsRange="day",statsMetric="count";
+try{
+  statsRange=localStorage.getItem("panel-stats-range")==="month"?"month":"day";
+  const saved=localStorage.getItem("panel-stats-metric");if(METRICS[saved])statsMetric=saved;
+}catch{}
+function median(values){ if(!values.length)return null;const v=[...values].sort((a,b)=>a-b),m=v.length>>1;return v.length%2?v[m]:Math.round((v[m-1]+v[m])/2); }
+function trim(n){ return String(+n.toFixed(n<10?1:0)); }
+function bigNumber(n){ return n>=1e8?[[trim(n/1e8),"亿"]]:n>=1e4?[[trim(n/1e4),"万"]]:[[n,""]]; }
+// Seconds matter only for short answers; past ten minutes they are noise.
+function duration(s){ return s<60?[[s,"秒"]]:s<600?[[Math.floor(s/60),"分"],[s%60,"秒"]]:s<3600?[[Math.floor(s/60),"分"]]:[[Math.floor(s/3600),"小时"],[Math.floor(s%3600/60),"分"]]; }
+function fileSize(n){ return n<1048576?`${Math.round(n/1024)} KB`:`${trim(n/1048576)} MB`; }
+function plain(parts){ return parts.map(([n,u])=>n+u).join(" "); }
+function parseAt(at){ const [d,t]=at.split(" "),[y,m,day]=d.split("-").map(Number),[h,mi,se]=t.split(":").map(Number);return new Date(y,m-1,day,h,mi,se); }
+function dayKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function buckets(){
+  const now=new Date(),list=[];
+  if(statsRange==="day")for(let i=13;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i);
+    list.push({key:dayKey(d),tick:i===0?"今天":i%2?"":`${d.getMonth()+1}/${d.getDate()}`,name:i===0?"今天":`${d.getMonth()+1}月${d.getDate()}日`,start:d});
+  }else for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    list.push({key:dayKey(d).slice(0,7),tick:`${d.getMonth()+1}月`,name:`${d.getFullYear()}年${d.getMonth()+1}月`,start:d});
+  }
+  return list;
+}
+async function refreshStats(force){
+  if(page!=="stats"||statsBusy||(!force&&statsTick++%10))return;
+  statsBusy=true;
+  try{statsData=await getJSON("/api/usage");statsError=null;}catch(e){statsError=e;}
+  finally{statsBusy=false;renderStats();}
+}
+function renderStats(){
+  const body=$("stats-body"),empty=$("stats-empty");
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.range===statsRange)));
+  const none=statsData&&!["answers","received","sent","builds","tasks"].some(k=>statsData[k]?.length);
+  const message=statsError&&!statsData?statsError.message+"。":!statsData?"正在读取…":none?"还没有记录。":"";
+  empty.hidden=!message;body.hidden=!!message;setText(empty,message);empty.classList.toggle("bad",!!statsError&&!statsData);
+  if(message)return;
+  setText($("stats-meta"),statsError?`${statsError.message}。下面是上次读到的数字。`:statsData.clipped?"日志太大，只统计了最近的部分。":"");
+  $("stats-meta").classList.toggle("bad",!!statsError);
+  const list=buckets(),from=list[0].start,metric=METRICS[statsMetric];
+  const signature=[statsRange,statsMetric,list.at(-1).key,...["answers","received","sent","builds","tasks"].map(k=>statsData[k].length+(statsData[k].at(-1)?.at||""))].join();
+  if(signature===statsDrawn)return;
+  statsDrawn=signature;
+  const lists={};
+  for(const k of ["answers","received","sent","builds","tasks"])lists[k]=statsData[k].map(a=>({...a,date:parseAt(a.at)})).filter(a=>a.date>=from);
+  const tile=key=>{
+    const m=METRICS[key],items=lists[m.of],value=items.length?m.value(items):null,b=make("button","kpi"),v=make("div","v");
+    b.type="button";b.setAttribute("aria-pressed",String(key===statsMetric));
+    for(const [n,u] of value===null?[["—",""]]:m.fmt(value)){v.append(String(n));if(u)v.append(make("small","",u));}
+    b.append(make("div","k",m.label),v,make("div","n",items.length?m.note(items):" "));
+    b.addEventListener("click",()=>{statsMetric=key;try{localStorage.setItem("panel-stats-metric",key);}catch{}renderStats();});
+    return b;
+  };
+  [$("kpis"),$("kpis-projects")].forEach((row,i)=>row.replaceChildren(...ROWS[i].map(tile)));
+  const items=lists[metric.of],byKey=new Map(list.map(b=>[b.key,[]]));
+  for(const a of items)byKey.get(statsRange==="day"?dayKey(a.date):dayKey(a.date).slice(0,7))?.push(a);
+  setText($("trend-title"),metric.label.replace("（中位）",""));setText($("trend-range"),statsRange==="day"?"近 14 天":"近 12 个月");
+  drawBars($("trend"),$("trend-ticks"),list.map(b=>({tick:b.tick,name:b.name,items:byKey.get(b.key)})),metric);
+  drawTools(lists.tasks,statsData.tasks);
+  drawBars($("hours"),$("hours-ticks"),Array.from({length:24},(_,h)=>({tick:h%6?"":`${h} 点`,name:`${h}:00–${h+1}:00`,items:items.filter(a=>a.date.getHours()===h)})),metric);
+}
+// A split metric stacks private (bottom) and group; both are sums over disjoint sessions, so the parts add up.
+// The median time does not add up and received or sent files do not name their chat: those stay one series.
+// copilot's task records: one row per tool, the whole answer ("conversation") first. An interrupted answer
+// (QQbot restarted mid-answer) counts as failed and is named in the row.
+function drawTools(tasks,all){
+  const card=$("tools-card");card.hidden=!all.length;if(!all.length)return;
+  const first=all[0]&&parseAt(all[0].at),since=first&&first>buckets()[0].start?`记录从 ${first.getMonth()+1}月${first.getDate()}日 开始`:"";
+  setText($("tools-since"),since);
+  const by=new Map();
+  // The post-answer ACE check calls lookup_ace too; its calls get their own row so lookup_ace counts the model's.
+  for(const t of tasks){const tool=t.check?"ace-check":t.tool,r=by.get(tool)||{tool,calls:0,failed:0,interrupted:0};r.calls++;
+    if(t.status==="failed"||t.status==="interrupted")r.failed++;if(t.status==="interrupted")r.interrupted++;by.set(tool,r);}
+  const rows=[...by.values()].sort((a,b)=>(b.tool==="conversation")-(a.tool==="conversation")||b.failed-a.failed||b.calls-a.calls);
+  const head=make("div","toolrow");head.append(make("span","",""),make("span","num","调用"),make("span","num","失败"),Object.assign(make("span","meter"),{textContent:"失败率"}));
+  $("tools").replaceChildren(head,...(rows.length?rows.map(r=>{
+    const row=make("div","toolrow"),meter=make("div","meter"),track=make("div","track"),fill=make("div","fill"),rate=Math.round(r.failed/r.calls*100);
+    fill.style.width=rate+"%";track.append(fill);meter.append(track,make("span","",rate+"%"));
+    const failed=make("span","num fail",r.failed?String(r.failed):"—");
+    if(r.interrupted)failed.prepend(make("small","",`中断 ${r.interrupted}`));
+    row.append(make("span","",({conversation:"回答","ace-check":"ACE 校验"})[r.tool]||r.tool),make("span","num calls",String(r.calls)),failed,meter);
+    return row;
+  }):[make("div","empty","这段时间没有记录。")]));
+}
+function drawBars(chart,ticks,groups,metric){
+  const part=(items,chat)=>{const some=items.filter(x=>x.chat===chat);return some.length?metric.value(some)||0:0;};
+  // null chat: an older log line whose chat the log order could not tell (two chats answering at once)
+  const parts=groups.map(g=>metric.split?[part(g.items,"private"),part(g.items,"group"),part(g.items,null)]:null);
+  const unknown=parts.some(p=>p&&p[2]);
+  const values=groups.map((g,i)=>parts[i]?parts[i][0]+parts[i][1]+parts[i][2]:g.items.length?metric.value(g.items)||0:0),max=Math.max(...values,1);
+  $("tip").hidden=true;
+  chart.parentElement.querySelector(".legend").hidden=!metric.split;chart.parentElement.querySelector(".legend .unknown").hidden=!unknown;
+  chart.replaceChildren(...groups.map((g,i)=>{
+    const cell=make("div","cell"),bar=make("div","bar"+(values[i]?"":" zero")),total=values[i]?plain(metric.fmt(values[i])):"无";
+    const text=parts[i]&&values[i]?`${total}（私聊 ${plain(metric.fmt(parts[i][0]))} · 群聊 ${plain(metric.fmt(parts[i][1]))}`+(parts[i][2]?` · 未知 ${plain(metric.fmt(parts[i][2]))}`:"")+"）":total;
+    bar.style.height=values[i]?`${Math.max(4,values[i]/max*100)}%`:"2px";
+    if(parts[i]&&values[i]){
+      bar.classList.add("split");
+      parts[i].forEach((v,k)=>{if(v){const seg=make("i","pgu"[k]);seg.style.flex=`${v} 0 0`;bar.append(seg);}});
+    }
+    cell.setAttribute("role","img");cell.setAttribute("aria-label",`${g.name}：${text}`);cell.dataset.name=g.name;cell.dataset.text=text;
+    cell.append(bar);return cell;
+  }));
+  ticks.replaceChildren(...groups.map(g=>make("span","",g.tick)));
+}
+// The tooltip sits above the hovered column; the whole column is the target, not only the bar.
+function showTip(e){
+  const cell=e.target.closest?.(".cell"),tip=$("tip");
+  if(!cell){tip.hidden=true;return;}
+  tip.replaceChildren(make("b","",cell.dataset.name),cell.dataset.text);tip.hidden=false;
+  const r=cell.getBoundingClientRect(),w=tip.offsetWidth;
+  tip.style.left=Math.max(8,Math.min(r.left+r.width/2-w/2,innerWidth-w-8))+"px";
+  tip.style.top=Math.max(8,r.top-tip.offsetHeight-6)+"px";
+}
+["trend","hours"].forEach(id=>{$(id).addEventListener("pointermove",showTip);$(id).addEventListener("pointerleave",()=>$("tip").hidden=true);});
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  statsRange=b.dataset.range;try{localStorage.setItem("panel-stats-range",statsRange);}catch{}renderStats();
+}));
+
+// ---- sidebar
+function setSide(collapsed,focus){
+  $("app").classList.toggle("side-collapsed",collapsed);
+  try{localStorage.setItem("panel-side",collapsed?"collapsed":"");}catch{}
+  if(focus)(collapsed?$("side-show"):$("side-hide")).focus();
+}
+try{setSide(localStorage.getItem("panel-side")==="collapsed");}catch{}
+$("side-hide").addEventListener("click",()=>setSide(true,true));$("side-show").addEventListener("click",()=>setSide(false,true));
+
+// ---- page chrome
+function showPage(name){
+  page=titles[name]?name:"models";
+  document.querySelectorAll("section[data-page]").forEach(s=>s.hidden=s.dataset.page!==page);
+  document.querySelectorAll("nav a").forEach(a=>a.dataset.page===page?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
+  document.querySelectorAll(".tools").forEach(t=>t.hidden=t.dataset.for!==page);
+  setText($("title"),titles[page]);closeMenu();$("now").hidden=page!=="models"||!$("now").textContent;
+  if(page==="logs")refreshLog();
+  if(page==="stats"){renderStats();refreshStats(true);}
+  $("tip").hidden=true;
+}
+addEventListener("hashchange",()=>showPage(location.hash.slice(1)));
+function status(text,kind=""){ $("status").hidden=!text;setText($("status-text"),text);$("status").dataset.state=kind;$("status-close").hidden=kind!=="completed"&&kind!=="failed"; }
+$("status-close").addEventListener("click",()=>{dismissed=lastJob;status(idleText());});
+function idleText(){ return !state?"正在读取状态…":""; }
+function renderChrome(){
+  const gw=state.gateway?.alive?(state.gateway.status==="ready"?"QQbot 已就绪":"QQbot 连接中"):"QQbot 未运行";
+  // The list marks the model in use, so the header only speaks up when QQbot is not ready.
+  setText($("now"),state.gateway?.alive&&state.gateway.status==="ready"?"":gw);$("now").hidden=page!=="models"||!$("now").textContent;
+  setText($("ollama-state"),state.ollama.online?"运行中":"未启动");$("start").hidden=!!state.ollama.online;setProp($("start"),"disabled",busy);
+  setText($("gateway-state"),gw.replace("QQbot ",""));setText($("ollama-url"),state.ollama.url||"—");setText($("config"),state.config_path||"var/models.json");
+  setProp($("api-add"),"disabled",busy);setProp($("refresh"),"disabled",refreshing);setProp($("api-submit"),"disabled",busy);
+}
+function renderAll(){ if(!state)return;renderChrome();renderLocal();renderApis(); }
+function jobText(j){
+  if(j.state!=="running")return j.message;
+  return {start:"正在启动 Ollama…",warm:`正在加载 ${j.model}…`,switch:`正在切换到 ${j.model}，QQbot 会重启…`,api_switch:"正在切换接口，QQbot 会重启…",
+    api_save:"正在保存接口…",api_delete:"正在删除接口…",api_balance:"正在查询余额…"}[j.action]||"正在处理…";
+}
+async function refresh(){
+  if(refreshing)return;refreshing=true;
+  try{
+    const r=await fetch("/api/status").catch(()=>{throw Error(OFFLINE);}),data=await r.json();if(!r.ok)throw Error(data.error||"读取状态失败");
+    const firstLoad=!state;
+    state=data.status;job=data.job;busy=job?.state==="running";
+    // A job that finished before this page opened is history, not news.
+    if(firstLoad&&job&&!busy)dismissed=lastJob=JSON.stringify(job);
+    if(!page)showPage(location.hash.slice(1));
+    const signature=JSON.stringify(job);
+    if(job&&signature!==lastJob){
+      lastJob=signature;
+      // Only the save this page submitted may close the dialog; a failed save keeps every field, including the key.
+      if(pendingSave&&job.action==="api_save"&&!busy){
+        pendingSave=false;
+        if(job.state==="completed")closeDialog();else setText($("dialog-error"),job.message);
+      }
+    }
+    if(job&&lastJob!==dismissed)status(jobText(job),job.state);else status(idleText());
+    renderAll();
+  }catch(e){status(e.message===OFFLINE?OFFLINE+"。":e.message+"。检查面板服务后刷新页面。","failed");}
+  finally{refreshing=false;if(state)renderChrome();}
+}
+async function act(action,model){
+  if(busy)return;busy=true;renderAll();status("正在提交…","running");
+  try{
+    const r=await fetch("/api/action",{method:"POST",headers:{"Content-Type":"application/json","X-Panel-Token":token},body:JSON.stringify({action,model})});
+    const data=await r.json();if(!r.ok)throw Error(data.error||"提交失败");
+    lastJob="";dismissed="";await refresh();
+  }catch(e){
+    busy=false;renderAll();
+    if(pendingSave){pendingSave=false;setText($("dialog-error"),e.message);}
+    status(e.message,"failed");
+  }
+}
+$("search").addEventListener("input",()=>{$("groups").classList.toggle("searching",!!$("search").value);renderLocal();renderApis();});$("refresh").addEventListener("click",refresh);
+$("api-add").addEventListener("click",()=>editApi());$("start").addEventListener("click",()=>act("start"));
+refresh();setInterval(()=>{refresh();refreshLog();refreshStats();},3000);
+</script>
+</html>

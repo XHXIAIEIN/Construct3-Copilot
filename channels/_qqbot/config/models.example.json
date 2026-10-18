@@ -1,0 +1,7 @@
+{
+  "ollama": {
+    "url": "http://localhost:11434",
+    "executable": "C:/path/to/ollama.exe",
+    "models_dir": "D:/models/ollama"
+  }
+}
