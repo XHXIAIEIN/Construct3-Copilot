@@ -144,3 +144,12 @@ def test_reply_limit_steps_up_with_what_the_reply_needs():
     assert shorten(complete, [], events, [], asked=True) == events
     shorten(complete, [], events + "长" * EVENTS_MAX, [], asked=True)
     assert f"under {EVENTS_MAX} characters" in asked[-1]
+
+
+def test_numbered_steps_each_take_a_line():
+    from copilot.providers.construct3.reply import step_lines
+    inline = "要用网格变形：1. 右键精灵 → 网格，行列都填 2。2. 把上边两点往里拖。3、如果有接缝，就把行数调多。"
+    assert step_lines(inline) == ("要用网格变形：\n1. 右键精灵 → 网格，行列都填 2。\n2. 把上边两点往里拖。\n"
+                                  "3、如果有接缝，就把行数调多。")
+    assert step_lines("1. 加鼠标。\n2. 加事件。") == "1. 加鼠标。\n2. 加事件。"
+    assert step_lines("X 填 0.2。1、2 两个点不动。") == "X 填 0.2。1、2 两个点不动。"

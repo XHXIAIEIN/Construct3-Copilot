@@ -12,7 +12,8 @@ from pathlib import Path
 from . import services as copilot
 from .record import fixed_lines, settle
 MAX_STEPS = 10
-from .reply import ASKED_EVENTS, BUILD_NOTE, LENGTH_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten
+from .reply import (ASKED_EVENTS, BUILD_NOTE, LENGTH_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten,
+                    step_lines)
 
 log = logging.getLogger("copilot.construct3.agent")
 from . import plugin as kb
@@ -211,7 +212,7 @@ class Agent:
         text, note = scrub(text)
         if note:
             run.trace.append(note)
-        return text, run.trace
+        return step_lines(text), run.trace
 
     def _finish(self, run: Run, text: str, outbox: list[Path] | None) -> str:
         """Take back the edits of an answer that is not sent, and pack the project of one that is."""

@@ -14,13 +14,16 @@ EVENTS_MAX = 350  # an answer that writes events the person asked for; the ceili
 SENT_MAX = 100  # characters; the reply that goes out with a project file
 # a step number: "1." or "2、" not inside a number such as 0.2 or r506.2
 STEP = re.compile(r"(?<![\d.])([1-9])[.、．](?!\d)")
+# a step that follows the end of a sentence or a colon on the same line: it starts a line of its own
+INLINE_STEP = re.compile(r"(?<=[。！？；：!?;:])[ \t]*(?=[1-9][.、．](?!\d))")
 ASKED_EVENTS = re.compile(r"事件|怎么写|写一下|写出来|写法|具体|步骤|example|event")
 SHORTEN = (
     "Rewrite your last answer in under {n} characters for the user. Keep the conclusion, the deciding reason and "
     "the steps the user must do, in everyday words. Keep the approach, not its details. Cut walkthroughs of what the code or events already do, second "
     "options, side notes, and code names, values and line numbers the person does not have to type. Keep every "
     "condition and action name the answer uses (e.g. 设置对象速率), copied exactly, since the person finds them "
-    "in the editor by that name. Same language, plain text, no mention of this request."
+    "in the editor by that name. Same language, plain text with each numbered step on its own line, no mention "
+    "of this request."
 )
 SHORTEN_EVENTS = (" Keep every event line (conditions, then → actions) exactly as written; shorten the words "
                   "around them.")
@@ -59,6 +62,12 @@ OFFER = re.compile(r"需要|要不要|想不想|如果(你)?(需要|想|有)|还
 def has_steps(text: str) -> bool:
     """Whether text holds numbered steps: a "1." and a "2.", on their own lines or in one line as QQ shows them."""
     return {"1", "2"} <= set(STEP.findall(text))
+
+
+def step_lines(text: str) -> str:
+    """The reply with each numbered step on its own line (2026-10-19: four steps of a mesh answer came in one
+    line, after the prompt's own example wrote them so)."""
+    return INLINE_STEP.sub("\n", text) if has_steps(text) else text
 
 
 def is_build_ask(question: str, project_held: bool) -> bool:
