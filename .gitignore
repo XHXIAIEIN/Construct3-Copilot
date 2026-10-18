@@ -39,3 +39,7 @@ qdrant_storage/
 
 # Claude Code local settings
 # .claude/settings.local.json
+
+# Channels runtime data and credentials
+channels/var/
+channels/.env
