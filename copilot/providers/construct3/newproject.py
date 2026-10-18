@@ -68,6 +68,11 @@ the theme decides what each role looks like.
       sized to the shape; a board of cells is cells with "outline": 1 in a darker role; behaviors: Tween, Timer, Solid,
       Sine, Bullet, 8Direction, Platform, MoveTo, Rotate, DragDrop, ScrollTo, DestroyOutsideLayout,
       BoundToLayout, or {"name": "Bullet", "properties": {"speed": 600}}; variables: name -> start value
+  {"name": "Cloth", "plugin": "TiledBg", "pattern": "checker", "size": [16, 10]},
+      a texture or a picture with content (a tablecloth, a carpet, a poster, a background to come): the backdrop's
+      checker, two cells to a unit, which shows how a mesh bends or a tween stretches it where a flat colour shows
+      nothing; placed like a Sprite, but its X and Y in events are its top-left corner; its instance takes
+      "color": "solid" (or any role) to tint it, and Set color tints it the same
   {"name": "Score", "plugin": "Text"},
   {"name": "Hp", "plugin": "Bar", "size": [6, 1], "frames": ["danger"]},   a generator component, NOT a native plugin: Hp and HpFrame become NinePatch objects.
       Set Hp width from the health ratio; look up NinePatch actions, never Bar actions

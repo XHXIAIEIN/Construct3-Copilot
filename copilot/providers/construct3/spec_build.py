@@ -42,7 +42,7 @@ from copilot.providers.construct3 import services as copilot  # noqa: E402
 NAME = re.compile(r"[A-Za-z][A-Za-z0-9_]{0,31}$")
 SHEET_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_ ]{0,31}$")
 SHAPES = ("rect", "circle", "triangle", "grid")
-WORLD = ("Sprite", "Text")
+WORLD = ("Sprite", "Text", "TiledBg")
 NONWORLD = {"Array": "Arr", "Dictionary": "Dictionary"}
 SINGLE = {"Touch": {"use-mouse-input": True}, "Mouse": {}, "Keyboard": {}}
 PLUGINS = (*WORLD, "Bar", *NONWORLD, *SINGLE)
@@ -54,7 +54,8 @@ BEHAVIORS = {"Tween": ("Tween", "TWEEN"), "Timer": ("Timer", "TIMER"), "Solid": 
              "DestroyOutsideLayout": ("destroy", "DESTROY_OUTSIDE"), "BoundToLayout": ("bound", "BOUND_TO_LAYOUT")}
 KEYS = {
     "spec": {"name", "viewport", "theme", "palette", "primary", "objects", "layouts", "sheets"},
-    "object": {"name", "plugin", "shape", "size", "frames", "outline", "outline_color", "shadow", "behaviors", "variables"},
+    "object": {"name", "plugin", "shape", "size", "frames", "outline", "outline_color", "shadow", "behaviors", "variables",
+               "pattern"},
     "behavior": {"name", "properties"},
     "layout": {"name", "sheet", "size", "screen", "layers", "instances", "backdrop"},
     "layer": {"name", "color", "parallax"},
@@ -310,7 +311,8 @@ def build(spec: dict, out: Path, rag: Path) -> list[str]:
             refuse(f"{where}.plugin", f"{plugin!r}; the plugins here are {', '.join(PLUGINS)}")
         if plugin in SINGLE and oname != plugin:
             refuse(f"{where}.name", f"a {plugin} object is named {plugin!r}, which the events write as objectClass")
-        allowed = {"Sprite": KEYS["object"], "Text": {"name", "plugin", "behaviors", "variables"},
+        allowed = {"Sprite": KEYS["object"] - {"pattern"}, "Text": {"name", "plugin", "behaviors", "variables"},
+                   "TiledBg": {"name", "plugin", "pattern", "size", "behaviors", "variables"},
                    "Bar": {"name", "plugin", "size", "frames"},
                    "Array": {"name", "plugin", "size"}, "Dictionary": {"name", "plugin"}}.get(plugin, {"name", "plugin"})
         extra = sorted(set(o) - allowed)
@@ -340,8 +342,14 @@ def build(spec: dict, out: Path, rag: Path) -> list[str]:
                 props[k] = v
             behs.append((b["name"], props))
         o["_behaviors"] = behs
-        if plugin == "Sprite":
-            if o.get("shape", "rect") not in SHAPES:
+        if plugin == "TiledBg":
+            # 2026-10-19: a tablecloth bent by a mesh was a flat trapezoid; the checker shows how it is bent
+            if o.get("pattern", "checker") != "checker":
+                refuse(f"{where}.pattern", f"{o.get('pattern')!r}; a TiledBg here is the \"checker\", which stands for a "
+                                           f"texture or a picture to come")
+            o["_frames"] = ["canvas"]
+        if plugin in ("Sprite", "TiledBg"):
+            if plugin == "Sprite" and o.get("shape", "rect") not in SHAPES:
                 refuse(f"{where}.shape", f"{o.get('shape')!r}; one of {', '.join(SHAPES)}")
             if o.get("size") == "fill":
                 if o.get("shape") == "grid":
@@ -522,6 +530,10 @@ def build(spec: dict, out: Path, rag: Path) -> list[str]:
             types[oname] = gen.sprite_type(oname, [gen.animation("Default", frames)], ivars, behaviors)
         elif plugin == "Text":
             types[oname] = gen.text_type(oname, ivars, behaviors)
+        elif plugin == "TiledBg":
+            # the template's backdrop checker, a tile of two cells to a unit that repeats over any size
+            gen.pattern(oname, "checker")
+            types[oname] = gen.image_type(oname, "TiledBg", gen.TILES[oname], gen.TILES[oname], 0, 0, ivars, behaviors)
         elif plugin == "Bar":
             gen.bar_images(f"{oname}Frame", oname, frame_role="canvas_alt", fill_role=o["_frames"][0], caps=True)
             types.update(gen.bar_types(f"{oname}Frame", oname, caps=True))
@@ -886,6 +898,14 @@ def build(spec: dict, out: Path, rag: Path) -> list[str]:
                 inst = {**inst, "col": box[2], "row": box[3], "repeat": [box[4] // w, box[5] // h],
                         "visible": inst.get("visible", False)}
             cols, rows = pair(inst.get("repeat", [1, 1]), f"{iw}.repeat", 1, 100)
+            if o["plugin"] == "TiledBg" and {"label", "frame"} & set(inst):
+                refuse(iw, f"a TiledBg has no label and no frames; leave out "
+                           f"{', '.join(map(repr, sorted({'label', 'frame'} & set(inst))))}")
+            tint = None
+            if "color" in inst:
+                if o["plugin"] != "TiledBg":
+                    refuse(f"{iw}.color", "\"color\" tints a TiledBg or colours a Text; a Sprite's colour is its frames")
+                tint = (*(c / 255 for c in gen.rgb(role(inst["color"], f"{iw}.color"))), 1)
             if "label" in inst and (cols, rows) != (1, 1):
                 refuse(f"{iw}.label", "a labelled Sprite is one button; write one instance per button, each with its "
                                       "label, instead of a repeat")
@@ -926,9 +946,15 @@ def build(spec: dict, out: Path, rag: Path) -> list[str]:
                         made_inst, label = gen.button(o["name"], files[o["name"]][frame], f"{o['name']}Label",
                                                       inst["label"], *at, longest=inst.get("longest"), ivars=ivars,
                                                       behaviors=behaviors)
+                    elif o["plugin"] == "TiledBg":
+                        made_inst = gen.tiledbg_inst(o["name"], at[0] * U, at[1] * U, w * U, h * U, 0, 0, ivars,
+                                                     behaviors)
+                        if tint:
+                            made_inst["world"]["color"] = list(tint)
                     else:
                         made_inst = gen.shape_inst(o["name"], files[o["name"]][0], *at, ivars=ivars, behaviors=behaviors)
-                    made_inst["properties"]["initial-frame"] = frame
+                    if o["plugin"] == "Sprite":
+                        made_inst["properties"]["initial-frame"] = frame
                     made_inst["properties"]["initially-visible"] = inst.get("visible", True) is not False
                     target.append(keep(made_inst, iw, {**inst, "_row": row0, "_col": col0}))
                     if "label" in inst:
@@ -1075,7 +1101,7 @@ def build(spec: dict, out: Path, rag: Path) -> list[str]:
                       + "\n".join(f"{n}. {p}" for n, p in enumerate(problems, 1)))
 
     # Objects the events create need an instance to copy: one in a layout that never runs.
-    unplaced = [n for n, o in byname.items() if o["plugin"] in ("Sprite", "Text") and n not in placed]
+    unplaced = [n for n, o in byname.items() if o["plugin"] in WORLD and n not in placed]
     if unplaced:
         objects_layout = gen.layout("Objects", [gen.layer("Objects")], None, (), vw, vh)
         for n in unplaced:
@@ -1084,6 +1110,8 @@ def build(spec: dict, out: Path, rag: Path) -> list[str]:
             behaviors = {b: {"properties": props} for b, props in o["_behaviors"]}
             objects_layout["layers"][0]["instances"].append(
                 gen.shape_inst(n, files[n][0], 1, 1, ivars=ivars, behaviors=behaviors) if o["plugin"] == "Sprite"
+                else gen.tiledbg_inst(n, U, U, o["_size"][0] * U, o["_size"][1] * U, 0, 0, ivars, behaviors)
+                if o["plugin"] == "TiledBg"
                 else gen.text_inst(n, "", U, U, 8 * U, 2 * U, ivars=ivars, behaviors=behaviors))
         layouts["Objects"] = objects_layout
 

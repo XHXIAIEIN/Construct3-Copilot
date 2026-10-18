@@ -52,8 +52,8 @@ BUILD_NOTE = ("\n(The person asks for an example or a project file: make it with
 # flat trapezoid, the request in their design being only "给我做一个示例"
 IMAGE_BUILD_NOTE = ("\n(The example is to look like the image. Before the design, look at the image again and write "
                     "in the design's request what it shows: each part, its shape and how it sits (flat, receding, "
-                    "hanging straight down, in front of another), and its colors. Build every part; what the tools "
-                    "cannot draw, such as a texture, is left for later.)")
+                    "hanging straight down, in front of another), and its colors. Build every part; a texture or a "
+                    "picture with content is a TiledBg in the checker, tinted to its colour.)")
 PROMISE = re.compile(r"(文件|c3p|工程|项目|例子)[^。！\n]*((发|传)(给|到)?你|发送|发来|发出|稍后|随后)"
                      r"|(发|传)(给|到)?你[^。！\n]*(文件|c3p|工程|例子)")
 
