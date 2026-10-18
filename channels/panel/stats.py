@@ -123,8 +123,8 @@ def _tail(path, cap):
     return data.decode("utf-8", errors="replace"), size > cap
 
 
-def answers(data_dir):
-    """Every channel's answers, oldest first, each with its local time under "_when"; and whether a log was cut."""
+def answers(data_dir, tz=None):
+    """Every channel's answers, oldest first, each with its time in tz (local by default) under "_when"; and whether a log was cut."""
     records, clipped = [], False
     for path in sorted((data_dir / "logs").glob("*/answers.jsonl")):
         try:
@@ -135,7 +135,7 @@ def answers(data_dir):
         for line in text.splitlines():
             try:
                 record = json.loads(line)
-                record["_when"] = datetime.fromisoformat(record["at"].replace("Z", "+00:00")).astimezone()
+                record["_when"] = datetime.fromisoformat(record["at"].replace("Z", "+00:00")).astimezone(tz)
             except (ValueError, TypeError, KeyError, AttributeError):
                 continue  # a torn or foreign line
             records.append(record)
@@ -211,7 +211,7 @@ def report(data_dir, range_="day", now=None):
     """The stats page: the base metrics and the application's, over the chosen range."""
     now = now or datetime.now().astimezone()
     columns = buckets(range_, now)
-    records, clipped = answers(data_dir)
+    records, clipped = answers(data_dir, now.tzinfo)
     shown = []
     for record in records:
         when = record["_when"]

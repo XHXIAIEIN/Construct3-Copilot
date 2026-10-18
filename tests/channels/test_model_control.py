@@ -57,7 +57,8 @@ class ModelControlTests(unittest.TestCase):
                    patch.object(self.control.gateway, "stop"), patch.object(self.control.gateway, "stop_launched"),
                    patch.object(self.control.gateway, "launch", return_value=SimpleNamespace(pid=300)),
                    patch.object(self.control.gateway, "wait_ready", return_value={"pid": 300}),
-                   patch.object(self.control, "status", return_value={"current": {"model": "example:small"}})]
+                   patch.object(self.control, "status", return_value={"current": {"model": "example:small"}}),
+                   patch.object(self.control.gateway, "candidates", return_value=[])]
         mocks = [p.start() for p in patches]
         for item in patches:
             self.addCleanup(item.stop)
