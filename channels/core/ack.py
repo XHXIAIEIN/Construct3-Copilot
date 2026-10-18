@@ -57,7 +57,7 @@ def last_sentence(reply: str) -> str:
 
 
 def acknowledges(message: str, last_reply: str = "", rules: dict[str, set[str]] | None = None) -> bool:
-    """Whether message only says got it after last_reply, the bot's reply before it: the whole message is a run of
+    """Whether message only says got it after last_reply, the bot's message it follows: the whole message is a run of
     acknowledge and filler words with at least one acknowledge word, and the reply's last sentence holds no invite
     (a question or an offer, which a "好" or a "1" answers). When the reply lays out a choice anywhere, the pick
     words choose and are no acknowledgement: "1" after two ways is the first way."""

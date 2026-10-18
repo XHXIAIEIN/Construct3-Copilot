@@ -67,6 +67,12 @@ def file_fact(name: str, size: int | None, **more) -> dict:
     return {"type": Path(name or "").suffix.lower(), "bytes": size, **more}
 
 
+def arrival(arrived: str | None, waited: int | None) -> dict:
+    """The fields of when a message came and how long it waited; a line written without them (--cli, lines
+    from before) did not measure them."""
+    return {name: value for name, value in (("arrived", arrived), ("waited", waited)) if value is not None}
+
+
 def new_turn_id() -> str:
     """Local time like bot.log's, so a turn is found next to its lines there, and a few random letters."""
     return f"{datetime.now():%Y%m%d-%H%M%S}-{secrets.token_hex(2)}"
@@ -94,11 +100,14 @@ class AnswerLog:
         self._lock = threading.Lock()
 
     def write(self, answer: Answer, *, chat: str, session: str, files_in: list[dict], files_out: list[dict],
-              turn: str | None = None, question: str = "", reply: str | None = None) -> dict:
+              turn: str | None = None, question: str = "", reply: str | None = None, arrived: str | None = None,
+              waited: int | None = None) -> dict:
         """Append the answer's line and its turn, and return the line. chat is "private", "group" or "cli";
-        reply: the text sent, the application's text when None."""
+        reply: the text sent, the application's text when None; arrived and waited: when the question came and
+        the seconds it waited for the chat's running answer before handle started, left out when None."""
         turn = turn or new_turn_id()
         line = {"at": utc_now(), "turn": turn, "channel": self.channel, "chat": chat, "session": session,
+                **arrival(arrived, waited),
                 "seconds": round(answer.seconds), "calls": answer.tokens.get("calls", 0),
                 "prompt": answer.tokens.get("prompt", 0), "completion": answer.tokens.get("completion", 0),
                 "files_in": files_in, "files_out": files_out, "ok": answer.error is None}
@@ -133,11 +142,13 @@ class AnswerLog:
             log.warning("turns.jsonl not written: %s", exc)
         return line
 
-    def skip(self, *, chat: str, session: str, reason: str, message: str, after: str) -> dict:
+    def skip(self, *, chat: str, session: str, reason: str, message: str, after: str, arrived: str | None = None,
+             waited: int | None = None) -> dict:
         """Append the line of a message given no answer and return it. reason: why, "ack" for one that only says
-        got it; after: the last sentence of the reply it followed, where the rule looks for a question or an offer."""
-        line = {"at": utc_now(), "channel": self.channel, "chat": chat, "session": session, "skipped": reason,
-                "message": message, "after": after}
+        got it; after: the last sentence of the bot's message it followed, where the rule looks for a question or
+        an offer; arrived and waited as for write."""
+        line = {"at": utc_now(), "channel": self.channel, "chat": chat, "session": session,
+                **arrival(arrived, waited), "skipped": reason, "message": message, "after": after}
         try:
             text = json.dumps(line, ensure_ascii=False)
             with self._lock:

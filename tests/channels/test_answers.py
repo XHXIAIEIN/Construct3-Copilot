@@ -7,8 +7,10 @@ import io
 import json
 import logging
 import tempfile
+import threading
 import unittest
 from contextlib import redirect_stdout
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -136,6 +138,7 @@ class AnswerLogTests(unittest.TestCase):
             ask_cli(Recording(usage, {"tools": []}), "example", channel="qq", data_dir=self.data, usage=usage)
         line = self.lines()[0]
         self.assertEqual((line["chat"], line["session"], line["calls"], line["app"]), ("cli", "cli", 2, {"tools": []}))
+        self.assertFalse({"arrived", "waited"} & set(line))  # the terminal asks once and measures no wait
         self.assertFalse((self.data / "runtime" / "gateway.json").exists())
         with redirect_stdout(io.StringIO()), self.assertRaises(RuntimeError):
             ask_cli(Recording(fail=True), "example", channel="qq", data_dir=self.data)
@@ -211,6 +214,56 @@ class AnswerLogTests(unittest.TestCase):
         self.assertEqual([(s["chat"], s["session"], s["message"], s["after"])
                           for s in answers.read_skipped(self.data, "qq")], [("private", "c2c:OPENID", "哦哦", "reply")])
 
+    def test_got_it_sent_during_a_build_is_judged_against_the_busy_note(self):
+        """A "好的" sent while a build runs answers the busy note it saw. The build's reply NOT_MADE ends in an offer
+        ("再让我做一次"), but it came while the "好的" waited, so the "好的" starts no second build."""
+        from channels.core import ack
+        from channels.platforms.qq import bot
+        from copilot.providers.construct3 import agent, plugin
+        note, asked, release = plugin.BUSY["new_project_from_spec"], [], threading.Event()
+        self.addCleanup(release.set)
+        self.assertFalse(ack.acknowledges("好的", agent.NOT_MADE))  # judged against the later reply, it is a yes
+
+        class Building(Recording):
+            def handle(self, request):
+                asked.append(request["text"])
+                request["notify"](note)
+                release.wait(10)
+                return {"text": agent.NOT_MADE, "files": [], "trace": []}
+
+        usage = Usage(self.data)
+        client = self.qq_client(Building(usage), usage)
+        replies = []
+
+        async def reply(**kwargs):
+            replies.append(kwargs["content"])
+
+        def message(id, content):
+            return SimpleNamespace(id=id, content=content, reply=reply, attachments=[],
+                                   author=SimpleNamespace(user_openid="OPENID"))
+
+        async def chat():
+            build = asyncio.create_task(client.on_c2c_message_create(message("m1", "做个贪吃蛇")))
+            for _ in range(500):
+                if note in replies:
+                    break
+                await asyncio.sleep(0.01)
+            got_it = asyncio.create_task(client.on_c2c_message_create(message("m2", "好的")))
+            await asyncio.sleep(0.6)  # the "好的" waits behind the build
+            release.set()
+            await asyncio.gather(build, got_it)
+
+        with patch.object(bot.qqfile, "token_auth", lambda token: None):
+            asyncio.run(chat())
+        self.assertEqual((asked, replies), (["做个贪吃蛇"], [note, agent.NOT_MADE]))
+        line, = self.lines()
+        self.assertEqual(line["waited"], 0)
+        self.assertRegex(line["arrived"], r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.*Z$")
+        skip, = answers.read_skipped(self.data, "qq")
+        self.assertEqual((skip["message"], skip["after"]), ("好的", note))
+        self.assertGreaterEqual(skip["waited"], 1)
+        self.assertLess(skip["arrived"], skip["at"])
+
     def test_qq_message_writes_its_line_when_qq_refuses_the_reply(self):
         from botpy.errors import ServerError
         from channels.platforms.qq import bot
@@ -273,7 +326,7 @@ class ReadersTests(unittest.TestCase):
 
     def test_list_puts_messages_given_no_answer_among_the_turns(self):
         out = self.logs("--last", "0")
-        self.assertIn("未回答  private c2c:NEW  只表示收到，没回复也没调模型\n  消息：哦哦\n  上一条回复的最后一句：示例做好了", out)
+        self.assertIn("未回答  private c2c:NEW  只表示收到，没回复也没调模型\n  消息：哦哦\n  对照的 bot 消息的最后一句：示例做好了", out)
         self.assertLess(out.index("问：终端"), out.index("消息：哦哦"))  # in time order
         self.assertIn("消息：哦哦", self.logs("--last", "1"))
         self.assertIn("消息：哦哦", self.logs("--session", "NEW"))
@@ -282,6 +335,20 @@ class ReadersTests(unittest.TestCase):
         self.assertIn("消息：哦哦", only)
         self.assertNotIn("问：", only)
         self.assertNotIn("哦哦", self.logs("--failed"))  # a skip has no "ok" and is no failure
+
+    def test_list_shows_a_wait_behind_the_chat_running_answer(self):
+        log = answers.AnswerLog(self.data, "qq")
+        log.write(answers.Answer(result={"text": "做好了"}), chat="private", session="c2c:Q", files_in=[],
+                  files_out=[], turn="20261019-010000-aaaa", question="做个贪吃蛇", arrived="2026-10-19T00:57:00Z",
+                  waited=1)
+        log.skip(chat="private", session="c2c:Q", reason="ack", message="好的", after="在做了，要两三分钟，做好发你。",
+                 arrived="2026-10-19T00:58:30Z", waited=95)
+        came = datetime(2026, 10, 19, 0, 58, 30, tzinfo=timezone.utc).astimezone()
+        out = self.logs("--session", "c2c:Q")
+        self.assertIn(f"未回答  private c2c:Q  排队 95s（{came:%H:%M:%S} 到）  只表示收到", out)
+        self.assertIn("对照的 bot 消息的最后一句：在做了，要两三分钟，做好发你。", out)
+        self.assertEqual(out.count("排队"), 1)  # a second is the send of a reply, no wait behind an answer
+        self.assertNotIn("排队", self.logs("--session", "NEW"))  # lines without the fields measured nothing
 
     def test_one_turn_keeps_tool_results_when_steps_are_cut(self):
         out = self.logs("--turn", "20261018-231714-a1b2", "--grep", "new_project", "--width", "80")

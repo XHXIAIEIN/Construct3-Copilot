@@ -3,13 +3,15 @@
     python -m channels.logs                         the last 10 turns: time, question, files, cost, tools, reply
     python -m channels.logs --since 23:00           turns from 23:00 today (or "2026-10-18", "2026-10-18 23:00")
     python -m channels.logs --session E5DB --failed  turns of a chat whose key contains E5DB and that failed
-    python -m channels.logs --skipped               only the messages given no answer, each with the reply it followed
+    python -m channels.logs --skipped               only the messages given no answer, each with the bot message
+                                                    it was judged against
     python -m channels.logs --turn 20261018-231714-a1b2              one turn in full, its trace one step a line
     python -m channels.logs --turn 20261018-231714-a1b2 --grep new_project --width 0   only those steps, uncut
 
 The list also shows the messages given no answer (skipped.jsonl, such as a "哦哦" after a reply), in time order
-among the turns. A turn written before turn ids existed shows its counts only; its question, reply and trace are in
-bot.log.
+among the turns. A turn or message that waited WAIT_SHOWN seconds or more for its chat's running answer shows the
+wait and when it came. A turn written before turn ids existed shows its counts only; its question, reply and trace
+are in bot.log.
 """
 from __future__ import annotations
 
@@ -23,13 +25,24 @@ from .core.answers import read_answers, read_skipped, read_turns, trace_summary
 OLD = "（旧记录：问题、回复和工具轨迹只在 bot.log）"
 # skipped.jsonl's "skipped", as channels/core/chat.py writes it
 REASONS = {"ack": "只表示收到，没回复也没调模型"}
+# seconds; a message that comes while its chat has no answer running waits well under one
+WAIT_SHOWN = 3
 
 
-def local_time(line: dict) -> datetime | None:
+def local_time(line: dict, name: str = "at") -> datetime | None:
     try:
-        return datetime.fromisoformat(str(line["at"]).replace("Z", "+00:00")).astimezone().replace(tzinfo=None)
+        return datetime.fromisoformat(str(line[name]).replace("Z", "+00:00")).astimezone().replace(tzinfo=None)
     except (KeyError, ValueError):
         return None
+
+
+def wait(line: dict) -> str:
+    """How long the message waited for its chat's running answer, when it is long enough to be such a wait."""
+    waited = line.get("waited")
+    if not isinstance(waited, (int, float)) or waited < WAIT_SHOWN:
+        return ""
+    came = local_time(line, "arrived")
+    return f"  排队 {waited:.0f}s" + (f"（{came:%H:%M:%S} 到）" if came else "")
 
 
 def parse_since(text: str) -> datetime:
@@ -80,7 +93,7 @@ def app_fields(app) -> str:
 def head(line: dict) -> str:
     when = local_time(line)
     return (f"[{when:%Y-%m-%d %H:%M:%S}] " if when else "") + (
-        f"turn {line.get('turn', '-')}  {line.get('chat')} {line.get('session')}  "
+        f"turn {line.get('turn', '-')}  {line.get('chat')} {line.get('session')}{wait(line)}  "
         f"{line.get('seconds')}s calls {line.get('calls')} prompt {line.get('prompt')} "
         f"completion {line.get('completion')}" + (f" model {line['model']}" if line.get("model") else "")
         + f"  {'ok' if line.get('ok') else '失败'}")
@@ -102,10 +115,10 @@ def summary(line: dict, turn: dict | None, width: int) -> str:
 def skipped(line: dict, width: int) -> str:
     when = local_time(line)
     reason = line.get("skipped")
-    after = cut(line.get("after", ""), width) or "（这个会话还没有回复）"
+    after = cut(line.get("after", ""), width) or "（无：会话还没有回复，或消息来时上一问正在回答、还没发提示）"
     return "\n".join([(f"[{when:%Y-%m-%d %H:%M:%S}] " if when else "")
-                      + f"未回答  {line.get('chat')} {line.get('session')}  {REASONS.get(reason, reason)}",
-                      f"  消息：{cut(line.get('message', ''), width)}", f"  上一条回复的最后一句：{after}"])
+                      + f"未回答  {line.get('chat')} {line.get('session')}{wait(line)}  {REASONS.get(reason, reason)}",
+                      f"  消息：{cut(line.get('message', ''), width)}", f"  对照的 bot 消息的最后一句：{after}"])
 
 
 def detail(line: dict, turn: dict | None, width: int, grep: str | None) -> str:

@@ -61,10 +61,14 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
     gateway = GatewayReceipt(data_dir)
     chats = Chats(application, data_dir=data_dir, channel="qq", usage=usage, receipt=gateway)
 
-    @serialized_sessions
     async def handle(key: str, question: str, reply, attachments=(), send_file=None) -> None:
-        """send_file(path, msg_seq) sends a file as a reply to the same message."""
-        if chats.acknowledged(key, question, chat=chat_of(key), attachments=attachments):
+        """send_file(path, msg_seq) sends a file as a reply to the same message. The arrival is taken before the
+        message waits for the chat's running answer, which can take minutes for a build."""
+        await respond(key, chats.arrive(key), question, reply, attachments, send_file)
+
+    @serialized_sessions
+    async def respond(key: str, arrival, question: str, reply, attachments, send_file) -> None:
+        if chats.acknowledged(key, question, chat=chat_of(key), attachments=attachments, arrival=arrival):
             return
         refusal = chats.admit(key, question)
         if refusal:
@@ -77,9 +81,10 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
             notes.append(note)
             log.info("%s note: %s", key, note)
             asyncio.run_coroutine_threadsafe(reply(content=note, msg_seq=len(notes)), loop)
-        turn = await chats.ask(key, question, group=key.startswith("group:"), notify=notify, attachments=[
-            {"filename": a.filename or "", "url": a.url or "", "content_type": a.content_type or "", "size": a.size or 0}
-            for a in attachments])
+        turn = await chats.ask(key, question, group=key.startswith("group:"), notify=notify, arrival=arrival,
+                               attachments=[{"filename": a.filename or "", "url": a.url or "",
+                                             "content_type": a.content_type or "", "size": a.size or 0}
+                                            for a in attachments])
         files = turn.files[:1] if send_file else []
         parts = chunks(turn.text)[: MAX_REPLIES - len(files) - len(notes)]  # the file and the note are replies to the same message too
         sent = set()

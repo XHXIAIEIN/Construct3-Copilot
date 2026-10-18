@@ -1,13 +1,15 @@
 """One question and its answer, the same on every platform: the daily limit, the chat's recent turns, its session
-folder, the call of application.handle and the line in the answer log. A platform receives the message, drops it
-when Chats.acknowledged says it only says got it, passes it to Chats.admit and Chats.ask, sends what comes back
-the way its platform can, then calls Chats.record with what it sent."""
+folder, the call of application.handle and the line in the answer log. A platform takes Chats.arrive as a message
+comes, before the message waits for its chat's running answer; once its turn comes, it drops the message when
+Chats.acknowledged says it only says got it, passes it to Chats.admit and Chats.ask, sends what comes back the way
+its platform can, then calls Chats.record with what it sent."""
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
 import re
+import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
@@ -60,14 +62,32 @@ def serialized_sessions(handler):
 
 
 @dataclass
+class Arrival:
+    """A message as it came, before it waited for its chat's running answer: when (as utc_now writes it and as
+    time.monotonic counts it), and seen, the bot's message it follows as Chats.last_sent found it then, which
+    acknowledged judges it against. A "好的" sent during a build answers the busy note it saw, not the reply that
+    came while it waited."""
+    seen: str = ""
+    at: str = field(default_factory=utc_now)
+    clock: float = field(default_factory=time.monotonic)
+
+    def waited(self) -> int:
+        """Whole seconds since the message came."""
+        return round(time.monotonic() - self.clock)
+
+
+@dataclass
 class Turn:
     """What the application answered, ready to send: its text (FAILED when handle raised) and its files, with the
-    turn id and the question the answer log keeps them under."""
+    turn id and the question the answer log keeps them under, when the question came and how many seconds it
+    waited before handle started (both None without an arrival)."""
     answer: answer_log.Answer
     text: str = ""
     files: list[Path] = field(default_factory=list)
     id: str = ""
     question: str = ""
+    arrived: str | None = None
+    waited: int | None = None
 
 
 class Chats:
@@ -85,6 +105,9 @@ class Chats:
         # it followed (2026-10-19)
         self.history: dict[str, deque] = {}
         self.answered: dict[str, str | None] = {}  # when each chat's last answer came, as utc_now wrote it
+        # the chats whose answer is being made, each with the busy note that answer sent ("" before one): the
+        # note is set from handle's thread and read by arrive on the event loop
+        self.answering: dict[str, str] = {}
         self._asked: dict[tuple[str, date], int] = defaultdict(int)
 
     def recent(self, key: str) -> deque:
@@ -111,19 +134,37 @@ class Chats:
             turns.clear()
         return turns
 
-    def acknowledged(self, key: str, question: str, *, chat: str, attachments=()) -> bool:
-        """Whether the message only says got it or thanks after the chat's last reply ("哦哦", "o了", "谢谢", "1";
-        the words and signals are in ack.json). Such a message gets no reply and no model call, and counts neither
-        against the day's questions nor in the history; it goes to skipped.jsonl with the last sentence of that
-        reply, so a question dropped by mistake can be found. A message with a file is always answered.
+    def last_sent(self, key: str) -> str:
+        """The bot's message that the chat's next message follows. While an answer is being made, it is that
+        answer's busy note: the person saw the note, and it is no question or offer, so a "好的" after it is got it.
+        Before a note it is nothing, since the question being answered came after the last reply and already
+        answered it. Otherwise it is the last reply in recent."""
+        if key in self.answering:
+            return self.answering[key]
+        return next((m["content"] for m in reversed(self.recent(key)) if m.get("role") == "assistant"), "")
+
+    def arrive(self, key: str) -> Arrival:
+        """The message's time and the bot's message it follows, taken as it comes, before it waits for the chat's
+        running answer; acknowledged and ask take it once the message's turn comes."""
+        return Arrival(seen=self.last_sent(key))
+
+    def acknowledged(self, key: str, question: str, *, chat: str, attachments=(),
+                     arrival: Arrival | None = None) -> bool:
+        """Whether the message only says got it or thanks after the bot's message it follows ("哦哦", "o了", "谢谢",
+        "1"; the words and signals are in ack.json): arrival.seen, or last_sent now without an arrival. Such a
+        message gets no reply and no model call, and counts neither against the day's questions nor in the history;
+        it goes to skipped.jsonl with the last sentence of that message and how long it waited, so a question
+        dropped by mistake can be found. A message with a file is always answered.
         chat: "private", "group" or "cli", as for record."""
         if attachments:
             return False
-        last = next((m["content"] for m in reversed(self.recent(key)) if m.get("role") == "assistant"), "")
+        last = self.last_sent(key) if arrival is None else arrival.seen
         if not ack.acknowledges(question, last):
             return False
         log.info("%s ack: %s", key, question)
-        self.log.skip(chat=chat, session=key, reason="ack", message=question, after=ack.last_sentence(last))
+        self.log.skip(chat=chat, session=key, reason="ack", message=question, after=ack.last_sentence(last),
+                      arrived=None if arrival is None else arrival.at,
+                      waited=None if arrival is None else arrival.waited())
         return True
 
     def admit(self, key: str, question: str) -> str | None:
@@ -135,13 +176,27 @@ class Chats:
             return f"今天的 {self.daily_limit} 个问题已经用完，明天再来。"
         return None
 
-    async def ask(self, key: str, question: str, *, group: bool, attachments: list[dict], notify) -> Turn:
+    async def ask(self, key: str, question: str, *, group: bool, attachments: list[dict], notify,
+                  arrival: Arrival | None = None) -> Turn:
         """Run application.handle in a worker thread. attachments: filename, url, content_type and size each;
-        notify(note) is called from that thread for a note the application sends while it works."""
-        answer = await asyncio.to_thread(answer_log.handle, self.application, {
-            "text": question, "session_id": key, "session_dir": self.sessions / safe_name(key),
-            "history": list(self.recent(key)), "group": group, "notify": notify, "attachments": attachments,
-        }, usage=self.usage, receipt=self.receipt)
+        notify(note) is called from that thread for a note the application sends while it works. arrival: the
+        question's, from arrive; the turn keeps when it came and how long it waited before handle started."""
+        waited = None if arrival is None else arrival.waited()
+
+        def noted(note: str) -> None:
+            self.answering[key] = note
+            notify(note)
+        self.answering[key] = ""
+        try:
+            answer = await asyncio.to_thread(answer_log.handle, self.application, {
+                "text": question, "session_id": key, "session_dir": self.sessions / safe_name(key),
+                "history": list(self.recent(key)), "group": group, "notify": noted if notify else None,
+                "attachments": attachments,
+            }, usage=self.usage, receipt=self.receipt)
+        finally:
+            # nothing below gives way to the event loop, so the next message's arrive already finds this reply in
+            # the history
+            self.answering.pop(key, None)
         turn_id = answer_log.new_turn_id()
         if answer.error is None:
             turn = Turn(answer, answer.result.get("text", ""), [Path(p) for p in answer.result.get("files", [])],
@@ -150,6 +205,7 @@ class Chats:
         else:
             log.error("application failed", exc_info=answer.error)
             turn, trace = Turn(answer, FAILED, id=turn_id, question=question), []
+        turn.arrived, turn.waited = None if arrival is None else arrival.at, waited
         # the whole trace can be 100 KB; it goes to turns.jsonl with the answer's line
         log.info("%s tools: %s (python -m channels.logs --turn %s)", key, answer_log.trace_summary(trace), turn_id)
         log.info("%s reply: %s", key, turn.text.replace("\n", " / "))
@@ -169,4 +225,5 @@ class Chats:
         """The answer's line, written once the platform has sent what it could. chat: "private", "group" or "cli"."""
         return self.log.write(turn.answer, chat=chat, session=session, files_in=files_in,
                               turn=turn.id or None, question=turn.question, reply=turn.text,
-                              files_out=[answer_log.file_fact(p.name, size_of(p), sent=p in sent) for p in turn.files])
+                              files_out=[answer_log.file_fact(p.name, size_of(p), sent=p in sent) for p in turn.files],
+                              arrived=turn.arrived, waited=turn.waited)

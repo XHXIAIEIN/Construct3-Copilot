@@ -100,6 +100,39 @@ class ChatAcknowledgedTests(unittest.IsolatedAsyncioTestCase):
                               ("private", "c2c:a", "ack", "1", "改成 lerp(a,b,1-0.01^dt) 就不受影响。"),
                               ("group", "group:G:M", "ack", "谢谢", "")])
             self.assertRegex(skipped[0]["at"], r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.*Z$")
+            self.assertFalse({"arrived", "waited"} & set(skipped[0]))  # no arrival taken, no wait measured
+
+    async def test_a_message_is_judged_against_the_bot_message_it_came_after(self):
+        """While the chat's answer is being made, a message follows that answer's busy note, and nothing before the
+        note: the question being answered already answered the reply before it. Once the answer is made, a
+        message follows its reply."""
+        note = "在做了，要两三分钟，做好发你。"
+        with tempfile.TemporaryDirectory() as tmp:
+            arrivals = {}
+
+            def handle(request):
+                if request["text"] == "跳跃怎么做":
+                    return {"text": "用 Platform 行为。要我做一个示例吗？"}
+                arrivals["before the note"] = chats.arrive("c2c:a")
+                request["notify"](note)
+                arrivals["after the note"] = chats.arrive("c2c:a")
+                return {"text": INVITE}
+
+            application = Mock()
+            application.handle.side_effect = handle
+            chats = chat.Chats(application, data_dir=Path(tmp), channel="qq")
+            await chats.ask("c2c:a", "跳跃怎么做", group=False, attachments=[], notify=None)
+            notes = []
+            await chats.ask("c2c:a", "要，做个贪吃蛇", group=False, attachments=[], notify=notes.append)
+            self.assertEqual(notes, [note])
+            self.assertEqual({name: a.seen for name, a in arrivals.items()},
+                             {"before the note": "", "after the note": note})
+            for arrival in arrivals.values():
+                self.assertTrue(chats.acknowledged("c2c:a", "好的", chat="private", arrival=arrival))
+            self.assertFalse(chats.acknowledged("c2c:a", "好的", chat="private", arrival=chats.arrive("c2c:a")))
+            self.assertFalse(chats.acknowledged("c2c:a", "好的", chat="private"))
+            self.assertEqual([(s["after"], s["waited"]) for s in answers.read_skipped(Path(tmp), "qq")],
+                             [("", 0), (note, 0)])
 
 
 if __name__ == "__main__":
