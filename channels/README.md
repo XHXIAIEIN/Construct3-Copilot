@@ -88,6 +88,7 @@ channels/scripts/start.ps1 -Stop
 
 模型页面日志保存在 `var/logs/models/`，QQ 日志保存在 `var/logs/bot/`。
 `var/runtime/gateway.json` 记录 READY 事件、进程身份和正在进行的回答数（`active_answers`）。页面核对进程后显示连接状态；有回答进行时不切换模型。
+回执里还有 `code`：bot 启动时 `channels/` 和 `copilot/` 下 Python 文件的指纹，面板自己的代码和 `var/` 不算在内。面板拿它和磁盘上的文件比，不一致就在设置页的 QQbot 一行和模型页标题下提醒重启，鼠标悬停能看到启动后改过哪些文件。没有 `code` 的旧回执，按启动后有没有文件被改过来判断。
 Construct 应用的任务与文件记录保存在 `var/copilot/`。
 
 ## 回答记录与统计

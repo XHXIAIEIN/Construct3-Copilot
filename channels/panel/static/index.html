@@ -62,7 +62,7 @@ dialog form{padding:20px 22px;display:flex;flex-direction:column;gap:14px}dialog
 .field{display:flex;flex-direction:column;gap:4px;font-size:13px}.field>span{color:var(--text2)}.field small{color:var(--muted);font-size:12px}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 fieldset{border:1px solid var(--border);border-radius:10px;padding:12px;margin:0;display:flex;flex-direction:column;gap:10px}legend{padding:0 4px;color:var(--text2);font-size:13px}
-.hint{font-size:12px;color:var(--warn)}.hint:empty{display:none}
+.hint{font-size:12px;color:var(--warn)}#gateway-state.warn{color:var(--warn)}.hint:empty{display:none}
 .error{font-size:13px;color:var(--danger);background:var(--danger-bg);padding:8px 10px;border-radius:8px}.error:empty{display:none}
 .dialog-actions{display:flex;justify-content:flex-end;gap:8px}
 details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] summary{margin-bottom:8px}
@@ -626,13 +626,17 @@ $("status-close").addEventListener("click",()=>{dismissed=lastJob;status(idleTex
 function idleText(){ return !state?"正在读取状态…":""; }
 function renderChrome(){
   const gw=state.gateway?.alive?(state.gateway.status==="ready"?"QQbot 已就绪":"QQbot 连接中"):"QQbot 未运行";
-  // The list marks the model in use, so the header only speaks up when QQbot is not ready.
-  setText($("now"),state.gateway?.alive&&state.gateway.status==="ready"?"":gw);$("now").hidden=page!=="models"||!$("now").textContent;
+  // The running bot imported its code when it started; files changed since then need a restart to take effect.
+  const stale=!!(state.gateway?.alive&&state.gateway.code_change?.stale),changed=state.gateway?.code_change?.changed||[];
+  // The list marks the model in use, so the header only speaks up when QQbot is not ready or runs old code.
+  setText($("now"),state.gateway?.alive&&state.gateway.status==="ready"?(stale?"QQbot 还在运行旧代码，到设置里重启后生效":""):gw);$("now").hidden=page!=="models"||!$("now").textContent;
   setText($("ollama-state"),state.ollama.online?"运行中":"未启动");$("start").hidden=!!state.ollama.online;setProp($("start"),"disabled",busy);
   // A count is only the live bot's: one left by a process that is gone says nothing.
   const answering=state.gateway?.alive&&Number.isInteger(state.gateway.active_answers)&&state.gateway.active_answers>0?state.gateway.active_answers:0;
-  setText($("gateway-state"),gw.replace("QQbot ","")+(answering?`，正在回答 ${answering} 个`:""));setText($("ollama-url"),state.ollama.url||"—");setText($("config"),state.config_path||"var/models.json");
-  const restartArmed=armedFor("restart","gateway");setText($("restart"),restartArmed?"确认重启":"重启");$("restart").classList.toggle("confirm",restartArmed);
+  setText($("gateway-state"),gw.replace("QQbot ","")+(answering?`，正在回答 ${answering} 个`:"")+(stale?" · 代码已更新，重启后生效":""));
+  $("gateway-state").classList.toggle("warn",stale);
+  $("gateway-state").title=stale&&changed.length?`启动后改过：${changed.slice(0,8).join("、")}${changed.length>8?` 等 ${changed.length} 个文件`:""}`:"";setText($("ollama-url"),state.ollama.url||"—");setText($("config"),state.config_path||"var/models.json");
+  const restartArmed=armedFor("restart","gateway");setText($("restart"),restartArmed?"确认重启":"重启");$("restart").classList.toggle("confirm",restartArmed);$("restart").classList.toggle("primary",stale&&!restartArmed);
   $("restart").title=restartArmed?"再点一次确认：QQbot 会断开几秒，按当前 .env 和代码重新启动":"按当前 .env 和代码重新启动 QQbot";setProp($("restart"),"disabled",busy||answering>0);
   setProp($("api-add"),"disabled",busy);setProp($("refresh"),"disabled",refreshing);setProp($("api-submit"),"disabled",busy);
 }
