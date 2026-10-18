@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import unittest
 from contextlib import contextmanager
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -86,6 +87,34 @@ class ChatHistoryTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(application.handle.call_args.args[0]["history"], [
                 {"role": "user", "content": "这种斜切效果怎么做"}, {"role": "assistant", "content": "用网格变形"}])
             await after.ask("c2c:other", "你好", group=False, attachments=[], notify=None)
+            self.assertEqual(application.handle.call_args.args[0]["history"], [])
+
+    async def test_history_ends_hours_after_the_last_answer(self):
+        def hours_ago(hours):
+            return (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+
+        first = [{"role": "user", "content": "这种斜切效果怎么做"}, {"role": "assistant", "content": "用网格变形"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            application = Mock()
+            application.handle.return_value = {"text": "用网格变形"}
+            path = Path(tmp) / "sessions" / "_history" / "c2c_placeholder.json"
+            for saved, carried in [({"at": hours_ago(chat.HISTORY_HOURS - 1), "turns": first}, first),
+                                   ({"at": hours_ago(chat.HISTORY_HOURS + 1), "turns": first}, []),
+                                   (first, [])]:  # a file from before the time was kept
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps(saved, ensure_ascii=False), encoding="utf-8")
+                after_restart = chat.Chats(application, data_dir=Path(tmp), channel="qq")
+                await after_restart.ask("c2c:placeholder", "给我做一个示例", group=False, attachments=[], notify=None)
+                self.assertEqual(application.handle.call_args.args[0]["history"], carried)
+                written = json.loads(path.read_text(encoding="utf-8"))
+                self.assertTrue(chat.within_hours(written["at"], 0.1))
+                self.assertEqual(written["turns"][-2:], [{"role": "user", "content": "给我做一个示例"},
+                                                         {"role": "assistant", "content": "用网格变形"}])
+
+            running = chat.Chats(application, data_dir=Path(tmp), channel="qq")
+            with patch("channels.core.chat.utc_now", return_value=hours_ago(chat.HISTORY_HOURS + 1)):
+                await running.ask("c2c:other", "这种斜切效果怎么做", group=False, attachments=[], notify=None)
+            await running.ask("c2c:other", "怎么存档", group=False, attachments=[], notify=None)
             self.assertEqual(application.handle.call_args.args[0]["history"], [])
 
 

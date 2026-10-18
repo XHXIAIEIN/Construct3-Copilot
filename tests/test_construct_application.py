@@ -1,6 +1,8 @@
 """Check the application boundary independently of QQ and model services."""
 from contextlib import nullcontext
+from datetime import datetime, timedelta, timezone
 import io
+import json
 import re
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -10,7 +12,7 @@ import zipfile
 import pytest
 
 from copilot.providers.construct3 import attachments
-from copilot.providers.construct3.application import EARLIER_IMAGE_TURNS, Application, load_archive
+from copilot.providers.construct3.application import EARLIER_IMAGE_HOURS, EARLIER_IMAGE_TURNS, Application, load_archive
 from copilot.providers.construct3.reply import is_build_ask
 
 
@@ -161,6 +163,35 @@ def test_image_outlives_a_restart(tmp_path):
     after.agent.answer = Mock(return_value=("ok", []))
     after.handle({**request, "text": "给我做一个示例"})
     assert after.agent.answer.call_args.kwargs["images"] == [{"media_type": "image/png", "data": "aW1hZ2U="}]
+
+
+def test_image_ends_hours_after_the_last_question(tmp_path):
+    attachment = {"filename": "photo.png", "content_type": "image/png", "size": 5, "url": "https://example.test/p"}
+    request = {"session_id": "c2c:placeholder", "session_dir": tmp_path / "c2c_placeholder"}
+    kept = tmp_path / "_images" / "c2c_placeholder.json"
+    image = [{"media_type": "image/png", "data": "aW1hZ2U="}]
+    application = Application(Mock(), model="model-placeholder", vision=True)
+    application.agent.answer = Mock(return_value=("ok", []))
+
+    def hours_ago(hours):
+        return (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+
+    for at, carried in [(hours_ago(EARLIER_IMAGE_HOURS - 1), image), (hours_ago(EARLIER_IMAGE_HOURS + 1), []),
+                        (None, [])]:  # a file from before the time was kept
+        with patch("copilot.providers.construct3.attachments.download", return_value=b"image"):
+            application.handle({**request, "text": "这种斜切效果怎么做", "attachments": [attachment]})
+        saved = json.loads(kept.read_text(encoding="utf-8"))
+        if at:
+            saved["at"] = at
+        else:
+            del saved["at"]
+        kept.write_text(json.dumps(saved), encoding="utf-8")
+        application.handle({**request, "text": "给我做一个示例"})
+        assert application.agent.answer.call_args.kwargs["images"] == carried
+        assert ("image sent earlier" in application.agent.answer.call_args.args[0]) == bool(carried)
+        assert kept.is_file() == bool(carried)
+    application.handle({**request, "text": "再改一下颜色"})
+    assert application.agent.answer.call_args.kwargs["images"] == []
 
 
 def test_image_is_a_note_for_a_text_model(tmp_path):

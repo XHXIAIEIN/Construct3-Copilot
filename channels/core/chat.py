@@ -10,21 +10,34 @@ import logging
 import re
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from functools import wraps
 from pathlib import Path
 
 from . import ack, answers as answer_log
+from .receipt import utc_now
 
 log = logging.getLogger("channels.core.chat")
 
 HISTORY_TURNS = 3
+# a question this long after the chat's last answer starts without its turns, so a person back the next day does not
+# bring yesterday's into a new question. A restart takes minutes; the longest pause inside one topic was 87 minutes
+# (2026-10-16)
+HISTORY_HOURS = 6
 DAILY_LIMIT = 30  # questions per chat and day
 FAILED = "应用处理失败，请稍后重试。"
 
 
 def safe_name(key: str) -> str:
     return re.sub(r"[^A-Za-z0-9_-]", "_", key)
+
+
+def within_hours(at, hours: float) -> bool:
+    """Whether at, a time utc_now wrote, is at most hours ago; a missing or unreadable time is not."""
+    try:
+        return datetime.now(timezone.utc) - datetime.fromisoformat(at) <= timedelta(hours=hours)
+    except (TypeError, ValueError):
+        return False
 
 
 def size_of(path: Path) -> int | None:
@@ -71,22 +84,32 @@ class Chats:
         # kept on disk under sessions/_history: "给我做一个示例" after three restarts came without the question
         # it followed (2026-10-19)
         self.history: dict[str, deque] = {}
+        self.answered: dict[str, str | None] = {}  # when each chat's last answer came, as utc_now wrote it
         self._asked: dict[tuple[str, date], int] = defaultdict(int)
 
     def recent(self, key: str) -> deque:
-        """The chat's last turns, read from disk the first time the chat asks after a start."""
+        """The chat's last turns, read from disk the first time the chat asks after a start; none once the last
+        answer is more than HISTORY_HOURS ago."""
         if key not in self.history:
-            turns = deque(maxlen=HISTORY_TURNS * 2)
+            turns, at = deque(maxlen=HISTORY_TURNS * 2), None
             path = self.sessions / "_history" / f"{safe_name(key)}.json"
             try:
-                turns.extend(m for m in json.loads(path.read_text(encoding="utf-8"))
-                             if isinstance(m, dict) and isinstance(m.get("content"), str))
+                saved = json.loads(path.read_text(encoding="utf-8"))
+                # a list is a file from before the time was kept: its age is unknown, so it counts as too old
+                if isinstance(saved, dict):
+                    at = saved.get("at")
+                    turns.extend(m for m in saved.get("turns", [])
+                                 if isinstance(m, dict) and isinstance(m.get("content"), str))
             except FileNotFoundError:
                 pass
             except (OSError, ValueError, TypeError) as exc:
                 log.warning("history of %s unreadable: %s", key, exc)
-            self.history[key] = turns
-        return self.history[key]
+            self.history[key], self.answered[key] = turns, at
+        turns = self.history[key]
+        if turns and not within_hours(self.answered.get(key), HISTORY_HOURS):
+            log.info("%s starts without the history of its last answer at %s", key, self.answered.get(key))
+            turns.clear()
+        return turns
 
     def acknowledged(self, key: str, question: str, *, attachments=()) -> bool:
         """Whether the message only says got it or thanks after the chat's last reply ("哦哦", "o了", "谢谢", "1";
@@ -127,12 +150,14 @@ class Chats:
         # the whole trace can be 100 KB; it goes to turns.jsonl with the answer's line
         log.info("%s tools: %s (python -m channels.logs --turn %s)", key, answer_log.trace_summary(trace), turn_id)
         log.info("%s reply: %s", key, turn.text.replace("\n", " / "))
-        turns = self.recent(key)
+        turns = self.history[key]  # not recent(): the turns this answer went with stay even when it took long
         turns.extend([{"role": "user", "content": question}, {"role": "assistant", "content": turn.text}])
+        self.answered[key] = utc_now()
         path = self.sessions / "_history" / f"{safe_name(key)}.json"
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps(list(turns), ensure_ascii=False), encoding="utf-8")
+            path.write_text(json.dumps({"at": self.answered[key], "turns": list(turns)}, ensure_ascii=False),
+                            encoding="utf-8")
         except OSError as exc:
             log.warning("history of %s not saved: %s", key, exc)
         return turn

@@ -1,4 +1,5 @@
 """Handle Construct requests independently of their message transport."""
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 import base64
@@ -21,6 +22,16 @@ DOWNLOAD_MAX = 30 * 1024 * 1024
 UNPACK_MAX = 200 * 1024 * 1024
 QUESTION_MAX = 500
 EARLIER_IMAGE_TURNS = 3  # the questions after an image it still goes with, as many turns as the chat history keeps
+EARLIER_IMAGE_HOURS = 6  # and within this many hours of the last question it came or went with, like the chat history
+
+
+def kept_within(at, hours: float) -> bool:
+    """Whether at, the UTC time a kept image was last written, is at most hours ago; a missing time is not."""
+    try:
+        return datetime.now(timezone.utc) - datetime.fromisoformat(at) <= timedelta(hours=hours)
+    except (TypeError, ValueError):
+        return False
+
 
 def unpack_project(url: str, filename: str, target: Path) -> tuple[Path | None, str]:
     """Download a .c3p, .zip or .capx. A Construct 3 project (a zip of the folder project) is unpacked and its
@@ -141,19 +152,24 @@ class Application:
                 unread.append(suffix or "无扩展名")
         # kept on disk: "给我做一个示例" after three restarts was built from the old project, without the image (2026-10-19)
         kept = session.parent / "_images" / f"{re.sub(r'[^A-Za-z0-9_-]', '_', key)}.json"
+        now = datetime.now(timezone.utc).isoformat()
         if images:
             kept.parent.mkdir(parents=True, exist_ok=True)
-            kept.write_text(json.dumps({"images": images, "left": EARLIER_IMAGE_TURNS}), encoding="utf-8")
+            kept.write_text(json.dumps({"images": images, "left": EARLIER_IMAGE_TURNS, "at": now}), encoding="utf-8")
         elif self.vision and question and kept.is_file():
             # history keeps only text, so "还原一模一样的效果图" after a screenshot was built without it (2026-10-18)
             try:
                 earlier = json.loads(kept.read_text(encoding="utf-8"))
-                images, left = earlier["images"], earlier["left"]
+                images, left, at = earlier["images"], earlier["left"], earlier.get("at")
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 log.warning("earlier image unreadable: %s", exc)
+                images, left, at = [], 0, None
+            # a file kept before the time was written has no age, and counts as too old
+            if images and not kept_within(at, EARLIER_IMAGE_HOURS):
+                log.info("%s goes on without the image kept at %s", key, at)
                 images, left = [], 0
             if left > 1:
-                kept.write_text(json.dumps({"images": images, "left": left - 1}), encoding="utf-8")
+                kept.write_text(json.dumps({"images": images, "left": left - 1, "at": now}), encoding="utf-8")
             else:
                 kept.unlink(missing_ok=True)
             if images:

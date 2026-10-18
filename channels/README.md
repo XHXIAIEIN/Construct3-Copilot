@@ -70,6 +70,8 @@ var/             本地配置、日志、会话与备份（不进 git）
 请求包含消息、会话、历史、附件和通知回调；返回值提供 `text`、`files` 与 `trace`，可以再带一个 `record`。
 
 每个聊天最近 3 轮问答存在 `var/sessions/_history/`，最近一张图和它还要跟着的提问数存在 `var/sessions/_images/`，bot 重启后接着用。
+两份文件都记着最后一轮的时间（`at`，UTC）。离最后一轮超过 6 小时再问，就不带历史和图，从头开始；没有 `at` 的旧文件也当作过期。
+6 小时是 `core/chat.py` 的 `HISTORY_HOURS` 和 `copilot/providers/construct3/application.py` 的 `EARLIER_IMAGE_HOURS`，要改就两处一起改。
 
 只表示收到、懂了或谢谢的消息（「哦哦」「o了」「ojbk」「谢谢」「1」）不回复、不调模型、不算进每日限额，也不进历史。
 上一条回复最后一句在问或在提议时照常回答；回复里给了方案或选项时，「1」算作选择。带文件或引用了别的消息时总是回答。
