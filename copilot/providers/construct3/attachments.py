@@ -26,13 +26,19 @@ TEXT_CHARS = 8000  # characters of one file passed to the model
 SHEET_CHARS = 12000  # characters of a .capx's printed events passed to the model
 
 
+class Unreadable(ValueError):
+    """Why a sent file cannot be read, worded for the person who sent it. The reply shows only this error's text:
+    other errors can hold a local path or English from zipfile and urllib."""
+
+
 def download(url: str, limit: int) -> bytes:
     if url.startswith("//"):
         url = "https:" + url
     with urllib.request.urlopen(url, timeout=60) as resp:
         data = resp.read(limit + 1)
     if len(data) > limit:
-        raise ValueError(f"file larger than {limit // (1024 * 1024)} MB")
+        size = f"{limit // (1024 * 1024)} MB" if limit >= 1024 * 1024 else f"{limit // 1024} KB"
+        raise Unreadable(f"文件超过 {size}")
     return data
 
 
@@ -70,11 +76,11 @@ def as_zip(data: bytes, filename: str, limit: int) -> bytes:
     """A .rar, .7z or tar archive unpacked and packed again as a zip, so the rest reads one format."""
     tool = bsdtar()
     if not tool:
-        raise ValueError("这里读不了这种压缩包，改发 .zip 或 .c3p")
+        raise Unreadable("这里读不了这种压缩包，改发 .zip 或 .c3p")
     try:
         return _as_zip(tool, data, filename, limit)
     except subprocess.TimeoutExpired:
-        raise ValueError("压缩包太大，解压超时；改发 .zip 或 .c3p") from None
+        raise Unreadable("压缩包太大，解压超时；改发 .zip 或 .c3p") from None
 
 
 def _as_zip(tool: str, data: bytes, filename: str, limit: int) -> bytes:
@@ -84,18 +90,18 @@ def _as_zip(tool: str, data: bytes, filename: str, limit: int) -> bytes:
         listing = subprocess.run([tool, "-tvf", str(src)], capture_output=True, text=True, encoding="utf-8",
                                  errors="replace", timeout=60)
         if listing.returncode:
-            raise ValueError("压缩包打不开，可能损坏或设了密码；改发 .zip 或 .c3p")
+            raise Unreadable("压缩包打不开，可能损坏或设了密码；改发 .zip 或 .c3p")
         # bsdtar -tv lists like ls -l: the fifth field is the size
         sizes = [line.split()[4] for line in listing.stdout.splitlines() if len(line.split()) > 4]
         if sum(int(s) for s in sizes if s.isdigit()) > limit:
-            raise ValueError(f"解压后超过 {limit // (1024 * 1024)} MB")
+            raise Unreadable(f"解压后超过 {limit // (1024 * 1024)} MB")
         out = Path(tmp) / "x"
         out.mkdir()
         # bsdtar refuses absolute paths and ".." on extraction unless -P is given
         done = subprocess.run([tool, "-xf", str(src), "-C", str(out)], capture_output=True, text=True,
                               encoding="utf-8", errors="replace", timeout=120)
         if done.returncode:
-            raise ValueError("压缩包解不开，可能设了密码；改发 .zip 或 .c3p")
+            raise Unreadable("压缩包解不开，可能设了密码；改发 .zip 或 .c3p")
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
             for f in sorted(out.rglob("*")):

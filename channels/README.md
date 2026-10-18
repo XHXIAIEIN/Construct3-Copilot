@@ -62,6 +62,7 @@ var/             本地配置、日志、会话与备份（不进 git）
 1. 在 `platforms/` 下建 `<名字>/`，写 `__main__.py`：调用 `core.entry.main("<名字>", run, split=...)`。
    `run` 负责连接平台；`split` 把回复切成该平台能发的段落，`--cli` 也按它打印。
 2. 收到消息时先问 `core.chat.Chats` 的 `acknowledged`（和 `record` 一样要传聊天类型），是就不回；再依次调用 `admit`（每日限额）和 `ask`（调用应用）；按平台的方式发出回复和文件，再调用 `record` 写回答记录。
+   发送出错时也要调用 `record`：`ask` 返回时回答已经做好并存进历史，回答记录里要有它的用量和工具。
    连上平台后用 `core.receipt.GatewayReceipt` 记录启动和就绪。
 3. 平台自己的依赖写进 `<名字>/requirements.txt`，再在 `channels/requirements.txt` 里加一行 `-r`。
 4. 在 `platforms/__init__.py` 登记模块名、显示名和要在面板展示的日志。

@@ -82,20 +82,25 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
             for a in attachments])
         files = turn.files[:1] if send_file else []
         parts = chunks(turn.text)[: MAX_REPLIES - len(files) - len(notes)]  # the file and the note are replies to the same message too
-        for seq, part in enumerate(parts, start=len(notes) + 1):
-            await reply(content=part, msg_seq=seq)
         sent = set()
-        for seq, path in enumerate(files, start=len(notes) + len(parts) + 1):
-            try:
-                await send_file(path, seq)
-                sent.add(path)
-                log.info("%s sent file %s bytes", key, path.stat().st_size)
-            except (OSError, aiohttp.ClientError, asyncio.TimeoutError, qqfile.UploadError) as exc:
-                log.warning("%s file send failed: %s", key, exc)
-                if seq < MAX_REPLIES:
-                    await reply(content="文件未发送成功，请稍后重试。", msg_seq=seq + 1)
-        chats.record(turn, chat=chat_of(key), session=key, sent=sent,
-                     files_in=[answer_log.file_fact(a.filename, a.size) for a in attachments])
+        try:
+            for seq, part in enumerate(parts, start=len(notes) + 1):
+                await reply(content=part, msg_seq=seq)
+            for seq, path in enumerate(files, start=len(notes) + len(parts) + 1):
+                try:
+                    await send_file(path, seq)
+                    sent.add(path)
+                    log.info("%s sent file %s bytes", key, path.stat().st_size)
+                except (OSError, aiohttp.ClientError, asyncio.TimeoutError, qqfile.UploadError) as exc:
+                    log.warning("%s file send failed: %s", key, exc)
+                    if seq < MAX_REPLIES:
+                        await reply(content="文件未发送成功，请稍后重试。", msg_seq=seq + 1)
+        except Exception as exc:  # botpy raises when QQ refuses a message (botpy/http.py _handle_response)
+            log.warning("%s reply send failed: %r", key, exc)
+        finally:
+            # the answer is made and in the history, so its line with the model usage and tools is written too
+            chats.record(turn, chat=chat_of(key), session=key, sent=sent,
+                         files_in=[answer_log.file_fact(a.filename, a.size) for a in attachments])
 
     # botpy 1.2 drops msg_elements, where a quoted message (message_type 103) carries its content and files,
     # so keep each event's raw payload by message id
