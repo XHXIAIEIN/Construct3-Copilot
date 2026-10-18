@@ -8,11 +8,14 @@ from pathlib import Path
 
 from .model import settings as model_settings
 from .model.client import create_client
+from .core.answers import write_description
 from .model.usage import Usage
 from .settings import REPO
 
 
-def create_application(*, settings: dict, data_dir: Path):
+def create_application(*, settings: dict, data_dir: Path, usage: Usage | None = None):
+    """The Construct application on the configured model. usage counts its tokens (a new one when not given);
+    its declaration of what it records goes to <data>/runtime/app.json for the panel."""
     from openai import BadRequestError
     from copilot import Runtime
     from copilot.providers import construct3 as provider
@@ -31,6 +34,9 @@ def create_application(*, settings: dict, data_dir: Path):
                   source="qqbot", options=options)
 
     model = model_settings.from_settings(settings)
-    usage = Usage(data_dir)
-    return Application(create_client(model, settings, usage), model=model.model, request_options=model.request_options,
-                       timeout=model.timeout, usage=usage, bad_request_error=BadRequestError)
+    usage = usage or Usage(data_dir)
+    application = Application(create_client(model, settings, usage), model=model.model,
+                              request_options=model.request_options, timeout=model.timeout, usage=usage,
+                              bad_request_error=BadRequestError)
+    write_description(data_dir, application.describe())
+    return application

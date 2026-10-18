@@ -1,6 +1,7 @@
 """Handle Construct requests independently of their message transport."""
 from pathlib import Path
 from types import SimpleNamespace
+import copy
 import hashlib
 import io
 import logging
@@ -11,6 +12,7 @@ import xml.etree.ElementTree as ET
 
 from . import attachments as attachments_mod, plugin as kb
 from .agent import Agent
+from .record import DESCRIPTION
 
 log = logging.getLogger("copilot.construct3")
 DOWNLOAD_MAX = 30 * 1024 * 1024
@@ -60,7 +62,13 @@ class Application:
         self.agent = Agent(client, model=model, request_options=request_options, timeout=timeout, usage=usage, bad_request_error=bad_request_error)
         self.projects = {}
 
+    def describe(self):
+        """The fields this application adds to an answer's record (handle's "record") and how to count them."""
+        return copy.deepcopy(DESCRIPTION)
+
     def handle(self, request):
+        """The reply text, the files to send and the tool trace; "record" is the answer's record when the agent
+        ran, absent for a message answered before it (an unreadable file, nothing to ask)."""
         key = request["session_id"]
         session = Path(request["session_dir"])
         question = request.get("text", "")
@@ -131,12 +139,14 @@ class Application:
             return {"text": "请发送 Construct 问题、项目或文本文件。", "files": [], "trace": []}
         question = question[:QUESTION_MAX] + extra
         outbox = []
+        record = {}  # filled by the agent, also when it fails part way
         try:
             if key not in self.projects:  # a project sent before a restart is still on disk
                 saved = next(session.rglob("project.c3proj"), None) if session.is_dir() else None
                 if saved:
                     self.projects[key] = saved.parent
-            text, trace = self.agent.answer(question, history, self.projects.get(key), request.get("group", False), outbox, session, notify)
+            text, trace = self.agent.answer(question, history, self.projects.get(key), request.get("group", False), outbox,
+                                            session, notify, record=record)
             made = next(session.rglob("project.c3proj"), None) if session.is_dir() else None
             if made:  # a project the answer made replaces the session's
                 self.projects[key] = made.parent
@@ -144,7 +154,7 @@ class Application:
             log.exception("agent failed")
             # a build finished before the failure is packed in outbox and still goes (2026-10-06: a 402 after a build)
             text, trace = ("后面出了错，做好的部分先发你。" if outbox else "出错了，稍后再试。"), []
-        return {"text": text, "trace": trace, "files": outbox}
+        return {"text": text, "trace": trace, "files": outbox, "record": record}
 
     def review(self):
         from .review import main

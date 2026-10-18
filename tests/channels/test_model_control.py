@@ -3,12 +3,10 @@ from __future__ import annotations
 
 import json
 import os
-import sqlite3
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
-from contextlib import closing
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -181,17 +179,22 @@ class ModelControlTests(unittest.TestCase):
                 self.control._stop_launched(launched)
         stop.assert_not_called()
 
-    def test_running_conversation_refuses_switch_before_configuration_write(self):
+    def test_running_answer_refuses_switch_before_configuration_write(self):
         mocks = self.prepare_switch()
-        database = self.home / "var" / "copilot" / "tasks.sqlite3"
-        database.parent.mkdir()
-        with closing(sqlite3.connect(database)) as db:
-            db.execute("CREATE TABLE tasks (capability TEXT,status TEXT)")
-            db.execute("INSERT INTO tasks VALUES ('conversation','running')")
-            db.commit()
-        self.assertFalse(self.control.switch("example:small")["ok"])
+        receipt = self.home / "var" / "runtime" / "gateway.json"
+        receipt.write_text(json.dumps({**self.receipt, "active_answers": 1}), encoding="utf-8")
+        result = self.control.switch("example:small")
+        self.assertFalse(result["ok"])
+        self.assertIn("运行中的会话", result["message"])
         self.assertEqual((self.home / ".env").read_bytes(), self.original)
         mocks[2].assert_not_called()
+
+    def test_active_answers_of_a_gone_process_do_not_hold_the_switch(self):
+        mocks = self.prepare_switch()
+        receipt = self.home / "var" / "runtime" / "gateway.json"
+        receipt.write_text(json.dumps({**self.receipt, "active_answers": 2}), encoding="utf-8")
+        mocks[1].return_value = []
+        self.assertTrue(self.control.switch("example:small")["ok"])
 
     def test_startup_failure_rolls_back_only_its_own_config(self):
         mocks = self.prepare_switch()

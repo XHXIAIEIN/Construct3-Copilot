@@ -23,7 +23,7 @@ def test_request_context_reaches_agent_and_files_survive_late_failure(tmp_path):
     application = Application(Mock(), model="model-placeholder")
     artifact = tmp_path / "output.c3p"
 
-    def answer(question, history, project, group, outbox, session, notify):
+    def answer(question, history, project, group, outbox, session, notify, record=None):
         assert question == "example"
         assert history == [{"role": "user", "content": "earlier"}]
         assert group is True

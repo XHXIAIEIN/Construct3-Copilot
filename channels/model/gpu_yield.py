@@ -17,7 +17,7 @@ FRESH = 5  # seconds since the log's last write that still count as generating
 POLL = 2
 MARKS = (b"/api/jobs", b"/api/tts", b"/api/concat")
 
-log = logging.getLogger("qqbot.yield")
+log = logging.getLogger("channels.model.gpu_yield")
 _missing_said: set[Path] = set()
 
 

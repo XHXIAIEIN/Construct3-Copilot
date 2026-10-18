@@ -1,5 +1,6 @@
 """Token counting: every model call of an answer adds to the thread's tally, and the answer ends with one
-line in usage.log. The panel reads that file by its path and line format, so both stay as they are."""
+line in usage.log, whose path and line format stay as they are. The channel that asked keeps a count of its own
+for the same answer (watch), for its answer log."""
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ import threading
 import time
 from pathlib import Path
 
-log = logging.getLogger("qqbot.agent")
+log = logging.getLogger("channels.model.usage")
 
 
 class Usage:
@@ -23,14 +24,23 @@ class Usage:
     def end(self) -> None:
         self._tally.now = None
 
+    def watch(self) -> dict:
+        """Start the channel's own count of the calls this thread makes, beside the application's tally; return it."""
+        self._tally.watched = {"calls": 0, "prompt": 0, "completion": 0, "cache_hit": 0}
+        return self._tally.watched
+
+    def unwatch(self) -> None:
+        self._tally.watched = None
+
     def count(self, resp) -> None:
         """Add one model response to the thread's tally, when an answer is being given."""
-        tally, usage = getattr(self._tally, "now", None), getattr(resp, "usage", None)
-        if tally is not None and usage is not None:
-            tally["calls"] += 1
-            tally["prompt"] += usage.prompt_tokens or 0
-            tally["completion"] += usage.completion_tokens or 0
-            tally["cache_hit"] += getattr(usage, "prompt_cache_hit_tokens", 0) or 0
+        usage = getattr(resp, "usage", None)
+        for tally in (getattr(self._tally, "now", None), getattr(self._tally, "watched", None)):
+            if tally is not None and usage is not None:
+                tally["calls"] += 1
+                tally["prompt"] += usage.prompt_tokens or 0
+                tally["completion"] += usage.completion_tokens or 0
+                tally["cache_hit"] += getattr(usage, "prompt_cache_hit_tokens", 0) or 0
 
     def write_usage(self, session: Path | None, tally: dict, seconds: float) -> None:
         """Terminal runs (--cli, the plugin's e2e runs) do not write bot.log, so every answer also goes to usage.log."""

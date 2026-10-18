@@ -16,6 +16,7 @@ from pathlib import Path
 from .control import ModelControl, ControlError
 from .api_profiles import ApiProfiles
 from . import logs as panel_logs
+from . import stats as panel_stats
 
 log = logging.getLogger(__name__)
 
@@ -104,11 +105,15 @@ def create_server(control, port=8767):
                 self.send(200, page.replace("__PANEL_TOKEN__", token), "text/html; charset=utf-8")
             elif self.path == "/api/health":
                 self.send(200, {"app": "channels-panel", "home": str(control.home)})
-            elif self.path == "/api/usage":
+            elif self.path == "/api/stats" or self.path.startswith("/api/stats?"):
+                # the counts never name a chat, but they come from the conversations, so they need the token too
+                range_ = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).get("range", ["day"])[0]
                 if self.headers.get("X-Panel-Token") != token:
                     self.send(403, {"error": "页面已失效，请刷新后重试"})
+                elif range_ not in ("day", "month"):
+                    self.send(400, {"error": "时间范围只能按天或按月"})
                 else:
-                    self.send(200, panel_logs.usage(control))
+                    self.send(200, panel_stats.report(control._data(), range_))
             elif self.path == "/api/logs" or self.path.startswith("/api/logs/"):
                 self.send_log()
             elif self.path == "/api/status":

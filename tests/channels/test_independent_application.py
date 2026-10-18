@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
 from contextlib import redirect_stdout
 
@@ -24,12 +25,14 @@ class IndependentApplicationTests(unittest.TestCase):
         from channels.qq.bot import ask_cli
         application = Echo()
         out = io.StringIO()
-        with redirect_stdout(out):
-            ask_cli(application, "example", data_dir=Path("data-placeholder"))
+        (REPO / ".tmp").mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=REPO / ".tmp") as folder, redirect_stdout(out):
+            ask_cli(application, "example", data_dir=Path(folder))
+            self.assertTrue((Path(folder) / "logs" / "qq" / "answers.jsonl").is_file())
         request = application.requests[0]
         self.assertEqual((request["text"], request["session_id"], request["history"], request["attachments"]),
                          ("example", "cli", [], []))
-        self.assertEqual(request["session_dir"], Path("data-placeholder") / "sessions" / "cli")
+        self.assertEqual(request["session_dir"], Path(folder) / "sessions" / "cli")
         self.assertEqual(out.getvalue().splitlines(), ["[tool] cli", "example", "[file] file-placeholder"])
 
     def test_transport_model_and_panel_load_without_copilot_or_a_model_client(self):

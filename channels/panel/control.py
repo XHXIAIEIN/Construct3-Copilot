@@ -8,7 +8,6 @@ import json
 import os
 import re
 import shutil
-import sqlite3
 import subprocess
 import threading
 import time
@@ -16,7 +15,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
-from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -213,7 +211,7 @@ class ModelControl:
     def _receipt(self) -> dict:
         try:
             value = json.loads((self._data() / "runtime" / "gateway.json").read_text(encoding="utf-8"))
-            return {key: value[key] for key in ("status", "pid", "started_at", "ready_at") if key in value}
+            return {key: value[key] for key in ("status", "pid", "started_at", "ready_at", "active_answers") if key in value}
         except (OSError, ValueError, TypeError):
             return {}
 
@@ -342,15 +340,19 @@ class ModelControl:
                 return {"ok": False, "message": str(exc) if isinstance(exc, ControlError) else "模型预热未完成。"}
 
     def _assert_idle(self) -> None:
-        database = self._data() / "copilot" / "tasks.sqlite3"
-        if not database.exists():
+        """The channel counts the answers it is giving in its receipt; a count left by a process that is gone
+        (killed mid-answer) is stale and does not hold the switch."""
+        receipt = self._receipt()
+        active = receipt.get("active_answers")
+        if not active:
             return
+        if not isinstance(active, int) or isinstance(active, bool) or active < 0:
+            raise ControlError("无法确认会话是否空闲，已保留现有服务。")
         try:
-            with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2)) as db:
-                active = db.execute("SELECT count(*) FROM tasks WHERE capability='conversation' AND status='running'").fetchone()[0]
-        except sqlite3.Error:
+            alive = bool(self._gateway_identity(receipt))
+        except ControlError:
             raise ControlError("无法确认会话是否空闲，已保留现有服务。") from None
-        if active:
+        if alive:
             raise ControlError("QQ 助手仍有运行中的会话，请等回答完成后再切换。")
 
     def _updated_env(self, original: bytes, config: dict, model: str) -> bytes:

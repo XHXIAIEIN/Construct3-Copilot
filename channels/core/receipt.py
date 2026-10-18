@@ -1,8 +1,10 @@
-"""Record QQ gateway startup and ready events."""
+"""Record the gateway's startup and ready events, and how many answers it is giving."""
 from __future__ import annotations
 
 import json
 import os
+import threading
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,16 +18,36 @@ class GatewayReceipt:
         self.path = data_dir / "runtime" / "gateway.json"
         self.pid = os.getpid()
         self.record: dict | None = None
+        self._lock = threading.Lock()  # answers run in worker threads
 
     def starting(self) -> None:
-        self.record = {"status": "starting", "pid": self.pid, "started_at": utc_now()}
-        self._write()
+        with self._lock:
+            self.record = {"status": "starting", "pid": self.pid, "started_at": utc_now(), "active_answers": 0}
+            self._write()
 
     def ready(self) -> None:
-        if self.record is None:
-            raise RuntimeError("Record gateway startup before its ready event")
-        self.record.update(status="ready", ready_at=utc_now())
-        self._write()
+        with self._lock:
+            if self.record is None:
+                raise RuntimeError("Record gateway startup before its ready event")
+            self.record.update(status="ready", ready_at=utc_now())
+            self._write()
+
+    @contextmanager
+    def answering(self):
+        """Count an answer as active while the application handles it: the panel switches models only when
+        none is, and it trusts the count only while this process is alive."""
+        self._add(1)
+        try:
+            yield
+        finally:
+            self._add(-1)
+
+    def _add(self, step: int) -> None:
+        with self._lock:
+            if self.record is None:
+                raise RuntimeError("Record gateway startup before its answers")
+            self.record["active_answers"] = max(0, self.record.get("active_answers", 0) + step)
+            self._write()
 
     def _write(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)

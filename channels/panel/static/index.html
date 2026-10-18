@@ -87,7 +87,8 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .seg{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--border2);border-radius:8px}
 .seg button{border:0;min-height:28px;padding:3px 14px;border-radius:6px;color:var(--text2)}.seg button[aria-pressed=true]{background:var(--selected);color:var(--text)}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
-.kpi{position:relative;display:block;text-align:left;white-space:normal;border:0;border-left:1px solid var(--border);border-radius:0;padding:14px 16px 16px;min-height:0}.kpi:first-child{border-left:0}
+.kpi{position:relative;display:block;text-align:left;white-space:normal;border:0;border-left:1px solid var(--border);border-radius:0;padding:14px 16px 16px;min-height:0}.kpi:nth-child(4n+1){border-left:0}.kpi:nth-child(n+5){border-top:1px solid var(--border)}
+.app-note{margin:-4px 0 12px}
 .kpi[aria-pressed=true]{background:var(--hover)}.kpi[aria-pressed=true]::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:2px;border-radius:2px;background:var(--info)}
 .kpi .k{font-size:12px;color:var(--text2)}.kpi .v{font-size:24px;font-weight:500;line-height:1.35}.kpi .v small{font-size:13px;font-weight:400;color:var(--text2);margin:0 4px 0 2px}
 .kpi .n{font-size:12px;color:var(--muted);word-break:keep-all}
@@ -107,7 +108,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
   .app{grid-template-columns:1fr}nav{position:static;height:auto;margin:0;border-radius:0;border-width:0 0 1px;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--border);padding:8px 12px;overflow-x:auto}
   .brand{padding:0 8px 0 0}.side-toggle{display:none!important}.app.side-collapsed nav{display:flex}main{padding:16px}header{flex-direction:column}header>div:first-child{flex-basis:auto}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
   .toolrow{grid-template-columns:56px 104px minmax(80px,1fr);row-gap:2px}.toolrow>:first-child{grid-column:1/-1}.toolrow:first-child{display:none}.toolrow .num{text-align:left}.toolrow .calls::before{content:"调用 "}.toolrow .fail::before{content:"失败 "}.toolrow .fail{display:flex;align-items:baseline;white-space:pre}.toolrow .fail small{order:2;margin:0 0 0 6px}
-  .kpis{grid-template-columns:1fr 1fr}.kpi:nth-child(3){border-left:0}.kpi:nth-child(n+3){border-top:1px solid var(--border)}.kpi .v{font-size:20px}
+  .kpis{grid-template-columns:1fr 1fr}.kpis .kpi{border-left:1px solid var(--border)}.kpis .kpi:nth-child(2n+1){border-left:0}.kpis .kpi:nth-child(n+3){border-top:1px solid var(--border)}.kpi .v{font-size:20px}
   .logbox{height:calc(100vh - 290px)}.tools select{flex:1}
   .row{flex-wrap:wrap}.row .what{flex-basis:100%}.facts{grid-template-columns:1fr}.facts dd{border-top:0;padding-top:0}
 }
@@ -146,11 +147,11 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
     <section data-page="stats" hidden>
       <div class="list empty" id="stats-empty">正在读取…</div>
       <div id="stats-body" hidden>
-        <div class="kpis" id="kpis" role="group" aria-label="回答"></div>
-        <div class="kpis" id="kpis-projects" role="group" aria-label="项目"></div>
-        <div class="list chart"><div class="chart-head"><span id="trend-title"></span><div class="side"><span class="legend" hidden><span><i class="p"></i>私聊</span><span><i class="g"></i>群聊</span><span class="unknown" hidden><i class="u"></i>未知</span></span><small id="trend-range"></small></div></div><div class="bars" id="trend"></div><div class="ticks" id="trend-ticks"></div></div>
-        <div class="list chart"><div class="chart-head"><span>时段</span><div class="side"><span class="legend" hidden><span><i class="p"></i>私聊</span><span><i class="g"></i>群聊</span><span class="unknown" hidden><i class="u"></i>未知</span></span><small>按完成时间</small></div></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
-        <div class="list chart" id="tools-card" hidden><div class="chart-head"><span>工具</span><small id="tools-since"></small></div><div id="tools"></div></div>
+        <div class="kpis" id="kpis" role="group" aria-label="统计"></div>
+        <div class="muted app-note" id="app-note" hidden></div>
+        <div class="list chart"><div class="chart-head"><span id="trend-title"></span><div class="side"><span class="legend" hidden><span><i class="p"></i>私聊</span><span><i class="g"></i>群聊</span><span class="unknown" hidden><i class="u"></i>其他</span></span><small id="trend-range"></small></div></div><div class="bars" id="trend"></div><div class="ticks" id="trend-ticks"></div></div>
+        <div class="list chart"><div class="chart-head"><span>时段</span><div class="side"><span class="legend" hidden><span><i class="p"></i>私聊</span><span><i class="g"></i>群聊</span><span class="unknown" hidden><i class="u"></i>其他</span></span><small>按完成时间</small></div></div><div class="bars hours" id="hours"></div><div class="ticks" id="hours-ticks"></div></div>
+        <div id="tables"></div>
         <div class="muted" id="stats-meta"></div>
       </div>
     </section>
@@ -405,7 +406,7 @@ async function getJSON(url){
   try{data=await r.json();}catch{}
   if(r.ok)return data;
   // An older panel process serves the new page but has no log endpoint until it restarts.
-  if(r.status===404&&(url==="/api/logs"||url==="/api/usage"))throw Error("面板服务需要重启，重启后才能看日志");
+  if(r.status===404&&(url==="/api/logs"||url.startsWith("/api/stats")))throw Error("面板服务需要重启，重启后才能看日志和统计");
   throw Error(data.error||"日志读取失败");
 }
 // A timestamped line says its own level near the start; a line without one (traceback, wrapped JSON) belongs to the line above.
@@ -482,128 +483,103 @@ const logResize=new ResizeObserver(()=>{if(logFollow)$("log-box").scrollTop=$("l
 logResize.observe($("log-lines"));logResize.observe($("log-box"));
 
 // ---- stats
-// Each tile counts one list: answers (usage.log, one line per whole answer, every model call and tool step), or the
-// project files received, sent and built (bot.log). Picking a tile sets what both charts show.
-const sum=(list,key)=>list.reduce((t,x)=>t+x[key],0);
-const METRICS={
-  count:{split:true,of:"answers",label:"回答",value:a=>a.length,fmt:n=>[[n,"次"]],
-    note:a=>{const g=a.filter(x=>x.chat==="group").length;return `私聊 ${a.length-g} · 群聊 ${g}`;}},
-  people:{split:true,of:"answers",label:"人数",value:a=>new Set(a.map(x=>x.who)).size,fmt:n=>[[n,"人"]],
-    note:a=>`人均 ${trim(a.length/new Set(a.map(x=>x.who)).size)} 次`},
-  tokens:{split:true,of:"answers",label:"词元",value:a=>sum(a,"prompt")+sum(a,"completion"),fmt:n=>bigNumber(n),
-    note:a=>`输出 ${plain(bigNumber(sum(a,"completion")))}`},
-  time:{of:"answers",label:"用时（中位）",value:a=>median(a.map(x=>x.seconds)),fmt:n=>duration(n),
-    note:a=>`最长 ${plain(duration(Math.max(...a.map(x=>x.seconds))))}`},
-  received:{split:true,of:"received",label:"用户上传",value:a=>a.length,fmt:n=>[[n,"个"]],note:a=>`共 ${fileSize(sum(a,"bytes"))}`},
-  sent:{split:true,of:"sent",label:"发给用户",value:a=>a.filter(x=>x.ok).length,fmt:n=>[[n,"个"]],
-    note:a=>{const failed=a.filter(x=>!x.ok).length;return failed?`失败 ${failed} 次`:`共 ${fileSize(sum(a,"bytes"))}`;}},
-  builds:{split:true,of:"builds",label:"生成项目",value:a=>a.length,fmt:n=>[[n,"次"]],
-    // "unknown": the log cut the line that says how the build ended.
-    note:a=>{const n=k=>a.filter(x=>x.outcome===k).length,unknown=n("unknown");return `成功 ${n("built")} · 失败 ${n("failed")}`+(unknown?` · 未知 ${unknown}`:"");}},
-  fixes:{split:true,of:"builds",label:"自动修正",value:a=>sum(a,"fixes"),fmt:n=>[[n,"处"]],
-    note:a=>{const n=a.filter(x=>x.fixes).length;return n?`在 ${n} 次生成里`:"";}},
-};
-const ROWS=[["count","people","tokens","time"],["received","sent","builds","fixes"]];
-let statsData=null,statsError=null,statsBusy=false,statsDrawn="",statsTick=0,statsRange="day",statsMetric="count";
+// The server counts (/api/stats): the base metrics over the fields every channel writes, and the application's
+// metrics by its own declaration. The page only formats them. A tile sets what both charts show; a table is a
+// metric counted per name.
+const FORMATS={number:n=>bigNumber(n),duration:n=>duration(Math.round(n)),bytes:n=>[[fileSize(n),""]],percent:n=>[[Math.round(n*100),"%"]]};
+function fmt(m,n){ return n===null||n===undefined?[["—",""]]:(FORMATS[m.format]||(v=>[[trim(v),m.unit||""]]))(n); }
+const FLAGS={true:"成功",false:"失败"};
+let statsData=null,statsError=null,statsBusy=false,statsDrawn="",statsTick=0,statsRange="day",statsMetric="base:answers",statsVersion=0;
 try{
   statsRange=localStorage.getItem("panel-stats-range")==="month"?"month":"day";
-  const saved=localStorage.getItem("panel-stats-metric");if(METRICS[saved])statsMetric=saved;
+  statsMetric=localStorage.getItem("panel-stats-metric")||statsMetric;
 }catch{}
-function median(values){ if(!values.length)return null;const v=[...values].sort((a,b)=>a-b),m=v.length>>1;return v.length%2?v[m]:Math.round((v[m-1]+v[m])/2); }
 function trim(n){ return String(+n.toFixed(n<10?1:0)); }
-function bigNumber(n){ return n>=1e8?[[trim(n/1e8),"亿"]]:n>=1e4?[[trim(n/1e4),"万"]]:[[n,""]]; }
+function bigNumber(n){ return n>=1e8?[[trim(n/1e8),"亿"]]:n>=1e4?[[trim(n/1e4),"万"]]:[[trim(n),""]]; }
 // Seconds matter only for short answers; past ten minutes they are noise.
 function duration(s){ return s<60?[[s,"秒"]]:s<600?[[Math.floor(s/60),"分"],[s%60,"秒"]]:s<3600?[[Math.floor(s/60),"分"]]:[[Math.floor(s/3600),"小时"],[Math.floor(s%3600/60),"分"]]; }
 function fileSize(n){ return n<1048576?`${Math.round(n/1024)} KB`:`${trim(n/1048576)} MB`; }
 function plain(parts){ return parts.map(([n,u])=>n+u).join(" "); }
-function parseAt(at){ const [d,t]=at.split(" "),[y,m,day]=d.split("-").map(Number),[h,mi,se]=t.split(":").map(Number);return new Date(y,m-1,day,h,mi,se); }
-function dayKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
-function buckets(){
-  const now=new Date(),list=[];
-  if(statsRange==="day")for(let i=13;i>=0;i--){
-    const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i);
-    list.push({key:dayKey(d),tick:i===0?"今天":i%2?"":`${d.getMonth()+1}/${d.getDate()}`,name:i===0?"今天":`${d.getMonth()+1}月${d.getDate()}日`,start:d});
-  }else for(let i=11;i>=0;i--){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    list.push({key:dayKey(d).slice(0,7),tick:`${d.getMonth()+1}月`,name:`${d.getFullYear()}年${d.getMonth()+1}月`,start:d});
-  }
-  return list;
-}
+function total(v){ return v&&typeof v==="object"?Object.values(v).reduce((t,x)=>t+(total(x)||0),0):v; }
 async function refreshStats(force){
   if(page!=="stats"||statsBusy||(!force&&statsTick++%10))return;
   statsBusy=true;
-  try{statsData=await getJSON("/api/usage");statsError=null;}catch(e){statsError=e;}
+  try{statsData=await getJSON(`/api/stats?range=${statsRange}`);statsError=null;statsVersion++;}catch(e){statsError=e;}
   finally{statsBusy=false;renderStats();}
+}
+function tiles(){
+  const app=statsData.app?.metrics||[];
+  return [...statsData.base.map(m=>({...m,key:"base:"+m.id})),...app.filter(m=>m.view!=="table").map(m=>({...m,key:"app:"+m.id}))];
+}
+function noteOf(m){
+  if(m.note)return `${m.note.label} ${plain(fmt(m.note,m.note.value))}`;
+  if(m.parts)return Object.entries(m.parts).map(([k,v])=>`${(m.values||FLAGS)[k]||k} ${plain(fmt(m,total(v)))}`).join(" · ");
+  return "";
 }
 function renderStats(){
   const body=$("stats-body"),empty=$("stats-empty");
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.range===statsRange)));
-  const none=statsData&&!["answers","received","sent","builds","tasks"].some(k=>statsData[k]?.length);
-  const message=statsError&&!statsData?statsError.message+"。":!statsData?"正在读取…":none?"还没有记录。":"";
+  const message=statsError&&!statsData?statsError.message+"。":!statsData?"正在读取…":
+    !statsData.total?"还没有记录。统计从这一版开始记，之前的回答不计入。"+(statsData.app?"":statsData.app_note+"。"):"";
   empty.hidden=!message;body.hidden=!!message;setText(empty,message);empty.classList.toggle("bad",!!statsError&&!statsData);
   if(message)return;
-  setText($("stats-meta"),statsError?`${statsError.message}。下面是上次读到的数字。`:statsData.clipped?"日志太大，只统计了最近的部分。":"");
+  const since=statsData.since&&statsData.since>statsData.buckets[0].key?`记录从 ${statsData.since} 开始。`:"";
+  setText($("stats-meta"),statsError?`${statsError.message}。下面是上次读到的数字。`:(statsData.clipped?"日志太大，只统计了最近的部分。":"")+since);
   $("stats-meta").classList.toggle("bad",!!statsError);
-  const list=buckets(),from=list[0].start,metric=METRICS[statsMetric];
-  const signature=[statsRange,statsMetric,list.at(-1).key,...["answers","received","sent","builds","tasks"].map(k=>statsData[k].length+(statsData[k].at(-1)?.at||""))].join();
+  const all=tiles();
+  if(!all.some(t=>t.key===statsMetric))statsMetric=all[0].key;
+  const signature=[statsVersion,statsMetric].join();
   if(signature===statsDrawn)return;
   statsDrawn=signature;
-  const lists={};
-  for(const k of ["answers","received","sent","builds","tasks"])lists[k]=statsData[k].map(a=>({...a,date:parseAt(a.at)})).filter(a=>a.date>=from);
-  const tile=key=>{
-    const m=METRICS[key],items=lists[m.of],value=items.length?m.value(items):null,b=make("button","kpi"),v=make("div","v");
-    b.type="button";b.setAttribute("aria-pressed",String(key===statsMetric));
-    for(const [n,u] of value===null?[["—",""]]:m.fmt(value)){v.append(String(n));if(u)v.append(make("small","",u));}
-    b.append(make("div","k",m.label),v,make("div","n",items.length?m.note(items):" "));
-    b.addEventListener("click",()=>{statsMetric=key;try{localStorage.setItem("panel-stats-metric",key);}catch{}renderStats();});
+  const metric=all.find(t=>t.key===statsMetric);
+  $("kpis").replaceChildren(...all.map(m=>{
+    const b=make("button","kpi"),v=make("div","v");
+    b.type="button";b.setAttribute("aria-pressed",String(m.key===statsMetric));
+    for(const [n,u] of fmt(m,m.value)){v.append(String(n));if(u)v.append(make("small","",u));}
+    b.append(make("div","k",m.label),v,make("div","n",(m.value===null?"":noteOf(m))||" "));
+    b.addEventListener("click",()=>{statsMetric=m.key;try{localStorage.setItem("panel-stats-metric",m.key);}catch{}renderStats();});
     return b;
-  };
-  [$("kpis"),$("kpis-projects")].forEach((row,i)=>row.replaceChildren(...ROWS[i].map(tile)));
-  const items=lists[metric.of],byKey=new Map(list.map(b=>[b.key,[]]));
-  for(const a of items)byKey.get(statsRange==="day"?dayKey(a.date):dayKey(a.date).slice(0,7))?.push(a);
-  setText($("trend-title"),metric.label.replace("（中位）",""));setText($("trend-range"),statsRange==="day"?"近 14 天":"近 12 个月");
-  drawBars($("trend"),$("trend-ticks"),list.map(b=>({tick:b.tick,name:b.name,items:byKey.get(b.key)})),metric);
-  drawTools(lists.tasks,statsData.tasks);
-  drawBars($("hours"),$("hours-ticks"),Array.from({length:24},(_,h)=>({tick:h%6?"":`${h} 点`,name:`${h}:00–${h+1}:00`,items:items.filter(a=>a.date.getHours()===h)})),metric);
+  }));
+  // Without runtime/app.json (the channel has not started with this version) only the base metrics show.
+  setText($("app-note"),statsData.app?"":statsData.app_note);$("app-note").hidden=!!statsData.app;
+  setText($("trend-title"),metric.label.replace("（平均）",""));setText($("trend-range"),statsRange==="day"?"近 14 天":"近 12 个月");
+  drawBars($("trend"),$("trend-ticks"),statsData.buckets.map((b,i)=>({tick:b.tick,name:b.name,parts:metric.trend[i]})),metric);
+  drawBars($("hours"),$("hours-ticks"),metric.hours.map((parts,h)=>({tick:h%6?"":`${h} 点`,name:`${h}:00–${h+1}:00`,parts})),metric);
+  drawTables(statsData.app);
 }
-// A split metric stacks private (bottom) and group; both are sums over disjoint sessions, so the parts add up.
-// The median time does not add up and received or sent files do not name their chat: those stay one series.
-// copilot's task records: one row per tool, the whole answer ("conversation") first. An interrupted answer
-// (QQbot restarted mid-answer) counts as failed and is named in the row.
-function drawTools(tasks,all){
-  const card=$("tools-card");card.hidden=!all.length;if(!all.length)return;
-  const first=all[0]&&parseAt(all[0].at),since=first&&first>buckets()[0].start?`记录从 ${first.getMonth()+1}月${first.getDate()}日 开始`:"";
-  setText($("tools-since"),since);
-  const by=new Map();
-  // The post-answer ACE check calls lookup_ace too; its calls get their own row so lookup_ace counts the model's.
-  for(const t of tasks){const tool=t.check?"ace-check":t.tool,r=by.get(tool)||{tool,calls:0,failed:0,interrupted:0};r.calls++;
-    if(t.status==="failed"||t.status==="interrupted")r.failed++;if(t.status==="interrupted")r.interrupted++;by.set(tool,r);}
-  const rows=[...by.values()].sort((a,b)=>(b.tool==="conversation")-(a.tool==="conversation")||b.failed-a.failed||b.calls-a.calls);
-  const head=make("div","toolrow");head.append(make("span","",""),make("span","num","调用"),make("span","num","失败"),Object.assign(make("span","meter"),{textContent:"失败率"}));
-  $("tools").replaceChildren(head,...(rows.length?rows.map(r=>{
-    const row=make("div","toolrow"),meter=make("div","meter"),track=make("div","track"),fill=make("div","fill"),rate=Math.round(r.failed/r.calls*100);
-    fill.style.width=rate+"%";track.append(fill);meter.append(track,make("span","",rate+"%"));
-    const failed=make("span","num fail",r.failed?String(r.failed):"—");
-    if(r.interrupted)failed.prepend(make("small","",`中断 ${r.interrupted}`));
-    row.append(make("span","",({conversation:"回答","ace-check":"ACE 校验"})[r.tool]||r.tool),make("span","num calls",String(r.calls)),failed,meter);
-    return row;
-  }):[make("div","empty","这段时间没有记录。")]));
+// A table counts per name; with a split it shows the failures beside the calls.
+function drawTables(app){
+  const cards=(app?.metrics||[]).filter(m=>m.view==="table").map(m=>{
+    const card=make("div","list chart"),head=make("div","chart-head"),box=make("div");
+    head.append(make("span","",m.label),make("small","",app.label));
+    const rows=Object.entries(m.rows||{}).map(([name,v])=>{
+      const split=v&&typeof v==="object",calls=split?(v.true||0)+(v.false||0):v,failed=split?v.false||0:0;
+      return {name:(m.names||{})[name]||name,calls,failed,split};
+    }).sort((a,b)=>b.failed-a.failed||b.calls-a.calls);
+    const top=make("div","toolrow");top.append(make("span","",""),make("span","num","调用"),make("span","num","失败"),Object.assign(make("span","meter"),{textContent:"失败率"}));
+    box.append(top,...(rows.length?rows.map(r=>{
+      const row=make("div","toolrow"),meter=make("div","meter"),track=make("div","track"),fill=make("div","fill"),rate=r.calls?Math.round(r.failed/r.calls*100):0;
+      fill.style.width=rate+"%";track.append(fill);meter.append(track,make("span","",r.split?rate+"%":"—"));
+      row.append(make("span","",r.name),make("span","num calls",String(r.calls)),make("span","num fail",r.failed?String(r.failed):"—"),meter);
+      return row;
+    }):[make("div","empty","这段时间没有记录。")]));
+    card.append(head,box);return card;
+  });
+  $("tables").replaceChildren(...cards);
 }
+// A metric that adds up stacks private (bottom), group and other chats (the terminal); an average stays one series.
 function drawBars(chart,ticks,groups,metric){
-  const part=(items,chat)=>{const some=items.filter(x=>x.chat===chat);return some.length?metric.value(some)||0:0;};
-  // null chat: an older log line whose chat the log order could not tell (two chats answering at once)
-  const parts=groups.map(g=>metric.split?[part(g.items,"private"),part(g.items,"group"),part(g.items,null)]:null);
-  const unknown=parts.some(p=>p&&p[2]);
-  const values=groups.map((g,i)=>parts[i]?parts[i][0]+parts[i][1]+parts[i][2]:g.items.length?metric.value(g.items)||0:0),max=Math.max(...values,1);
+  const values=groups.map(g=>g.parts.reduce((t,x)=>t+(x||0),0)),max=Math.max(...values,1);
+  const other=metric.stacked&&groups.some(g=>g.parts[2]);
   $("tip").hidden=true;
-  chart.parentElement.querySelector(".legend").hidden=!metric.split;chart.parentElement.querySelector(".legend .unknown").hidden=!unknown;
+  chart.parentElement.querySelector(".legend").hidden=!metric.stacked;chart.parentElement.querySelector(".legend .unknown").hidden=!other;
   chart.replaceChildren(...groups.map((g,i)=>{
-    const cell=make("div","cell"),bar=make("div","bar"+(values[i]?"":" zero")),total=values[i]?plain(metric.fmt(values[i])):"无";
-    const text=parts[i]&&values[i]?`${total}（私聊 ${plain(metric.fmt(parts[i][0]))} · 群聊 ${plain(metric.fmt(parts[i][1]))}`+(parts[i][2]?` · 未知 ${plain(metric.fmt(parts[i][2]))}`:"")+"）":total;
+    const cell=make("div","cell"),bar=make("div","bar"+(values[i]?"":" zero")),sum=values[i]?plain(fmt(metric,values[i])):"无";
+    const p=g.parts,text=metric.stacked&&values[i]?`${sum}（私聊 ${plain(fmt(metric,p[0]))} · 群聊 ${plain(fmt(metric,p[1]))}`+(p[2]?` · 其他 ${plain(fmt(metric,p[2]))}`:"")+"）":sum;
     bar.style.height=values[i]?`${Math.max(4,values[i]/max*100)}%`:"2px";
-    if(parts[i]&&values[i]){
+    if(metric.stacked&&values[i]){
       bar.classList.add("split");
-      parts[i].forEach((v,k)=>{if(v){const seg=make("i","pgu"[k]);seg.style.flex=`${v} 0 0`;bar.append(seg);}});
+      p.forEach((v,k)=>{if(v){const seg=make("i","pgu"[k]);seg.style.flex=`${v} 0 0`;bar.append(seg);}});
     }
     cell.setAttribute("role","img");cell.setAttribute("aria-label",`${g.name}：${text}`);cell.dataset.name=g.name;cell.dataset.text=text;
     cell.append(bar);return cell;
@@ -621,7 +597,7 @@ function showTip(e){
 }
 ["trend","hours"].forEach(id=>{$(id).addEventListener("pointermove",showTip);$(id).addEventListener("pointerleave",()=>$("tip").hidden=true);});
 document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
-  statsRange=b.dataset.range;try{localStorage.setItem("panel-stats-range",statsRange);}catch{}renderStats();
+  statsRange=b.dataset.range;try{localStorage.setItem("panel-stats-range",statsRange);}catch{}renderStats();refreshStats(true);
 }));
 
 // ---- sidebar

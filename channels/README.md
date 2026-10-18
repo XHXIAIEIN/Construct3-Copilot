@@ -34,7 +34,7 @@ start.cmd        日常启动入口，打开面板
 settings.py      读取 .env，由入口读一次后显式传下去
 app.py           唯一接到 Copilot 的地方：造模型客户端，再造 Construct 应用
 model/           模型连接：设置、OpenAI 兼容和 Anthropic 客户端、用量、GPU 让位
-core/            与平台无关的部分：启动回执
+core/            与平台无关的部分：启动回执、回答记录
 qq/              QQ 通道：连接、文件上传
 panel/           面板：模型切换、接口配置、日志与统计
 grader.py        应用自带的回复审查器
@@ -50,7 +50,7 @@ var/             本地配置、日志、会话与备份（不进 git）
 
 `copilot/` 不 import `channels`；`channels/` 里只有 `app.py` import `copilot`。`tests/channels/test_boundaries.py` 检查这两条。
 其余模块只认得一个有 `handle(request)` 的对象。
-请求包含消息、会话、历史、附件和通知回调；返回值提供 `text`、`files` 与 `trace`。
+请求包含消息、会话、历史、附件和通知回调；返回值提供 `text`、`files` 与 `trace`，可以再带一个 `record`。
 
 `app.py` 默认从 Copilot 仓库的相邻目录加载 Construct3-Agent-Skills 和 Construct3-RAG，可用 `.env` 的 `C3BOT_SKILLS` 和 `CONSTRUCT3_RAG` 指定。
 Construct 的工具循环、工程解析、生成与交付规则实现在 `copilot/providers/construct3/`。
@@ -71,6 +71,17 @@ channels/scripts/start.ps1 -Stop
 `-Stop` 停止本仓库的连接及审查器。日常操作使用 `start.cmd`。
 
 模型页面日志保存在 `var/logs/models/`，QQ 日志保存在 `var/logs/bot/`。
-`var/runtime/gateway.json` 记录 READY 事件和进程身份，页面核对进程后显示连接状态。
-Construct 应用的任务与文件记录保存在 `var/copilot/`。QQ 上传结果另记在连接日志中。
+`var/runtime/gateway.json` 记录 READY 事件、进程身份和正在进行的回答数（`active_answers`）。页面核对进程后显示连接状态；有回答进行时不切换模型。
+Construct 应用的任务与文件记录保存在 `var/copilot/`。
+
+## 回答记录与统计
+
+每次回答，通道往 `var/logs/<通道>/answers.jsonl` 追加一行，QQ 是 `logs/qq/`，`--cli` 也写在这里，聊天类型记为 `cli`。
+通道只写基础字段：时间、通道、聊天类型、会话、用时、模型调用数和词元、收发文件（只记类型和大小，不记文件名）、`handle` 是否正常返回。
+应用返回的 `record` 原样放在 `app` 下，通道不解读它。
+
+应用的 `describe()` 声明自己加了哪些字段、怎么统计。`app.py` 启动时把它写到 `var/runtime/app.json`，通道停着时这份声明仍在。
+面板只实现原子操作：`count`、`sum`、`avg`、`rate`，加上 `where`（过滤）、`each`（展开列表字段）、`by`（分组）和 `split`（按布尔拆成两份）。
+基础指标用同样的写法内置在 `panel/stats.py`。没有 `app.json` 时只显示基础指标，并注明应用未提供统计。
+统计从这一版开始记，之前的 `bot.log` 和 `usage.log` 不再参与统计。`usage.log` 照旧写，日志页可以查看。
 `QQBOT_DATA` 可设置运行数据目录（相对路径从 `channels/` 算起），`C3BOT_DATA` 兼容已有配置。

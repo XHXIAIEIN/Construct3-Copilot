@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 
 from . import services as copilot
+from .record import fixed_lines, settle
 MAX_STEPS = 10
 from .reply import ASKED_EVENTS, BUILD_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten
 
@@ -43,6 +44,7 @@ class Run:
         self.session = session
         self.notify = notify
         self.trace: list[str] = []
+        self.calls: list[dict] = []  # the model's tool calls and how each went, for the answer's record
         self.send = False  # set by a written edit, an undo that leaves edits, send_project or a new project
         self.told = False  # the busy note went out, at the first tool call that makes or changes a project
         self.asked = project is not None or bool(ASKED_EVENTS.search(question))  # events may make the reply longer
@@ -83,6 +85,8 @@ class Run:
 
     def made(self, result: tuple[Path | None, str]) -> str:
         # a new project is the person's from here on: its tools replace the old project's, and it is sent
+        if self.calls:  # the build call this result answers
+            self.calls[-1].update(built=result[0] is not None, fixes=fixed_lines(result[1]))
         if result[0]:
             self.project = result[0]
             self.send = True
@@ -129,23 +133,36 @@ class Agent:
 
     def answer(
         self, question: str, history: list[dict] | None = None, project: Path | None = None, group: bool = False,
-        outbox: list[Path] | None = None, session: Path | None = None, notify=None,
+        outbox: list[Path] | None = None, session: Path | None = None, notify=None, record: dict | None = None,
     ) -> tuple[str, list[str]]:
-        """Run an answer under the same-session lock and record prepared attachments."""
+        """Run an answer under the same-session lock and record prepared attachments. record, when given, is
+        filled with the answer's record (record.settle), also when the answer fails part way."""
+        calls: list[dict] = []
         with copilot.session(project, session, group) as task:
-            text, trace = self._answer_in_session(question, history, project, group, outbox, session, notify)
-            failed = text in (NO_FILE, NOT_MADE, NOT_FINISHED, NOT_SURE, NO_STEPS) or any(
-                t.startswith("pack failed:") or t == "steps ran out" for t in trace)
-            task.finish(status="failed" if failed else "completed", summary=text, artifacts=outbox or [])
-            return text, trace
+            try:
+                text, trace = self._answer_in_session(question, history, project, group, outbox, session, notify, calls)
+                failed = text in (NO_FILE, NOT_MADE, NOT_FINISHED, NOT_SURE, NO_STEPS) or any(
+                    t.startswith("pack failed:") or t == "steps ran out" for t in trace)
+                task.finish(status="failed" if failed else "completed", summary=text, artifacts=outbox or [])
+                return text, trace
+            finally:
+                if record is not None:
+                    try:
+                        children = copilot.children(task)
+                    except Exception as exc:  # the record is a by-product; the answer still goes out
+                        log.warning("task rows unreadable, record without script outcomes: %s", exc)
+                        children = []
+                    record.update(settle(calls, children))
 
     def _answer_in_session(
         self, question: str, history: list[dict] | None, project: Path | None, group: bool,
-        outbox: list[Path] | None, session: Path | None, notify,
+        outbox: list[Path] | None, session: Path | None, notify, calls: list[dict] | None = None,
     ) -> tuple[str, list[str]]:
         tally = self.usage.begin()
         started = time.monotonic()
         run = Run(question, history, project, group, session, notify)
+        if calls is not None:
+            run.calls = calls
         text = ""
         try:
             text = self._answer(run)
@@ -272,6 +289,7 @@ class Agent:
     def _call(self, run: Run, call) -> str:
         """Run one tool call of the model and return its result, or the error the model should read."""
         name = call.function.name
+        run.calls.append({"id": call.id, "name": name, "ok": True})
         try:
             try:
                 args = json.loads(call.function.arguments or "{}")
@@ -284,10 +302,13 @@ class Agent:
             if run.notify and not run.told and name in kb.BUSY:
                 run.told = True
                 run.notify(kb.BUSY[name])
-            return mended + run.handlers[name](**args)
+            with copilot.tool_call(call.id):
+                return mended + run.handlers[name](**args)
         except json.JSONDecodeError as exc:
+            run.calls[-1]["ok"] = False
             return json_error(name, exc)
         except (KeyError, TypeError, OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
+            run.calls[-1]["ok"] = False
             log.warning("tool %s failed: %s", name, exc)
             return f"tool error: {exc}"
 

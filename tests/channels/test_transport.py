@@ -27,7 +27,8 @@ class GatewayTests(unittest.TestCase):
         with patch("channels.core.receipt.utc_now", side_effect=["2026-01-01T00:00:00Z", "2026-01-01T00:00:01Z"]):
             receipt.starting()
             starting = json.loads(receipt.path.read_text(encoding="utf-8"))
-            self.assertEqual(starting, {"status": "starting", "pid": os.getpid(), "started_at": "2026-01-01T00:00:00Z"})
+            self.assertEqual(starting, {"status": "starting", "pid": os.getpid(), "started_at": "2026-01-01T00:00:00Z",
+                                        "active_answers": 0})
             receipt.ready()
         ready = json.loads(receipt.path.read_text(encoding="utf-8"))
         self.assertEqual(ready, {**starting, "status": "ready", "ready_at": "2026-01-01T00:00:01Z"})

@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import os
 import json
+import contextvars
 import subprocess
 import sys
 import tempfile
 import hashlib
 import importlib.util
+import uuid
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -21,6 +23,10 @@ SOURCE = os.environ.get("COPILOT_SOURCE", "local")
 OPTIONS = json.loads(os.environ.get("COPILOT_C3_OPTIONS", "{}"))
 _runtime = None
 _binding = None
+# the request_id prefix of the scripts a model tool call runs, "tool:<call id>:<unique>", which ties each task row
+# to the call it ran for
+TOOL_REQUEST = "tool:"
+_call = contextvars.ContextVar("construct3_tool_call", default=None)
 
 
 class NullUsage:
@@ -32,6 +38,21 @@ class NullUsage:
 
     def end(self):
         pass
+
+
+@contextmanager
+def tool_call(call_id):
+    """Tag the scripts run inside with the model's tool call, unless the caller names the request itself."""
+    token = _call.set(call_id)
+    try:
+        yield
+    finally:
+        _call.reset(token)
+
+
+def children(task):
+    """The task store's rows of the scripts run under a conversation task, oldest first."""
+    return get_runtime().store.children(task.task_id)
 
 
 @contextmanager
@@ -99,6 +120,8 @@ def child_environment():
 def run_script(name, args, project=None, *, locale=None, limit=None, timeout=90, rag=None, request_id=None):
     runtime = get_runtime()
     args = list(args)
+    if request_id is None and _call.get() is not None:
+        request_id = f"{TOOL_REQUEST}{_call.get()}:{uuid.uuid4().hex}"
     if "--rag" not in args:
         args += ["--rag", str(runtime.skills_root if name == "search_guides" else rag or RAG)]
     context = {}

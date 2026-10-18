@@ -17,7 +17,7 @@ from typing import Awaitable, Callable
 
 import aiohttp
 
-log = logging.getLogger("qqbot.file")
+log = logging.getLogger("channels.qq.files")
 
 API = "https://api.sgroup.qq.com"
 FILE = 4  # file_type: a file card the receiver downloads
