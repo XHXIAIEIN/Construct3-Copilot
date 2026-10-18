@@ -116,6 +116,8 @@ def create_server(control, port=8767):
                     self.send(200, panel_stats.report(control.data_dir(), range_))
             elif self.path == "/api/logs" or self.path.startswith("/api/logs/"):
                 self.send_log()
+            elif self.path.startswith("/api/turns/"):
+                self.send_trace()
             elif self.path == "/api/status":
                 try:
                     self.send(200, {"status": control.status(), "job": jobs.snapshot()})
@@ -144,6 +146,18 @@ def create_server(control, port=8767):
                 self.send(200, panel_logs.read(control, ident, after))
             except KeyError:
                 self.send(404, {"error": "没有这个日志"})
+
+        def send_trace(self):
+            # A trace holds the conversation's tool calls, so it needs the token like the logs.
+            if self.headers.get("X-Panel-Token") != token:
+                self.send(403, {"error": "页面已失效，请刷新后重试"})
+                return
+            try:
+                self.send(200, panel_logs.trace(control, self.path.removeprefix("/api/turns/")))
+            except ValueError:
+                self.send(400, {"error": "回合号无效"})
+            except KeyError:
+                self.send(404, {"error": "找不到这一轮的轨迹，可能早于 turns.jsonl，或已经轮换掉"})
 
         def do_POST(self):
             if not self.valid_host() or self.headers.get("X-Panel-Token") != token:

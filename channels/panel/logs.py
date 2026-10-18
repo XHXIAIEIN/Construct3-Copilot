@@ -1,9 +1,12 @@
-"""Read the tail of the platforms', the model's and the panel's own logs, with the credentials the panel knows about removed."""
+"""Read the tail of the platforms', the model's and the panel's own logs, and one answer's tool trace, with the
+credentials the panel knows about removed."""
 from __future__ import annotations
 
 import json
 import re
 
+from ..core.answers import read_turns
+from ..logs import cut_step
 from ..platforms import PLATFORMS
 from .api_profiles import SEEDS, key_names
 
@@ -22,6 +25,8 @@ LINE_CHARS = 1000
 # Values shorter than this are placeholders such as C3BOT_API_KEY=ollama; replacing them would blank ordinary words.
 MIN_SECRET = 8
 BEARER = re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]{8,}")
+TURN = re.compile(r"\d{8}-\d{6}-[0-9a-f]{4}")  # channels.core.answers.new_turn_id
+STEP_CHARS = 2000
 
 
 def _path(control, ident):
@@ -96,3 +101,18 @@ def read(control, ident, after=None):
         shown.append(line)
     return {"id": ident, "label": entry[1], "exists": True, "offset": offset, "size": size, "reset": reset,
             "clipped": clipped or (reset and start > 0), "lines": shown}
+
+
+def trace(control, turn):
+    """One answer's tool trace from its channel's turns.jsonl, each step with the credentials removed and then cut
+    as python -m channels.logs cuts it, keeping what the tool answered. KeyError when no channel has the turn:
+    it was written before turns.jsonl existed or has been rotated out."""
+    if not TURN.fullmatch(turn):
+        raise ValueError(turn)
+    hidden = secrets(control)
+    for platform in PLATFORMS.values():
+        found = read_turns(control.data_dir(), platform.name, [turn]).get(turn)
+        if found is not None:
+            steps = found.get("trace") if isinstance(found.get("trace"), list) else []
+            return {"turn": turn, "steps": [cut_step(redact(str(step), hidden), STEP_CHARS) for step in steps]}
+    raise KeyError(turn)

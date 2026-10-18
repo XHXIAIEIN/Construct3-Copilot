@@ -76,20 +76,23 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .check{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;white-space:nowrap}.check input,.tools .check input{width:auto;min-height:0;margin:0;padding:0;accent-color:var(--primary)}
 .logwrap{position:relative}
 .logbox{height:calc(100vh - 250px);min-height:300px;overflow:auto;padding:6px 0;font:12px/1.65 ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei",monospace}
-.logline{display:flex;gap:10px;padding:1px 14px 1px 12px;border-left:2px solid transparent}
+.logline{display:flex;gap:8px;padding:1px 14px 1px 12px;border-left:2px solid transparent}
 .logline .lt{flex:none;width:8ch;color:var(--muted);font-variant-numeric:tabular-nums}
 .logline .lm{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
-.lm.long:not(.open){display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.lm.open{cursor:pointer}
-.tag{display:inline-block;padding:0 5px;border-radius:4px;font:11px/17px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;background:var(--hover);color:var(--text2);vertical-align:1px}
-/* the full id stays in the text, so copying a line still gives the openid that files.py --user/--group takes */
-.sid{display:inline-block;max-width:9ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;color:var(--muted)}
+.long:not(.open){display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.long.open{cursor:pointer}
+.tracebtn{min-height:0;padding:0 5px;border:0;border-radius:4px;font:11px/17px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;color:var(--text2);text-decoration:underline;text-underline-offset:2px;vertical-align:1px}
+.trace{margin:4px 0;padding:5px 10px;border-left:2px solid var(--border2);border-radius:0 6px 6px 0;background:var(--hover);color:var(--text);font-weight:400}.trace.bad{color:var(--danger)}
+.trace .step{display:flex;gap:8px}.trace .n{flex:none;min-width:3ch;text-align:right;color:var(--muted)}.trace .st{flex:1;min-width:0}.trace b{font-weight:600}
+/* two narrow columns, the time and what the line is, so the message keeps the width; a log without chats has no second column */
+.logline .lk{flex:none;color:var(--text2);font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif}.logline[data-level] .lk{color:inherit}
+.logline .sid{white-space:nowrap;color:var(--muted)}
+#log-lines.chat .lk{width:2.4em}#log-lines:not(.chat) .lk:empty{display:none}
 .logline[data-kind=asks]{margin-top:6px;padding-top:7px;border-top:1px solid var(--border)}.logline[data-kind=asks] .lm{font-weight:600}
-.logline[data-kind=asks] .tag{background:var(--info-bg);color:var(--info)}.logline[data-kind=reply] .tag{background:var(--ok-bg);color:var(--ok)}
 .logline[data-kind=tools] .lm,.logline[data-kind=usage] .lm,.logline[data-kind=attachment] .lm{color:var(--text2)}
 .logday{position:sticky;top:-6px;z-index:1;padding:8px 14px 4px;background:var(--surface);color:var(--text2);font:12px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif}
 .logday+.logline[data-kind=asks]{margin-top:0;border-top:0}
-.logline[data-level=warn]{color:var(--warn);border-left-color:var(--warn)}.logline[data-level=warn] .tag{background:var(--warn-bg);color:var(--warn)}
-.logline[data-level=error]{color:var(--danger);background:var(--danger-bg);border-left-color:var(--danger)}.logline[data-level=error] .tag{background:var(--surface);color:var(--danger)}
+.logline[data-level=warn]{color:var(--warn);border-left-color:var(--warn)}
+.logline[data-level=error]{color:var(--danger);background:var(--danger-bg);border-left-color:var(--danger)}
 .only-issues .logline:not([data-level]),.only-issues .logday{display:none}
 .logbox .empty.bad{color:var(--danger)}.logbox .empty{font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;font-size:14px}
 .jump{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--surface);border-color:var(--border);box-shadow:var(--shadow);font-size:13px}
@@ -120,7 +123,7 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
   .brand{padding:0 8px 0 0}.side-toggle{display:none!important}.app.side-collapsed nav{display:flex}main{padding:16px}header{flex-direction:column}header>div:first-child{flex-basis:auto}.tools,.tools input{width:100%}.pair{grid-template-columns:1fr}
   .toolrow{grid-template-columns:56px 104px minmax(80px,1fr);row-gap:2px}.toolrow>:first-child{grid-column:1/-1}.toolrow:first-child{display:none}.toolrow .num{text-align:left}.toolrow .calls::before{content:"调用 "}.toolrow .fail::before{content:"失败 "}.toolrow .fail{display:flex;align-items:baseline;white-space:pre}.toolrow .fail small{order:2;margin:0 0 0 6px}
   .kpis{grid-template-columns:1fr 1fr}.kpis .kpi{border-left:1px solid var(--border)}.kpis .kpi:nth-child(2n+1){border-left:0}.kpis .kpi:nth-child(n+3){border-top:1px solid var(--border)}.kpi .v{font-size:20px}
-  .logbox{height:calc(100vh - 290px)}.tools select{flex:1}
+  .logbox{height:calc(100vh - 290px)}.logline{padding-right:10px}.logline .lt{width:5ch}.lt .sec{display:none}.tools select{flex:1}
   .row{flex-wrap:wrap}.row .what{flex-basis:100%}.facts{grid-template-columns:1fr}.facts dd{border-top:0;padding-top:0}
 }
 </style>
@@ -417,7 +420,8 @@ async function getJSON(url){
   try{data=await r.json();}catch{}
   if(r.ok)return data;
   // An older panel process serves the new page but has no log endpoint until it restarts.
-  if(r.status===404&&(url==="/api/logs"||url.startsWith("/api/stats")))throw Error("面板服务需要重启，重启后才能看日志和统计");
+  if(r.status===404&&(url==="/api/logs"||url.startsWith("/api/stats")||url.startsWith("/api/turns/")&&data.error==="页面不存在"))
+    throw Error("面板服务需要重启，重启后才能看日志、轨迹和统计");
   throw Error(data.error||"日志读取失败");
 }
 // A timestamped line says its own level near the start; a line without one (traceback, wrapped JSON) belongs to the line above.
@@ -434,8 +438,17 @@ const PYLOG=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?:[,.]\d+)? (?:\S+ )?(DEBUG|INF
   // channels.core.chat writes "<session> asks|reply|tools: ...", channels.model.usage "usage: <session with _> ..."
   SID=/^(usage: )?((?:c2c|group)[:_][\w:]+) (?:(asks|reply|tools|attachment): )?(.*)$/,
   KINDS={asks:"问",reply:"答",tools:"工具",attachment:"附件",usage:"用量"},LEVELS={WARNING:"警告",WARN:"警告",ERROR:"错误",CRITICAL:"严重"},
-  WEEK="日一二三四五六",LONG=400;
-let logDay="";
+  // the tools line ends with the command that prints its turn; the panel reads the same turn from /api/turns
+  TURNREF=/ \(python -m channels\.logs --turn (\d{8}-\d{6}-[0-9a-f]{4})\)$/,WEEK="日一二三四五六",LONG=400;
+// logWho: the chat named last, so the lines that follow it in the same chat leave it out
+let logDay="",logWho="";
+// "c2c:<openid>", usage's "c2c_<openid>", "group:<group>:<member>": the kind of chat and each id's first four
+// characters. The whole ids stay in the tooltip, and bot.log keeps them for files.py --user/--group.
+function who(sid){
+  const [scope,a="",b]=sid.split(/[:_]/);
+  if(scope==="c2c")return {label:`私聊 ${a.slice(0,4)}`,title:`私聊 ${a}`};
+  return {label:`群 ${a.slice(0,4)}`+(b?`·${b.slice(0,4)}`:""),title:`群 ${a}`+(b?`\n成员 ${b}`:"")};
+}
 function parseLog(line){
   let m=PYLOG.exec(line);if(m)return {day:m[1],time:m[2],level:m[3],msg:m[4]};
   m=BOTPY.exec(line);if(m)return {day:m[1],time:m[2],level:m[3],msg:m[4]};
@@ -443,23 +456,27 @@ function parseLog(line){
 }
 function dayLabel(day){ const [y,mo,d]=day.split("-").map(Number);return `${y}年${mo}月${d}日 周${WEEK[new Date(y,mo-1,d).getDay()]}`; }
 function logRows(line,level){
-  const node=make("div","logline"),p=parseLog(line),time=make("span","lt",p?p.time+" ":""),body=make("span","lm");
+  const node=make("div","logline"),p=parseLog(line),time=make("span","lt"),body=make("div","lm");
   if(level)node.dataset.level=level;
-  let msg=p?p.msg:line||" ",kind="",sid="";
+  let msg=p?p.msg:line||" ",kind="",sid="",turn="";
   if(p){
     time.title=line.slice(0,line.length-p.msg.length).trim();
+    time.append(p.time.slice(0,5),make("span","sec",p.time.slice(5))," ");  // a phone shows hh:mm
     const s=SID.exec(msg);
     if(s){sid=s[2];kind=s[1]?"usage":s[3]||"";msg=s[4];}
     if(kind==="reply")msg=msg.replaceAll(" / ","\n");  // chat.py puts " / " where the reply had a line break
+    const ref=kind==="tools"&&TURNREF.exec(msg);
+    if(ref){turn=ref[1];msg=msg.slice(0,ref.index);}
   }
-  // Real spaces, not margins, so a copied line reads "答 c2c:… text" and the id copies apart from its neighbours.
-  if(LEVELS[p?.level])body.append(make("span","tag",LEVELS[p.level])," ");
-  else if(kind)body.append(make("span","tag",KINDS[kind])," ");
-  if(sid)body.append(Object.assign(make("span","sid",sid),{title:sid})," ");
+  const tag=make("span","lk",LEVELS[p?.level]||KINDS[kind]||""),chat=sid&&who(sid);
+  if(chat&&(kind==="asks"||chat.title!==logWho))body.append(Object.assign(make("span","sid",chat.label),{title:chat.title})," ");
+  if(chat){logWho=chat.title;$("log-lines").classList.add("chat");}
   body.append(msg);
+  if(turn)body.append(" ",Object.assign(make("button","tracebtn","轨迹 ▸"),{type:"button",title:`python -m channels.logs --turn ${turn}`}));
+  if(turn)body.lastChild.dataset.turn=turn;
   if(msg.length>LONG){body.classList.add("long");body.title="点击展开或收起";}
   if(kind)node.dataset.kind=kind;
-  node.append(time,body);
+  node.append(time,tag,body);
   if(!p||p.day===logDay)return [node];
   logDay=p.day;return [make("div","logday",dayLabel(p.day)),node];
 }
@@ -505,7 +522,7 @@ async function refreshLog(){
 }
 function appendLog(data){
   const box=$("log-box"),lines=$("log-lines"),follow=data.reset||logOffset===null||logFollow;
-  if(data.reset){lines.replaceChildren();logLevel="";logDay="";}
+  if(data.reset){lines.replaceChildren();lines.classList.remove("chat");logLevel="";logDay="";logWho="";}
   logOffset=data.offset;
   if(!data.lines.length)return;
   const fragment=document.createDocumentFragment();
@@ -517,7 +534,7 @@ function appendLog(data){
   else{box.scrollTop-=before-box.scrollHeight;$("log-jump").hidden=false;}
 }
 function pickLog(id){
-  logId=id;logOffset=null;logLevel="";logDay="";logFollow=true;$("log-lines").replaceChildren();$("log-jump").hidden=true;
+  logId=id;logOffset=null;logLevel="";logDay="";logWho="";logFollow=true;$("log-lines").replaceChildren();$("log-lines").classList.remove("chat");$("log-jump").hidden=true;
   try{localStorage.setItem("panel-log",id);}catch{}
   refreshLog();
 }
@@ -527,7 +544,31 @@ function pinLog(){ const box=$("log-box");logFollow=true;box.scrollTop=box.scrol
 $("log-box").addEventListener("scroll",e=>{logFollow=atBottom(e.currentTarget);if(logFollow)$("log-jump").hidden=true;});
 $("log-jump").addEventListener("click",pinLog);
 // A click that ends a text selection is copying, not toggling.
-$("log-lines").addEventListener("click",e=>{const body=e.target.closest(".lm.long");if(body&&!getSelection().toString())body.classList.toggle("open");});
+$("log-lines").addEventListener("click",e=>{
+  const button=e.target.closest(".tracebtn");if(button)return toggleTrace(button);
+  const long=e.target.closest(".long");if(long&&!getSelection().toString())long.classList.toggle("open");
+});
+function traceStep(step,i){
+  const row=make("div","step"),text=make("span","st"),name=/^[A-Za-z_][\w-]*/.exec(step)?.[0]||"";
+  if(name)text.append(make("b","",name));
+  text.append(step.slice(name.length));
+  if(step.length>LONG)text.classList.add("long");
+  row.append(make("span","n",`${i+1}.`),text);return row;
+}
+// The trace is read once, on the first open; a failed read is tried again on the next open.
+async function toggleTrace(button){
+  const body=button.parentElement,open=button.getAttribute("aria-expanded")!=="true";
+  button.setAttribute("aria-expanded",open);button.textContent=open?"轨迹 ▾":"轨迹 ▸";
+  let box=body.querySelector(".trace");
+  if(box&&!box.classList.contains("bad")){box.hidden=!open;return;}
+  box?.remove();
+  if(!open)return;
+  box=make("div","trace","正在读取轨迹…");body.append(box);
+  try{
+    const steps=(await getJSON(`/api/turns/${button.dataset.turn}`)).steps;
+    box.replaceChildren(...(steps.length?steps.map(traceStep):[make("div","","这一轮没有工具轨迹。")]));
+  }catch(e){box.classList.add("bad");box.textContent=e.message+"。";}
+}
 // Wrapping changes with the width, so a resize or the page becoming visible would otherwise leave a follower mid-log.
 const logResize=new ResizeObserver(()=>{if(logFollow)$("log-box").scrollTop=$("log-box").scrollHeight;});
 logResize.observe($("log-lines"));logResize.observe($("log-box"));

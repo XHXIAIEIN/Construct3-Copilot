@@ -102,5 +102,23 @@ class LogTests(unittest.TestCase):
         data = self.get("/api/logs/usage")
         self.assertEqual((data["exists"], data["lines"]), (False, []))
 
+    def test_trace_of_a_turn(self):
+        turns = self.home / "var/logs/qq/turns.jsonl"
+        turns.parent.mkdir(parents=True)
+        long = "lookup_ace(" + "x" * 5000 + ") -> found Sprite"
+        turns.write_text(json.dumps({"turn": "20261019-004244-934f", "question": "q", "reply": "r",
+                                     "trace": ["presearch ['mesh']", "fetch(qq-secret-value-1)", long]}) + "\n",
+                         encoding="utf-8")
+        steps = self.get("/api/turns/20261019-004244-934f")["steps"]
+        self.assertEqual(steps[0], "presearch ['mesh']")
+        self.assertEqual(steps[1], "fetch(‹已隐藏 QQ_SECRET›)")
+        self.assertLess(len(steps[2]), 2100)
+        self.assertTrue(steps[2].endswith(" -> found Sprite"))
+        for path, code in (("/api/turns/20261019-004244-0000", 404), ("/api/turns/..%2F.env", 400),
+                           ("/api/turns/20261019-004244-934f", 403)):
+            with self.subTest(path=path), self.assertRaises(urllib.error.HTTPError) as error:
+                self.get(path, token="" if code == 403 else None)
+            self.assertEqual(error.exception.code, code)
+
 if __name__ == "__main__":
     unittest.main()
