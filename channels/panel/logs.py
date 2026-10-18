@@ -31,7 +31,7 @@ def _path(control, ident):
     entry = next((e for e in LOGS if e[0] == ident), None)
     if entry is None:
         raise KeyError(ident)
-    base = control._data() if entry[2] == "data" else control.home
+    base = control.data_dir() if entry[2] == "data" else control.home
     return entry, base / entry[3]
 
 
@@ -52,7 +52,7 @@ def secrets(control):
     """Values of the .env entries the panel treats as credentials: the bot's QQ secret, C3BOT_API_KEY, every name the
     key list shows, every provider key name it seeds, and every profile's api_key_env. Longest first, so a value that
     contains another is replaced whole."""
-    env = control._env()
+    env = control.env()
     names = {"QQ_SECRET", "C3BOT_API_KEY"} | set(key_names(env)) | {k for seed in SEEDS for k in seed[2]}
     try:
         profiles = json.loads((control.home / "var" / "apis.json").read_text(encoding="utf-8-sig"))["profiles"]

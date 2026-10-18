@@ -50,7 +50,7 @@ class Jobs:
             if action.startswith("api_"):
                 registry = ApiProfiles(self.control)
                 if action == "api_switch":
-                    with self.control._lock:
+                    with self.control.lock:
                         profile = registry.selection(model)
                         result = self.control.switch(profile["model"], api=profile)
                 else:
@@ -113,7 +113,7 @@ def create_server(control, port=8767):
                 elif range_ not in ("day", "month"):
                     self.send(400, {"error": "时间范围只能按天或按月"})
                 else:
-                    self.send(200, panel_stats.report(control._data(), range_))
+                    self.send(200, panel_stats.report(control.data_dir(), range_))
             elif self.path == "/api/logs" or self.path.startswith("/api/logs/"):
                 self.send_log()
             elif self.path == "/api/status":

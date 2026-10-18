@@ -11,6 +11,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from channels.panel.control import ControlError, ModelControl
+from channels.panel.ollama import local_url
 
 
 class ModelControlTests(unittest.TestCase):
@@ -51,11 +52,11 @@ class ModelControlTests(unittest.TestCase):
         raise AssertionError(path)
 
     def prepare_switch(self):
-        patches = [patch.object(self.control, "_request", side_effect=self.api),
-                   patch.object(self.control, "_gateway_identity", return_value=[self.process, self.parent]),
-                   patch.object(self.control, "_stop"), patch.object(self.control, "_stop_launched"),
-                   patch.object(self.control, "_launch_bot", return_value=SimpleNamespace(pid=300)),
-                   patch.object(self.control, "_wait_ready", return_value={"pid": 300}),
+        patches = [patch.object(self.control.ollama, "request", side_effect=self.api),
+                   patch.object(self.control.gateway, "identity", return_value=[self.process, self.parent]),
+                   patch.object(self.control.gateway, "stop"), patch.object(self.control.gateway, "stop_launched"),
+                   patch.object(self.control.gateway, "launch", return_value=SimpleNamespace(pid=300)),
+                   patch.object(self.control.gateway, "wait_ready", return_value={"pid": 300}),
                    patch.object(self.control, "status", return_value={"current": {"model": "example:small"}})]
         mocks = [p.start() for p in patches]
         for item in patches:
@@ -63,7 +64,7 @@ class ModelControlTests(unittest.TestCase):
         return mocks
 
     def test_status_only_returns_public_fields(self):
-        with patch.object(self.control, "_request", side_effect=self.api), patch.object(self.control, "_process", return_value=None):
+        with patch.object(self.control.ollama, "request", side_effect=self.api), patch.object(self.control.gateway, "process", return_value=None):
             status = self.control.status()
         self.assertTrue(status["ollama"]["online"])
         self.assertTrue(status["models"][0]["loaded"])
@@ -73,11 +74,11 @@ class ModelControlTests(unittest.TestCase):
             self.assertNotIn(private, serialized)
 
     def test_parent_exit_after_child_stop_is_success(self):
-        with patch.object(self.control, "_process", side_effect=[self.process, self.parent, None]), \
-             patch("channels.panel.control.subprocess.run", side_effect=[
+        with patch.object(self.control.gateway, "process", side_effect=[self.process, self.parent, None]), \
+             patch("channels.panel.gateway.subprocess.run", side_effect=[
                  subprocess.CompletedProcess([], 0), subprocess.CompletedProcess([], 1)
              ]) as stop:
-            self.control._stop([self.process, self.parent])
+            self.control.gateway.stop([self.process, self.parent])
         self.assertEqual(stop.call_count, 2)
 
     def test_api_switch_uses_key_reference_and_preserves_unrelated_settings(self):
@@ -85,39 +86,39 @@ class ModelControlTests(unittest.TestCase):
         result = self.control.switch("remote-placeholder", api={"id": "example", "model": "remote-placeholder",
             "base_url": "https://example.test/v1", "api_key_env": "PROVIDER_KEY", "protocol": "anthropic"})
         self.assertTrue(result["ok"], result)
-        values = self.control._env()
+        values = self.control.env()
         self.assertEqual(values["C3BOT_BASE_URL"], "https://example.test/v1")
         self.assertEqual(values["C3BOT_API_KEY_ENV"], "PROVIDER_KEY")
         self.assertEqual(values["C3BOT_API_PROTOCOL"], "anthropic")
-        local = self.control._updated_env(self.control.env_path.read_bytes(), self.config, "example:small")
+        local = self.control.envfile.with_local_model(self.control.env_path.read_bytes(), self.config["url"], "example:small")
         self.assertNotIn(b"C3BOT_API_PROTOCOL", local)
         self.assertNotIn("C3BOT_API_KEY", values)
         self.assertEqual(values["QQ_SECRET"], "private-placeholder")
 
     def test_stop_failure_keeps_a_live_process_as_failure(self):
-        with patch.object(self.control, "_process", return_value=self.parent), \
-             patch("channels.panel.control.subprocess.run", return_value=subprocess.CompletedProcess([], 1)):
+        with patch.object(self.control.gateway, "process", return_value=self.parent), \
+             patch("channels.panel.gateway.subprocess.run", return_value=subprocess.CompletedProcess([], 1)):
             with self.assertRaises(ControlError):
-                self.control._stop([self.parent])
+                self.control.gateway.stop([self.parent])
 
     def test_configuration_is_read_again_per_operation(self):
-        self.assertEqual(self.control._config()["url"], self.config["url"])
+        self.assertEqual(self.control.ollama.config()["url"], self.config["url"])
         self.config["url"] = "http://127.0.0.1:12345"
         self.control.config_path.write_text(json.dumps({"ollama": self.config}), encoding="utf-8")
-        self.assertEqual(self.control._config()["url"], self.config["url"])
+        self.assertEqual(self.control.ollama.config()["url"], self.config["url"])
 
     def test_registry_models_directory_overrides_stale_process_environment(self):
         self.control.config_path.unlink()
-        with patch("channels.panel.control._registry_models", return_value="registry-models"), patch.dict(os.environ, {"OLLAMA_MODELS": "stale-models"}):
-            self.assertEqual(self.control._config()["models_dir"], "registry-models")
+        with patch("channels.panel.ollama._registry_models", return_value="registry-models"), patch.dict(os.environ, {"OLLAMA_MODELS": "stale-models"}):
+            self.assertEqual(self.control.ollama.config()["models_dir"], "registry-models")
 
     def test_remote_or_credentialed_service_urls_are_refused(self):
         for value in ("http://example.test:11434", "http://user:secret@localhost:11434", "http://127.0.0.1:11434?token=secret"):
             with self.subTest(value=value), self.assertRaises(ControlError):
-                self.control._local_url(value)
+                local_url(value)
 
     def test_warm_never_pulls_and_requires_installed_tool_capability(self):
-        with patch.object(self.control, "_request", side_effect=self.api) as request, patch.object(self.control, "status", return_value={}):
+        with patch.object(self.control.ollama, "request", side_effect=self.api) as request, patch.object(self.control, "status", return_value={}):
             result = self.control.warm("example:small")
         self.assertTrue(result["ok"])
         generate = [c for c in request.call_args_list if c.args[1] == "/api/generate"]
@@ -127,7 +128,7 @@ class ModelControlTests(unittest.TestCase):
     def test_embedding_only_model_is_not_loaded(self):
         def embedding(config, path, payload=None, timeout=3):
             return {"capabilities": ["embedding"]} if path == "/api/show" else self.api(config, path, payload, timeout)
-        with patch.object(self.control, "_request", side_effect=embedding) as request:
+        with patch.object(self.control.ollama, "request", side_effect=embedding) as request:
             self.assertFalse(self.control.warm("example:small")["ok"])
         self.assertFalse(any(c.args[1] == "/api/generate" for c in request.call_args_list))
 
@@ -155,7 +156,7 @@ class ModelControlTests(unittest.TestCase):
 
     def test_absent_receipt_allows_a_fresh_gateway_when_no_candidate_exists(self):
         mocks = self.prepare_switch()
-        with patch.object(self.control, "_receipt", return_value={}), patch.object(self.control, "_gateway_candidates", return_value=[]):
+        with patch.object(self.control.gateway, "receipt", return_value={}), patch.object(self.control.gateway, "candidates", return_value=[]):
             result = self.control.switch("example:small")
         self.assertTrue(result["ok"])
         mocks[2].assert_called_once_with([])
@@ -163,20 +164,20 @@ class ModelControlTests(unittest.TestCase):
 
     def test_absent_receipt_refuses_an_existing_unknown_gateway(self):
         mocks = self.prepare_switch()
-        with patch.object(self.control, "_receipt", return_value={}), patch.object(self.control, "_gateway_candidates", return_value=[self.parent]):
+        with patch.object(self.control.gateway, "receipt", return_value={}), patch.object(self.control.gateway, "candidates", return_value=[self.parent]):
             self.assertFalse(self.control.switch("example:small")["ok"])
         self.assertEqual((self.home / ".env").read_bytes(), self.original)
         mocks[2].assert_not_called()
 
     def test_failed_launch_cleanup_checks_direct_children_before_stopping(self):
         launched = SimpleNamespace(pid=100, _control_started_at="2025-12-31T23:59:59.999Z")
-        with patch.object(self.control, "_process", return_value=self.parent), patch.object(self.control, "_children", return_value=[self.process]), patch.object(self.control, "_stop") as stop:
-            self.control._stop_launched(launched)
+        with patch.object(self.control.gateway, "process", return_value=self.parent), patch.object(self.control.gateway, "children", return_value=[self.process]), patch.object(self.control.gateway, "stop") as stop:
+            self.control.gateway.stop_launched(launched)
         stop.assert_called_once_with([self.process, self.parent])
         changed = {**self.process, "CommandLine": 'python.exe unrelated.py'}
-        with patch.object(self.control, "_process", return_value=self.parent), patch.object(self.control, "_children", return_value=[changed]), patch.object(self.control, "_stop") as stop:
+        with patch.object(self.control.gateway, "process", return_value=self.parent), patch.object(self.control.gateway, "children", return_value=[changed]), patch.object(self.control.gateway, "stop") as stop:
             with self.assertRaises(ControlError):
-                self.control._stop_launched(launched)
+                self.control.gateway.stop_launched(launched)
         stop.assert_not_called()
 
     def test_running_answer_refuses_switch_before_configuration_write(self):
@@ -217,30 +218,30 @@ class ModelControlTests(unittest.TestCase):
         mocks[3].assert_not_called()
 
     def test_legacy_child_requires_trusted_parent_and_matching_creation_time(self):
-        with patch.object(self.control, "_process", side_effect=lambda pid: {200: self.process, 100: self.parent}.get(pid)):
-            self.assertEqual(len(self.control._gateway_identity(self.receipt)), 2)
+        with patch.object(self.control.gateway, "process", side_effect=lambda pid: {200: self.process, 100: self.parent}.get(pid)):
+            self.assertEqual(len(self.control.gateway.identity(self.receipt)), 2)
             self.receipt["started_at"] = "2026-01-01T01:00:00Z"
             with self.assertRaises(ControlError):
-                self.control._gateway_identity(self.receipt)
+                self.control.gateway.identity(self.receipt)
 
     def test_module_launcher_is_accepted_and_cli_mode_is_refused(self):
         self.parent["CommandLine"] = f'"{self.control.python}" -u -m channels.qq'
-        self.assertTrue(self.control._bot_command(self.parent))
+        self.assertTrue(self.control.gateway.is_channel(self.parent))
         self.parent["CommandLine"] += ' --cli "placeholder"'
-        self.assertFalse(self.control._bot_command(self.parent))
+        self.assertFalse(self.control.gateway.is_channel(self.parent))
 
     def test_reused_pid_is_not_stopped(self):
         altered = {**self.process, "created_at": "2026-01-02T00:00:00Z"}
-        with patch.object(self.control, "_process", return_value=altered), patch("channels.panel.control.subprocess.run") as run:
+        with patch.object(self.control.gateway, "process", return_value=altered), patch("channels.panel.gateway.subprocess.run") as run:
             with self.assertRaises(ControlError):
-                self.control._stop([self.process])
+                self.control.gateway.stop([self.process])
         run.assert_not_called()
 
     def test_bot_launch_is_fixed_module_and_drops_inherited_managed_environment(self):
         self.control.python.parent.mkdir(parents=True)
         self.control.python.write_bytes(b"placeholder")
-        with patch.dict(os.environ, {"C3BOT_EXTRA_BODY": "stale", "C3BOT_MODEL": "stale", "QQ_SECRET": "stale"}), patch.object(self.control, "_detached") as detached:
-            self.control._launch_bot()
+        with patch.dict(os.environ, {"C3BOT_EXTRA_BODY": "stale", "C3BOT_MODEL": "stale", "QQ_SECRET": "stale"}), patch("channels.panel.gateway.detached") as detached:
+            self.control.gateway.launch()
         argv, env = detached.call_args.args[:2]
         self.assertEqual(argv, [str(self.control.python), "-u", "-m", "channels.qq"])
         self.assertNotIn("C3BOT_MODEL", env)
@@ -248,10 +249,10 @@ class ModelControlTests(unittest.TestCase):
         self.assertNotIn("QQ_SECRET", env)
 
     def test_ready_receipt_must_be_fresh_and_match_launched_process(self):
-        self.control.READY_TIMEOUT = .01
-        with patch.object(self.control, "_receipt", return_value=self.receipt), patch.object(self.control, "_gateway_identity") as identity, patch("channels.panel.control.time.sleep"):
+        self.control.gateway.READY_TIMEOUT = .01
+        with patch.object(self.control.gateway, "receipt", return_value=self.receipt), patch.object(self.control.gateway, "identity") as identity, patch("channels.panel.gateway.time.sleep"):
             with self.assertRaises(ControlError):
-                self.control._wait_ready(SimpleNamespace(pid=300, poll=lambda: None), "2026-01-02T00:00:00Z")
+                self.control.gateway.wait_ready(SimpleNamespace(pid=300, poll=lambda: None), "2026-01-02T00:00:00Z")
         identity.assert_not_called()
 
 

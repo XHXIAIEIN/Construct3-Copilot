@@ -1,1 +1,1 @@
-"""Message channels (QQ, Telegram), the model connection and the panel that runs them."""
+"""Message channels (QQ for now), the model connection and the panel that runs them."""

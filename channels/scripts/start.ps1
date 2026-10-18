@@ -5,9 +5,9 @@ $botRoot = Split-Path -Parent $PSScriptRoot  # channels/: .env and var/
 $repo = Split-Path -Parent $botRoot  # the Copilot checkout: .venv/
 $botPython = Join-Path $repo '.venv\Scripts\python.exe'
 $env:PYTHONPATH = $repo
-$botData = Join-Path $botRoot 'var'
-$dataLine = Select-String -Path (Join-Path $botRoot '.env') -Pattern '^(QQBOT|C3BOT)_DATA=(.+)$' -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($dataLine) { $botData = Join-Path $botRoot $dataLine.Matches[0].Groups[2].Value.Trim().Trim('"').Trim("'") }
+# the data folder as the channel itself resolves it (channels/settings.py)
+$botData = & $botPython -c 'from channels import settings as s; print(s.data_dir(s.load()))'
+if ($LASTEXITCODE -ne 0 -or -not $botData) { throw 'The data folder could not be read. Check .venv and channels/.env.' }
 
 # Identify this checkout's launchers before stopping their Python children.
 $processes = @(Get-CimInstance Win32_Process)

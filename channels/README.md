@@ -27,18 +27,19 @@ DeepSeek 余额从官方接口查询，显示币种、金额、账户状态和�
 ```
 
 复制 `channels/.env.example` 为 `channels/.env`，填写 QQ 凭据。双击 `channels/start.cmd`，选择模型并点击“切换并重启 QQbot”。
-`config/models.example.json` 展示服务配置格式。
+`models.example.json` 展示 `var/models.json` 的格式。
 
 ```text
 start.cmd        日常启动入口，打开面板
-settings.py      读取 .env，由入口读一次后显式传下去
+settings.py      读取 .env，由入口读一次后显式传下去；数据目录只在这里算，面板和 start.ps1 都用它
 app.py           唯一接到 Copilot 的地方：造模型客户端，再造 Construct 应用
 model/           模型连接：设置、OpenAI 兼容和 Anthropic 客户端、用量、GPU 让位
 core/            与平台无关的部分：启动回执、回答记录
 qq/              QQ 通道：连接、文件上传
-panel/           面板：模型切换、接口配置、日志与统计
+panel/           面板：control.py 编排切换，ollama.py、envfile.py、gateway.py 分管
+                 Ollama 服务、.env 改写和 QQ 进程；另有接口配置、日志与统计
 grader.py        应用自带的回复审查器
-config/          配置示例
+models.example.json  var/models.json 的示例
 scripts/         维护命令
 .env             本地凭据、模型与应用设置（不进 git）
 var/             本地配置、日志、会话与备份（不进 git）

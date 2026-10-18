@@ -16,7 +16,9 @@ import uuid
 from dotenv.parser import parse_stream
 
 from ..model.settings import protocol_of
-from .control import MANAGED, ControlError, _date, _digest, _utc
+from ..core.receipt import utc_now
+from .base import ControlError, digest
+from .envfile import MANAGED
 
 MARKS = {"unknown", "available", "low", "empty"}
 _registry_lock = threading.RLock()
@@ -83,7 +85,7 @@ class ApiProfiles:
     def _save(self, data):
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if self.path.exists():
-            folder = self.control._data() / "backups" / "apis"
+            folder = self.control.data_dir() / "backups" / "apis"
             folder.mkdir(parents=True, exist_ok=True)
             (folder / (uuid.uuid4().hex + ".json")).write_bytes(self.path.read_bytes())
         draft = self.path.with_suffix("." + uuid.uuid4().hex + ".tmp")
@@ -95,7 +97,7 @@ class ApiProfiles:
 
     def _load(self):
         if not self.path.exists():
-            env, profiles = self.control._env(), []
+            env, profiles = self.control.env(), []
             for ident, name, keys, base, model in SEEDS:
                 key = next((k for k in keys if env.get(k)), None)
                 if key:
@@ -116,7 +118,7 @@ class ApiProfiles:
 
     def public(self):
         with _registry_lock:
-            env = self.control._env()
+            env = self.control.env()
             profiles = []
             for profile in self._load()["profiles"]:
                 p = {k: profile[k] for k in ("id", "name", "base_url", "model", "balance_mark", "balance", "protocol") if k in profile}
@@ -132,16 +134,16 @@ class ApiProfiles:
             return profiles
 
     def key_names(self):
-        return key_names(self.control._env())
+        return key_names(self.control.env())
 
     def save(self, values):
-        with self.control._lock:
+        with self.control.lock:
             data = self._load()
             ident = values.get("id") or uuid.uuid4().hex
             if not re.fullmatch(r"[a-zA-Z0-9_-]{1,64}", ident):
                 raise ControlError("接口编号无效。")
             old = self._find(data, ident)
-            if old and self.control._env().get("C3BOT_API_PROFILE") == ident:
+            if old and self.control.env().get("C3BOT_API_PROFILE") == ident:
                 raise ControlError("请先切换到其他配置，再编辑当前接口。")
             name = str(values.get("name", "")).strip()
             model = str(values.get("model", "")).strip()
@@ -163,7 +165,7 @@ class ApiProfiles:
             if key_env and not secret and key_env != profile["api_key_env"]:
                 if not ENV_NAME.fullmatch(key_env) or key_env in RESERVED_KEYS:
                     raise ControlError("密钥变量名无效，或属于机器人保留变量。")
-                if not self.control._env().get(key_env):
+                if not self.control.env().get(key_env):
                     raise ControlError(f".env 中没有 {key_env}，请先在 .env 添加，或直接填写密钥。")
                 profile["api_key_env"] = key_env
             if secret:
@@ -179,10 +181,10 @@ class ApiProfiles:
                 profile["api_key_env"] = key
                 kept = "".join(b.original.string for b in parse_stream(io.StringIO(kept)) if b.key != key)
                 updated = kept + key + "=" + json.dumps(secret) + "\n"
-                backup = self.control._data() / "backups" / "apis"
+                backup = self.control.data_dir() / "backups" / "apis"
                 backup.mkdir(parents=True, exist_ok=True)
                 (backup / (uuid.uuid4().hex + ".env")).write_bytes(original)
-                self.control._write_env(updated.encode("utf-8"), _digest(original))
+                self.control.envfile.write(updated.encode("utf-8"), digest(original))
             if old:
                 data["profiles"][data["profiles"].index(old)] = profile
             else:
@@ -191,9 +193,9 @@ class ApiProfiles:
             return {"ok": True, "message": "接口已保存。"}
 
     def delete(self, ident):
-        with self.control._lock:
+        with self.control.lock:
             data = self._load()
-            if self.control._env().get("C3BOT_API_PROFILE") == ident:
+            if self.control.env().get("C3BOT_API_PROFILE") == ident:
                 raise ControlError("请先切换到其他配置，再删除当前接口。")
             old = self._find(data, ident)
             if old is None:
@@ -203,14 +205,14 @@ class ApiProfiles:
             return {"ok": True, "message": "接口已删除，本地备份可恢复。"}
 
     def balance(self, ident):
-        with self.control._lock:
+        with self.control.lock:
             data = self._load()
             profile = self._find(data, ident)
             if profile is None:
                 raise ControlError("接口不存在，请刷新列表。")
-            balance = {"state": "unsupported", "checked_at": _utc(), "message": "此接口使用手动余额标记。"}
+            balance = {"state": "unsupported", "checked_at": utc_now(), "message": "此接口使用手动余额标记。"}
             if profile.get("base_url", "").rstrip("/") in {"https://api.deepseek.com", "https://api.deepseek.com/v1"}:
-                key = self.control._env().get(profile["api_key_env"])
+                key = self.control.env().get(profile["api_key_env"])
                 try:
                     if not key:
                         raise ControlError("缺少接口密钥。")
@@ -233,7 +235,7 @@ class ApiProfiles:
         if profile is None or not profile.get("base_url") or not profile.get("model"):
             raise ControlError("请先补全接口地址和模型名称。")
         api_url(profile["base_url"])
-        if not self.control._env().get(profile["api_key_env"]):
+        if not self.control.env().get(profile["api_key_env"]):
             raise ControlError("接口尚未配置密钥。")
         if profile.get("balance_mark") == "empty":
             raise ControlError("此接口已标记余额耗尽，请更新标记后再切换。")

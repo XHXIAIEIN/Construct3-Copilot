@@ -31,15 +31,15 @@ class ApiProfileTests(unittest.TestCase):
     def test_add_edit_delete_and_restart_keep_secret_private_and_backup(self):
         self.registry.save({"id": "example", "name": "Example", "model": "example-model",
                             "base_url": "https://example.test/v1", "api_key": "new-placeholder"})
-        self.assertEqual(self.control._env()["QQBOT_API_EXAMPLE"], "new-placeholder")
+        self.assertEqual(self.control.env()["QQBOT_API_EXAMPLE"], "new-placeholder")
         self.registry.save({"id": "example", "name": "Edited", "model": "example-model",
                             "base_url": "https://example.test/v1", "balance_mark": "low"})
         self.assertEqual(self.registry.public()[-1]["balance_mark"], "low")
         self.registry.delete("example")
         self.assertEqual([p["id"] for p in ApiProfiles(self.control).public()], ["deepseek"])
         self.assertTrue(list((self.home / "var/backups/apis").glob("*.json")))
-        self.assertEqual(self.control._env()["QQ_SECRET"], "private-placeholder")
-        self.assertEqual(self.control._env()["QQBOT_API_EXAMPLE"], "new-placeholder")
+        self.assertEqual(self.control.env()["QQ_SECRET"], "private-placeholder")
+        self.assertEqual(self.control.env()["QQBOT_API_EXAMPLE"], "new-placeholder")
 
     def test_deleted_import_is_not_reimported(self):
         self.registry.public()

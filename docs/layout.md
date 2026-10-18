@@ -8,12 +8,12 @@ copilot/
   provider.py                    Agent-Skills 脚本执行能力
   providers/construct3/           C3 应用、工具循环、工程解析、生成器、项目编辑和回答记录
 channels/
-  settings.py                    读取 channels/.env，由入口读一次后显式传下去
+  settings.py                    读取 channels/.env，由入口读一次后显式传下去；数据目录只在这里算
   app.py                         唯一接到 copilot 的地方：造模型客户端，再造 Construct 应用
   model/                         模型连接：设置、OpenAI 兼容和 Anthropic 客户端、用量、GPU 让位
   core/                          与平台无关的部分：启动回执、回答记录
   qq/                            QQ 通道：连接、文件上传、终端提问（--cli）
-  panel/                         面板：模型切换、接口配置、日志与统计
+  panel/                         面板：模型切换（Ollama、.env、QQ 进程各一个模块）、接口配置、日志与统计
 tests/
   channels/                      通道和面板的离线测试，含边界测试
   e2e/construct3/                经 QQ 通道的终端入口执行的 C3 交互验证脚本
