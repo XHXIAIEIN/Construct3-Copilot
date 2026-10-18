@@ -520,7 +520,7 @@ function renderStats(){
   const body=$("stats-body"),empty=$("stats-empty");
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.range===statsRange)));
   const message=statsError&&!statsData?statsError.message+"。":!statsData?"正在读取…":
-    !statsData.total?"还没有记录。统计从这一版开始记，之前的回答不计入。"+(statsData.app?"":statsData.app_note+"。"):"";
+    !statsData.total?"还没有回答记录。"+(statsData.app?"":statsData.app_note+"。"):"";
   empty.hidden=!message;body.hidden=!!message;setText(empty,message);empty.classList.toggle("bad",!!statsError&&!statsData);
   if(message)return;
   const since=statsData.since&&statsData.since>statsData.buckets[0].key?`记录从 ${statsData.since} 开始。`:"";
