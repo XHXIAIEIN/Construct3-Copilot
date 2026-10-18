@@ -126,3 +126,20 @@ def test_attachment_log_leads_with_session_key(tmp_path, caplog):
     assert line.startswith("group:g-placeholder:m-placeholder attachment: name-md5 ")
     assert "photo" not in line
     assert line.endswith(", image, 123 bytes, .png")
+
+
+def test_reply_limit_steps_up_with_what_the_reply_needs():
+    from copilot.providers.construct3.reply import EVENTS_MAX, REPLY_MAX, STEPS_MAX, has_steps, shorten
+    asked = []
+    complete = lambda messages: asked.append(messages[-1]["content"]) or "短"
+    assert shorten(complete, [], "用网格变形。", []) == "用网格变形。"
+    shorten(complete, [], "长" * (REPLY_MAX + 1), [])
+    assert f"under {REPLY_MAX} characters" in asked[-1]
+    steps = "1. 设置网格大小。2. 设置网格点，X 填 0.2。" + "长" * 60
+    assert has_steps(steps) and not has_steps("X 填 0.2，r506.2 版本")
+    assert shorten(complete, [], steps, []) == steps
+    events = "\n".join(["开始 → 设置网格大小", "每帧 → 设置网格点", "点击 → 切换"] + ["长" * 200])
+    assert len(events) > STEPS_MAX
+    assert shorten(complete, [], events, [], asked=True) == events
+    shorten(complete, [], events + "长" * EVENTS_MAX, [], asked=True)
+    assert f"under {EVENTS_MAX} characters" in asked[-1]

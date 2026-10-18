@@ -6,9 +6,14 @@ import html
 import re
 from typing import Callable
 
-REPLY_MAX = 350  # characters; a longer answer is sent back once to be shortened
+# characters of a reply by what it needs, in steps; a longer one is sent back to be shortened (2026-10-18: most
+# replies in 35 characters, more only when the reply needs it, never past 350)
+REPLY_MAX = 35  # an answer without steps
+STEPS_MAX = 150  # an answer of numbered steps the person must do
+EVENTS_MAX = 350  # an answer that writes events the person asked for; the ceiling of every reply
 SENT_MAX = 100  # characters; the reply that goes out with a project file
-EVENTS_MAX = 1000  # an answer that writes events the person asked for
+# a step number: "1." or "2、" not inside a number such as 0.2 or r506.2
+STEP = re.compile(r"(?<![\d.])([1-9])[.、．](?!\d)")
 ASKED_EVENTS = re.compile(r"事件|怎么写|写一下|写出来|写法|具体|步骤|example|event")
 SHORTEN = (
     "Rewrite your last answer in under {n} characters for the user. Keep the conclusion, the deciding reason and "
@@ -45,6 +50,11 @@ BANNED = re.compile(r"希望(对你)?有(所)?帮助|很高兴|好问题|简单�
 # a closing offer or question: dropped while it ends the reply and another sentence remains
 OFFER = re.compile(r"需要|要不要|想不想|如果(你)?(需要|想|有)|还(需要|想要|有什么)|可以(帮你|给你|为你)|我可以|"
                    r"告诉我|说一声|说一句")
+
+
+def has_steps(text: str) -> bool:
+    """Whether text holds numbered steps: a "1." and a "2.", on their own lines or in one line as QQ shows them."""
+    return {"1", "2"} <= set(STEP.findall(text))
 
 
 def is_build_ask(question: str, project_held: bool) -> bool:
@@ -96,7 +106,7 @@ def shorten(complete: Callable[[list[dict]], str], messages: list[dict], text: s
     # three or more event lines; one arrow in prose does not make an answer of events (2026-10-06)
     # and only when the person asked for events or sent a project; a how-to question gets the approach
     events = asked and sum("→" in line for line in text.splitlines()) >= 3
-    limit = EVENTS_MAX if events else REPLY_MAX
+    limit = EVENTS_MAX if events else STEPS_MAX if has_steps(text) else REPLY_MAX
     if len(text) <= limit:
         return text
     short = rewrite(text, SHORTEN.format(n=limit) + (SHORTEN_EVENTS if events else ""))

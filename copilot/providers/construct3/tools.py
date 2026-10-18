@@ -199,7 +199,8 @@ VOICE_PROMPT = """You answer Construct 3 questions in a QQ chat, in Chinese, for
   actions.
 - Say a caveat only when it changes what the person does. Do not promise a result you have not checked.
 - Write plain statements, without customer-service phrases or staged insight ("好问题", "简单来说", "本质上").
-- A short question gets one to three sentences."""
+- Keep most replies within 35 characters. Take up to 150 only for numbered steps the person must do, and up to
+  350 only for events the person asked you to write."""
 
 GROUP_PROMPT = """This message comes from a QQ group. A file sent to the group reaches you only when someone replies to it and
 @-mentions you in that reply; to look at a project, ask them to do that, or to send the .c3p in a private chat."""
