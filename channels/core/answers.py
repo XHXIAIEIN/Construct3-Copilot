@@ -97,6 +97,8 @@ class AnswerLog:
                 "seconds": round(answer.seconds), "calls": answer.tokens.get("calls", 0),
                 "prompt": answer.tokens.get("prompt", 0), "completion": answer.tokens.get("completion", 0),
                 "files_in": files_in, "files_out": files_out, "ok": answer.error is None}
+        if answer.tokens.get("models"):
+            line["model"] = ",".join(answer.tokens["models"])
         record = answer.result.get("record")
         if isinstance(record, dict):
             line["app"] = record
