@@ -76,10 +76,21 @@ details summary{cursor:pointer;color:var(--text2);font-size:13px}details[open] s
 .check{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;white-space:nowrap}.check input,.tools .check input{width:auto;min-height:0;margin:0;padding:0;accent-color:var(--primary)}
 .logwrap{position:relative}
 .logbox{height:calc(100vh - 250px);min-height:300px;overflow:auto;padding:6px 0;font:12px/1.65 ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei",monospace}
-.logline{padding:0 14px 0 12px;border-left:2px solid transparent;white-space:pre-wrap;overflow-wrap:anywhere}
-.logline[data-level=warn]{color:var(--warn);border-left-color:var(--warn)}
-.logline[data-level=error]{color:var(--danger);background:var(--danger-bg);border-left-color:var(--danger)}
-.only-issues .logline:not([data-level]){display:none}
+.logline{display:flex;gap:10px;padding:1px 14px 1px 12px;border-left:2px solid transparent}
+.logline .lt{flex:none;width:8ch;color:var(--muted);font-variant-numeric:tabular-nums}
+.logline .lm{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.lm.long:not(.open){display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.lm.open{cursor:pointer}
+.tag{display:inline-block;padding:0 5px;border-radius:4px;font:11px/17px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;background:var(--hover);color:var(--text2);vertical-align:1px}
+/* the full id stays in the text, so copying a line still gives the openid that files.py --user/--group takes */
+.sid{display:inline-block;max-width:9ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;color:var(--muted)}
+.logline[data-kind=asks]{margin-top:6px;padding-top:7px;border-top:1px solid var(--border)}.logline[data-kind=asks] .lm{font-weight:600}
+.logline[data-kind=asks] .tag{background:var(--info-bg);color:var(--info)}.logline[data-kind=reply] .tag{background:var(--ok-bg);color:var(--ok)}
+.logline[data-kind=tools] .lm,.logline[data-kind=usage] .lm,.logline[data-kind=attachment] .lm{color:var(--text2)}
+.logday{position:sticky;top:-6px;z-index:1;padding:8px 14px 4px;background:var(--surface);color:var(--text2);font:12px ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif}
+.logday+.logline[data-kind=asks]{margin-top:0;border-top:0}
+.logline[data-level=warn]{color:var(--warn);border-left-color:var(--warn)}.logline[data-level=warn] .tag{background:var(--warn-bg);color:var(--warn)}
+.logline[data-level=error]{color:var(--danger);background:var(--danger-bg);border-left-color:var(--danger)}.logline[data-level=error] .tag{background:var(--surface);color:var(--danger)}
+.only-issues .logline:not([data-level]),.only-issues .logday{display:none}
 .logbox .empty.bad{color:var(--danger)}.logbox .empty{font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif;font-size:14px}
 .jump{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--surface);border-color:var(--border);box-shadow:var(--shadow);font-size:13px}
 .jump:hover:enabled{background:var(--surface);color:var(--text)}
@@ -415,6 +426,43 @@ function levelOf(line){
   if(!logLevel&&ERR.test(line))logLevel="error";
   return logLevel;
 }
+// Display only: the header of a stamped line goes to a tooltip and the day to a divider, so the message gets the width.
+// Python logging writes "date time,ms logger LEVEL message" (the panel's own log has no logger), botpy "date time,ms\t[LEVEL]\t(file:line)func\tmessage",
+// usage.log "date time message". Anything else (tracebacks, Ollama's key=value lines) is shown as it is.
+const PYLOG=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?:[,.]\d+)? (?:\S+ )?(DEBUG|INFO|WARNING|ERROR|CRITICAL) (.*)$/,
+  BOTPY=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?:[,.]\d+)?\t\[(\w+)\]\t\S*\t(.*)$/,PLAIN=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?:[,.]\d+)? (.*)$/,
+  // channels.core.chat writes "<session> asks|reply|tools: ...", channels.model.usage "usage: <session with _> ..."
+  SID=/^(usage: )?((?:c2c|group)[:_][\w:]+) (?:(asks|reply|tools|attachment): )?(.*)$/,
+  KINDS={asks:"问",reply:"答",tools:"工具",attachment:"附件",usage:"用量"},LEVELS={WARNING:"警告",WARN:"警告",ERROR:"错误",CRITICAL:"严重"},
+  WEEK="日一二三四五六",LONG=400;
+let logDay="";
+function parseLog(line){
+  let m=PYLOG.exec(line);if(m)return {day:m[1],time:m[2],level:m[3],msg:m[4]};
+  m=BOTPY.exec(line);if(m)return {day:m[1],time:m[2],level:m[3],msg:m[4]};
+  m=PLAIN.exec(line);return m&&{day:m[1],time:m[2],level:"",msg:m[3]};
+}
+function dayLabel(day){ const [y,mo,d]=day.split("-").map(Number);return `${y}年${mo}月${d}日 周${WEEK[new Date(y,mo-1,d).getDay()]}`; }
+function logRows(line,level){
+  const node=make("div","logline"),p=parseLog(line),time=make("span","lt",p?p.time+" ":""),body=make("span","lm");
+  if(level)node.dataset.level=level;
+  let msg=p?p.msg:line||" ",kind="",sid="";
+  if(p){
+    time.title=line.slice(0,line.length-p.msg.length).trim();
+    const s=SID.exec(msg);
+    if(s){sid=s[2];kind=s[1]?"usage":s[3]||"";msg=s[4];}
+    if(kind==="reply")msg=msg.replaceAll(" / ","\n");  // chat.py puts " / " where the reply had a line break
+  }
+  // Real spaces, not margins, so a copied line reads "答 c2c:… text" and the id copies apart from its neighbours.
+  if(LEVELS[p?.level])body.append(make("span","tag",LEVELS[p.level])," ");
+  else if(kind)body.append(make("span","tag",KINDS[kind])," ");
+  if(sid)body.append(Object.assign(make("span","sid",sid),{title:sid})," ");
+  body.append(msg);
+  if(msg.length>LONG){body.classList.add("long");body.title="点击展开或收起";}
+  if(kind)node.dataset.kind=kind;
+  node.append(time,body);
+  if(!p||p.day===logDay)return [node];
+  logDay=p.day;return [make("div","logday",dayLabel(p.day)),node];
+}
 function renderLogPicker(){
   const pick=$("log-pick"),present=(logCatalog||[]).filter(l=>l.exists);
   pick.hidden=$("log-issues").parentElement.hidden=!present.length;
@@ -457,11 +505,11 @@ async function refreshLog(){
 }
 function appendLog(data){
   const box=$("log-box"),lines=$("log-lines"),follow=data.reset||logOffset===null||logFollow;
-  if(data.reset){lines.replaceChildren();logLevel="";}
+  if(data.reset){lines.replaceChildren();logLevel="";logDay="";}
   logOffset=data.offset;
   if(!data.lines.length)return;
   const fragment=document.createDocumentFragment();
-  for(const line of data.lines){const node=make("div","logline",line||" ");const level=levelOf(line);if(level)node.dataset.level=level;fragment.append(node);}
+  for(const line of data.lines)fragment.append(...logRows(line,levelOf(line)));
   lines.append(fragment);
   const before=box.scrollHeight;
   while(lines.children.length>LOG_KEEP)lines.firstChild.remove();
@@ -469,7 +517,7 @@ function appendLog(data){
   else{box.scrollTop-=before-box.scrollHeight;$("log-jump").hidden=false;}
 }
 function pickLog(id){
-  logId=id;logOffset=null;logLevel="";logFollow=true;$("log-lines").replaceChildren();$("log-jump").hidden=true;
+  logId=id;logOffset=null;logLevel="";logDay="";logFollow=true;$("log-lines").replaceChildren();$("log-jump").hidden=true;
   try{localStorage.setItem("panel-log",id);}catch{}
   refreshLog();
 }
@@ -478,6 +526,8 @@ $("log-issues").addEventListener("change",e=>{$("log-box").classList.toggle("onl
 function pinLog(){ const box=$("log-box");logFollow=true;box.scrollTop=box.scrollHeight;$("log-jump").hidden=true; }
 $("log-box").addEventListener("scroll",e=>{logFollow=atBottom(e.currentTarget);if(logFollow)$("log-jump").hidden=true;});
 $("log-jump").addEventListener("click",pinLog);
+// A click that ends a text selection is copying, not toggling.
+$("log-lines").addEventListener("click",e=>{const body=e.target.closest(".lm.long");if(body&&!getSelection().toString())body.classList.toggle("open");});
 // Wrapping changes with the width, so a resize or the page becoming visible would otherwise leave a follower mid-log.
 const logResize=new ResizeObserver(()=>{if(logFollow)$("log-box").scrollTop=$("log-box").scrollHeight;});
 logResize.observe($("log-lines"));logResize.observe($("log-box"));
