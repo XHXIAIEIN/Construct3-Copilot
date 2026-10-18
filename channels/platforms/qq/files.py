@@ -62,9 +62,11 @@ async def _part_finish(session: aiohttp.ClientSession, auth: Auth, url: str, bod
             await asyncio.sleep(2)
 
 
-async def upload(auth: Auth, scope: str, target: str, path: Path, name: str | None = None) -> str:
-    """Upload path in parts and return its file_info."""
+async def upload(auth: Auth, scope: str, target: str, path: Path, name: str | None = None, chat: str = "") -> str:
+    """Upload path in parts and return its file_info. chat: the session key bot.log names the turn by, so the
+    panel puts these lines in that turn; the receiver as scope:target when empty."""
     data = path.read_bytes()
+    chat = chat or f"{scope}:{target}"
     name = name or path.name
     base = _base(scope, target)
     async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
@@ -79,7 +81,8 @@ async def upload(auth: Auth, scope: str, target: str, path: Path, name: str | No
         upload_id, block = prep["upload_id"], int(prep["block_size"])
         # the server numbers parts from 1 although its docs say 0, so the offset comes from the part's position
         parts = sorted(prep.get("parts") or [], key=lambda p: int(p.get("index") or 0))
-        log.info("upload prepared: %s bytes, block %s, part indices %s", len(data), block, [p.get("index") for p in parts])
+        log.info("%s upload prepared: %s bytes, block %s, part indices %s", chat, len(data), block,
+                 [p.get("index") for p in parts])
         for position, part in enumerate(parts):
             chunk = data[position * block : (position + 1) * block]
             async with session.put(part["presigned_url"], data=chunk) as resp:
@@ -94,14 +97,15 @@ async def upload(auth: Auth, scope: str, target: str, path: Path, name: str | No
         done = await _post(session, auth, f"{base}/files", {
             "file_type": FILE, "srv_send_msg": False, "file_name": name, "upload_id": upload_id,
         })
-    log.info("uploaded %s bytes as %s parts, ttl %s", len(data), len(prep.get("parts") or []), done.get("ttl"))
+    log.info("%s uploaded %s bytes as %s parts, ttl %s", chat, len(data), len(prep.get("parts") or []), done.get("ttl"))
     return done["file_info"]
 
 
 async def send_file(auth: Auth, scope: str, target: str, path: Path, name: str | None = None,
-                    msg_id: str | None = None, msg_seq: int = 1) -> dict:
-    """Upload path and send it; with msg_id it is a passive reply (msg_seq numbers the replies to it)."""
-    file_info = await upload(auth, scope, target, path, name)
+                    msg_id: str | None = None, msg_seq: int = 1, chat: str = "") -> dict:
+    """Upload path and send it; with msg_id it is a passive reply (msg_seq numbers the replies to it).
+    chat: as upload takes it."""
+    file_info = await upload(auth, scope, target, path, name, chat)
     body: dict = {"msg_type": 7, "media": {"file_info": file_info}, "msg_seq": msg_seq}
     if msg_id:
         body["msg_id"] = msg_id

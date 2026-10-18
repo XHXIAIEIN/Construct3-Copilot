@@ -5,6 +5,7 @@ it sent."""
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 from collections import defaultdict, deque
@@ -67,8 +68,25 @@ class Chats:
         self.receipt = receipt
         self.daily_limit = daily_limit
         self.log = answer_log.AnswerLog(data_dir, channel)
-        self.history: dict[str, deque] = defaultdict(lambda: deque(maxlen=HISTORY_TURNS * 2))
+        # kept on disk under sessions/_history: "给我做一个示例" after three restarts came without the question
+        # it followed (2026-10-19)
+        self.history: dict[str, deque] = {}
         self._asked: dict[tuple[str, date], int] = defaultdict(int)
+
+    def recent(self, key: str) -> deque:
+        """The chat's last turns, read from disk the first time the chat asks after a start."""
+        if key not in self.history:
+            turns = deque(maxlen=HISTORY_TURNS * 2)
+            path = self.sessions / "_history" / f"{safe_name(key)}.json"
+            try:
+                turns.extend(m for m in json.loads(path.read_text(encoding="utf-8"))
+                             if isinstance(m, dict) and isinstance(m.get("content"), str))
+            except FileNotFoundError:
+                pass
+            except (OSError, ValueError, TypeError) as exc:
+                log.warning("history of %s unreadable: %s", key, exc)
+            self.history[key] = turns
+        return self.history[key]
 
     def admit(self, key: str, question: str) -> str | None:
         """Count the question; the reply to send instead of an answer once the chat has used up today's."""
@@ -84,7 +102,7 @@ class Chats:
         notify(note) is called from that thread for a note the application sends while it works."""
         answer = await asyncio.to_thread(answer_log.handle, self.application, {
             "text": question, "session_id": key, "session_dir": self.sessions / safe_name(key),
-            "history": list(self.history[key]), "group": group, "notify": notify, "attachments": attachments,
+            "history": list(self.recent(key)), "group": group, "notify": notify, "attachments": attachments,
         }, usage=self.usage, receipt=self.receipt)
         turn_id = answer_log.new_turn_id()
         if answer.error is None:
@@ -97,7 +115,14 @@ class Chats:
         # the whole trace can be 100 KB; it goes to turns.jsonl with the answer's line
         log.info("%s tools: %s (python -m channels.logs --turn %s)", key, answer_log.trace_summary(trace), turn_id)
         log.info("%s reply: %s", key, turn.text.replace("\n", " / "))
-        self.history[key].extend([{"role": "user", "content": question}, {"role": "assistant", "content": turn.text}])
+        turns = self.recent(key)
+        turns.extend([{"role": "user", "content": question}, {"role": "assistant", "content": turn.text}])
+        path = self.sessions / "_history" / f"{safe_name(key)}.json"
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(list(turns), ensure_ascii=False), encoding="utf-8")
+        except OSError as exc:
+            log.warning("history of %s not saved: %s", key, exc)
         return turn
 
     def record(self, turn: Turn, *, chat: str, session: str, files_in: list[dict], sent: set[Path]) -> dict:

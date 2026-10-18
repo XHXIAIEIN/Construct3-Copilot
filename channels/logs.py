@@ -77,7 +77,8 @@ def head(line: dict) -> str:
     return (f"[{when:%Y-%m-%d %H:%M:%S}] " if when else "") + (
         f"turn {line.get('turn', '-')}  {line.get('chat')} {line.get('session')}  "
         f"{line.get('seconds')}s calls {line.get('calls')} prompt {line.get('prompt')} "
-        f"completion {line.get('completion')}  {'ok' if line.get('ok') else '失败'}")
+        f"completion {line.get('completion')}" + (f" model {line['model']}" if line.get("model") else "")
+        + f"  {'ok' if line.get('ok') else '失败'}")
 
 
 def summary(line: dict, turn: dict | None, width: int) -> str:

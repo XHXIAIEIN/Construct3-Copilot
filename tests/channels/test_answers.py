@@ -80,6 +80,19 @@ class AnswerLogTests(unittest.TestCase):
         self.assertNotIn("absent", found)
         self.assertEqual([l["turn"] for l in answers.read_answers(self.data, "qq")], ["T1", "T2"])
 
+    def test_line_names_the_models_the_responses_named(self):
+        usage = Usage(self.data)
+
+        class Two(Recording):
+            def handle(self, request):
+                for model in ("deepseek-chat", "deepseek-chat", "glm-4.7-flash", None):
+                    self.usage.count(SimpleNamespace(model=model, usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1)))
+                return {"text": "reply"}
+
+        answer = answers.handle(Two(usage), {"text": "q"}, usage=usage)
+        self.log.write(answer, chat="private", session="c2c:A", files_in=[], files_out=[])
+        self.assertEqual(self.lines()[0]["model"], "deepseek-chat,glm-4.7-flash")
+
     def test_turns_rotate_and_both_files_are_read(self):
         with patch.object(answers, "TURNS_BYTES", 10):
             for turn in ("T1", "T2", "T3"):

@@ -68,6 +68,8 @@ var/             本地配置、日志、会话与备份（不进 git）
 5. 面板目前只启停 `PANEL` 指定的一个平台（QQ）。要同时运行多个平台，需要每个平台各有一份启动回执；第二个平台接入时再做。
 请求包含消息、会话、历史、附件和通知回调；返回值提供 `text`、`files` 与 `trace`，可以再带一个 `record`。
 
+每个聊天最近 3 轮问答存在 `var/sessions/_history/`，最近一张图和它还要跟着的提问数存在 `var/sessions/_images/`，bot 重启后接着用。
+
 `app.py` 默认从 Copilot 仓库的相邻目录加载 Construct3-Agent-Skills 和 Construct3-RAG，可用 `.env` 的 `C3BOT_SKILLS` 和 `CONSTRUCT3_RAG` 指定。
 Construct 的工具循环、工程解析、生成与交付规则实现在 `copilot/providers/construct3/`。
 编辑器脚本由 Agent-Skills 提供，schema 与知识数据由 RAG 提供。
@@ -94,7 +96,8 @@ Construct 应用的任务与文件记录保存在 `var/copilot/`。
 ## 回答记录与统计
 
 每次回答，通道往 `var/logs/<通道>/answers.jsonl` 追加一行，QQ 是 `logs/qq/`，`--cli` 也写在这里，聊天类型记为 `cli`。
-通道只写基础字段：时间、通道、聊天类型、会话、用时、模型调用数和词元、收发文件（只记类型和大小，不记文件名）、`handle` 是否正常返回。
+通道只写基础字段：时间、通道、聊天类型、会话、用时、模型调用数和词元、模型（`model`，取模型接口返回的名字，一轮用了几个就逗号分隔）、收发文件（只记类型和大小，不记文件名）、`handle` 是否正常返回。
+`bot.log` 的 `usage:` 行末尾也带 `model`，`usage.log` 的格式不变。
 应用返回的 `record` 原样放在 `app` 下，通道不解读它。
 每行带一个回合号 `turn`。这一轮的问题、回复和完整工具轨迹按回合号写进同一目录的 `turns.jsonl`。超过 32MB 时改名为 `turns.1.jsonl`，只保留这一份旧文件。
 `bot.log` 的 `tools:` 行只记工具名的顺序和回合号，以前这一行会塞下整条轨迹，最长 160KB。

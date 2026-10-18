@@ -18,7 +18,7 @@ class Usage:
 
     def begin(self) -> dict:
         """Start the tally of the answer this thread gives; return it."""
-        self._tally.now = {"calls": 0, "prompt": 0, "completion": 0, "cache_hit": 0}
+        self._tally.now = {"calls": 0, "prompt": 0, "completion": 0, "cache_hit": 0, "models": []}
         return self._tally.now
 
     def end(self) -> None:
@@ -26,16 +26,20 @@ class Usage:
 
     def watch(self) -> dict:
         """Start the channel's own count of the calls this thread makes, beside the application's tally; return it."""
-        self._tally.watched = {"calls": 0, "prompt": 0, "completion": 0, "cache_hit": 0}
+        self._tally.watched = {"calls": 0, "prompt": 0, "completion": 0, "cache_hit": 0, "models": []}
         return self._tally.watched
 
     def unwatch(self) -> None:
         self._tally.watched = None
 
     def count(self, resp) -> None:
-        """Add one model response to the thread's tally, when an answer is being given."""
+        """Add one model response to the thread's tally, when an answer is being given. The model is the one the
+        response names, which can differ from the configured name (an alias, a dated version)."""
         usage = getattr(resp, "usage", None)
+        model = getattr(resp, "model", None)
         for tally in (getattr(self._tally, "now", None), getattr(self._tally, "watched", None)):
+            if tally is not None and isinstance(model, str) and model and model not in tally.setdefault("models", []):
+                tally["models"].append(model)
             if tally is not None and usage is not None:
                 tally["calls"] += 1
                 tally["prompt"] += usage.prompt_tokens or 0
@@ -46,7 +50,8 @@ class Usage:
         """Terminal runs (--cli, the plugin's e2e runs) do not write bot.log, so every answer also goes to usage.log."""
         line = (f"{session.name if session else '-'} calls {tally['calls']} prompt {tally['prompt']} "
                 f"(cache hit {tally['cache_hit']}) completion {tally['completion']} in {seconds:.0f} s")
-        log.info("usage: %s", line)
+        models = ",".join(tally.get("models") or [])
+        log.info("usage: %s%s", line, f" model {models}" if models else "")  # bot.log only; usage.log keeps its format
         try:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             with self.path.open("a", encoding="utf-8") as f:

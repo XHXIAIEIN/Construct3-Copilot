@@ -12,8 +12,8 @@ from pathlib import Path
 from . import services as copilot
 from .record import fixed_lines, settle
 MAX_STEPS = 10
-from .reply import (ASKED_EVENTS, BUILD_NOTE, LENGTH_NOTE, PROMISE, SHOW_NOTE, drop_promise, is_build_ask, scrub,
-                    shorten, step_lines)
+from .reply import (ASKED_EVENTS, BUILD_NOTE, IMAGE_BUILD_NOTE, LENGTH_NOTE, PROMISE, SHOW_NOTE, drop_promise,
+                    is_build_ask, scrub, shorten, step_lines)
 
 log = logging.getLogger("copilot.construct3.agent")
 from . import plugin as kb
@@ -56,7 +56,7 @@ class Run:
         self.shown = False  # set by show_example: an example made for a how-to question, not asked for
         if session is not None and is_build_ask(question, project is not None):
             self.build = True
-            question += BUILD_NOTE
+            question += BUILD_NOTE + (IMAGE_BUILD_NOTE if images else "")
             self.trace.append("build ask")
         else:
             question += LENGTH_NOTE
@@ -77,8 +77,9 @@ class Run:
         if self.session is None or self.project is not None or self.build:
             return False
         message = self.messages[-1]
-        if isinstance(message["content"], list):
-            message["content"][0]["text"] = message["content"][0]["text"].replace(LENGTH_NOTE, SHOW_NOTE)
+        if isinstance(message["content"], list):  # the question came with images
+            message["content"][0]["text"] = message["content"][0]["text"].replace(
+                LENGTH_NOTE, SHOW_NOTE + IMAGE_BUILD_NOTE)
         else:
             message["content"] = message["content"].replace(LENGTH_NOTE, SHOW_NOTE)
         self.build = self.shown = True

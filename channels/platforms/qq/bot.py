@@ -73,7 +73,7 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
 
         def notify(note: str) -> None:
             notes.append(note)
-            log.info("note: %s", note)
+            log.info("%s note: %s", key, note)
             asyncio.run_coroutine_threadsafe(reply(content=note, msg_seq=len(notes)), loop)
         turn = await chats.ask(key, question, group=key.startswith("group:"), notify=notify, attachments=[
             {"filename": a.filename or "", "url": a.url or "", "content_type": a.content_type or "", "size": a.size or 0}
@@ -141,15 +141,16 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
             gateway.ready()
             log.info("QQ gateway ready event received")
 
-        def file_sender(self, scope: str, target: str, msg_id: str):
+        def file_sender(self, scope: str, target: str, msg_id: str, key: str):
             auth = qqfile.token_auth(self.http._token)  # botpy's token, renewed as botpy renews it
-            return lambda path, seq: qqfile.send_file(auth, scope, target, path, msg_id=msg_id, msg_seq=seq)
+            return lambda path, seq: qqfile.send_file(auth, scope, target, path, msg_id=msg_id, msg_seq=seq, chat=key)
 
         async def on_c2c_message_create(self, message: C2CMessage) -> None:
             openid = message.author.user_openid
             attachments, quoted = all_attachments(message)
-            await handle(f"c2c:{openid}", with_quote(message.content, quoted), message.reply,
-                         attachments, self.file_sender("c2c", openid, message.id))
+            key = f"c2c:{openid}"
+            await handle(key, with_quote(message.content, quoted), message.reply,
+                         attachments, self.file_sender("c2c", openid, message.id, key))
 
         async def deliver_pending(self, message: GroupMessage) -> bool:
             """A text and a file left for a group in sessions/_pending/<group_openid>.json, sent as the reply to
@@ -170,13 +171,9 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
             if await self.deliver_pending(message):
                 return
             attachments, quoted = all_attachments(message)
-            await handle(
-                f"group:{message.group_openid}:{message.author.member_openid}",
-                with_quote(message.content, quoted),
-                message.reply,
-                attachments,
-                self.file_sender("group", message.group_openid, message.id),
-            )
+            key = f"group:{message.group_openid}:{message.author.member_openid}"
+            await handle(key, with_quote(message.content, quoted), message.reply,
+                         attachments, self.file_sender("group", message.group_openid, message.id, key))
 
     # botpy's own log (botpy.log, rotated daily) goes beside bot.log instead of the working folder
     file_log = dict(botpy.logging.DEFAULT_FILE_HANDLER, filename=str(log_dir / "%(name)s.log"))
