@@ -27,7 +27,7 @@ DESCRIPTION = {
         {"id": "fixes", "label": "自动修正", "op": "sum", "field": "fixes", "unit": "处",
          "note": {"label": "来自", "op": "count", "where": {"build": ["ok", "failed"]}, "unit": "次生成"}},
         {"id": "tools", "label": "工具", "op": "count", "each": "tools", "by": "name", "split": "ok", "view": "table",
-         "names": {ACE_CHECK: "ACE 校验"}},
+         "names": {ACE_CHECK: "ACE 校验（失败即草稿写错了名字）"}},
     ],
 }
 

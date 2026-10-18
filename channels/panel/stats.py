@@ -17,7 +17,7 @@ CHATS = ("private", "group")  # the chart stacks these and puts every other chat
 
 BASE = [
     {"id": "answers", "label": "回答", "op": "count", "unit": "次",
-     "note": {"label": "完成", "op": "rate", "field": "ok", "format": "percent"}},
+     "note": {"label": "正常返回", "op": "rate", "field": "ok", "format": "percent"}},
     {"id": "people", "label": "人数", "op": "count", "distinct": "session", "unit": "人"},
     {"id": "tokens", "label": "词元", "op": "sum", "field": ["prompt", "completion"], "format": "number",
      "note": {"label": "输出", "op": "sum", "field": "completion", "format": "number"}},
