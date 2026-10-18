@@ -46,6 +46,8 @@ PRESEARCH = (
 )
 CHECK_FAILED = (
     "Check failed: {missing}. A name the schema lacks may not exist, or may belong to another plugin or behavior. "
+    "An object that is not a plugin or behavior is the problem, not its ACE names: look its ACEs up under the "
+    "plugin or behavior it is an instance of, and keep the object's name in the answer. "
     "Look each one up with lookup_ace, then rewrite the whole answer for the user using only ACEs the lookups "
     "printed. Do not mention this check."
 )

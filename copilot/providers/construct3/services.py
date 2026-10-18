@@ -96,7 +96,7 @@ def child_environment():
     return env
 
 
-def run_script(name, args, project=None, *, locale=None, limit=None, timeout=90, rag=None):
+def run_script(name, args, project=None, *, locale=None, limit=None, timeout=90, rag=None, request_id=None):
     runtime = get_runtime()
     args = list(args)
     if "--rag" not in args:
@@ -106,7 +106,7 @@ def run_script(name, args, project=None, *, locale=None, limit=None, timeout=90,
         context = {"parent_id": os.environ["COPILOT_PARENT_TASK"],
                    "session_id": os.environ.get("COPILOT_SESSION", "local")}
     result = runtime.run_script(name, args, project=project, locale=locale, limit=limit,
-                                timeout=timeout, source=SOURCE, **context)
+                                timeout=timeout, source=SOURCE, request_id=request_id, **context)
     code = result.get("exit_code")
     if code is None:
         code = {"timed_out": 124, "busy": 5, "running": 75}.get(result["status"], 1)

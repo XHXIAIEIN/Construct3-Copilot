@@ -4,21 +4,31 @@ from __future__ import annotations
 
 import difflib
 import re
+import uuid
 from pathlib import Path
 
-from .tools import PROJECT_READERS, lookup_ace, run_script
+from .tools import PROJECT_READERS, run_script
 
 LIST_ACES = (
     "List every event-sheet condition, action or expression your last answer names. Leave out scripting API "
     "methods and properties (anything called from JavaScript, e.g. isMouseButtonDown, getAllInstances). "
     "Reply with JSON only: "
-    '{"aces": [{"object": "8Direction", "name": "设置最大速度", "written_as": "action"}]}. object is System, a '
-    "plugin or a behavior as lookup_ace takes it; name is the display name alone, without parameters or the "
-    "object; written_as is how the answer uses it: condition (before the arrow), action (after the arrow) or "
-    "expression (inside a parameter). "
+    '{"aces": [{"object": "SnakeHead", "plugin": "Sprite", "name": "设置位置", "written_as": "action"}, '
+    '{"object": "Player", "plugin": "8Direction", "name": "设置最大速度", "written_as": "action"}]}. object is the '
+    "object as the answer writes it (System, an object name or a behavior); plugin is the plugin or behavior "
+    "that has the ACE, as lookup_ace takes it (System, Sprite, Text, 8Direction), never an object name; name is "
+    "the display name alone, without parameters or the object; written_as is how the answer uses it: condition "
+    "(before the arrow), action (after the arrow) or expression (inside a parameter). "
     'An answer that names none gives {"aces": []}.'
 )
 KINDS = ("condition", "action", "expression")
+# the request_id prefix of the check's own lookups in the task store, which tells them from the model's calls
+CHECK_REQUEST = "acecheck:"
+NOT_AN_OBJECT = "is not an object of this project"
+
+
+def _lookup(args: list[str], project: Path | None, **options) -> str:
+    return run_script("lookup_ace", args, project, request_id=CHECK_REQUEST + uuid.uuid4().hex, **options)
 
 
 def _norm(s: str) -> str:
@@ -57,40 +67,57 @@ def _near(output: str, name: str) -> list[str]:
 
 
 def missing_aces(aces: list[dict], project: Path | None = None, seen: str = "") -> list[str]:
-    """Return 'object: name' for each named ACE that the object's full lookup does not print.
+    """Return 'object: name' for each named ACE that the full lookup of its plugin does not print, and one line
+    for a plugin that does not resolve, whose names are then not looked up.
+
+    An entry is looked up by its plugin, or by its object when it gives none: the object is often a name of the
+    model's own design (SnakeHead), which the project does not hold (2026-10-16: 94 failed lookups in one
+    conversation, and since the check named only the ACEs, the model renamed them and kept the object).
 
     seen is project_text(): a name the project's printed events or scripts hold is not checked, because a
     summary of a sent project names its variables, its addons' ACEs and actions with their parameters, which
     the schema lookup does not print (2026-10-04: fifty such names used up every step)."""
     cache: dict[str, dict[str, str]] = {}
     raw: dict[str, str] = {}  # the full lookups, for the closest names of a miss
+    unknown: set[str] = set()  # the plugins whose lookup says they are none, reported once
     missing = []
     for ace in aces:
-        obj, name = str(ace.get("object", "")), str(ace.get("name", ""))
+        shown, name = str(ace.get("object") or ""), str(ace.get("name", ""))
+        obj = str(ace.get("plugin") or "") or shown
         written = str(ace.get("written_as", ""))
         if not obj or not name:
             continue
         if seen and _norm(name) in seen:
             continue
+        if obj in unknown:
+            continue
+        if shown and shown != obj:
+            shown = f"{shown} ({obj})"
+        else:
+            shown = obj
         common = obj.lower() != "system"
         if obj not in cache:
             # the model may name an ACE in English as well as in the schema locale
-            raw[obj] = (run_script("lookup_ace", [obj], project, limit=0) + "\n"
-                        + run_script("lookup_ace", [obj], project, limit=0, locale="en-US"))
+            raw[obj] = _lookup([obj], project, limit=0) + "\n" + _lookup([obj], project, limit=0, locale="en-US")
             cache[obj] = _ace_lines(raw[obj], common)
+            if NOT_AN_OBJECT in raw[obj]:
+                unknown.add(obj)
+                missing.append(f"{obj} is not a plugin or behavior, so its ACE names could not be checked; name the "
+                               "plugin or behavior that has them (e.g. Sprite, Text, 8Direction)")
+                continue
         found = cache[obj]
         if not any(_norm(name) in found[k] for k in KINDS):
             # a bare lookup leaves out the ACEs every world object shares (_common), so retry with the name as a word
-            found = _join(found, _ace_lines(lookup_ace(obj, [name], project), common),
-                          _ace_lines(run_script("lookup_ace", [obj, name], project, locale="en-US"), common))
+            found = _join(found, _ace_lines(_lookup([obj, name], project), common),
+                          _ace_lines(_lookup([obj, name], project, locale="en-US"), common))
         kinds = [k for k in KINDS if _norm(name) in found[k]]
         if not kinds:
             near = _near(raw[obj], name)
-            missing.append(f"{obj}: {name}" + ("" if common else " (System has no such ACE; if every object has it, "
+            missing.append(f"{shown}: {name}" + ("" if common else " (System has no such ACE; if every object has it, "
                                                                  "it belongs to the object itself, so name the object)")
                            + (f"; closest real names: {', '.join(near)}" if near else ""))
         elif written in KINDS and written not in kinds:
             # 2026-10-04: Pick top/bottom, a condition, was written after the arrow as if it were an action
-            missing.append(f"{obj}: {name} is a {' or '.join(kinds)}, but the answer writes it as {'an' if written[0] in 'ae' else 'a'} {written}; "
+            missing.append(f"{shown}: {name} is a {' or '.join(kinds)}, but the answer writes it as {'an' if written[0] in 'ae' else 'a'} {written}; "
                            "a condition goes before the arrow, an action after it")
     return missing

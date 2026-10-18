@@ -213,15 +213,17 @@ PROJECT_READERS = ("print_sheet", "print_layout", "read_script", "check_project"
 
 
 def run_script_code(name: str, args: list[str], project: Path | None = None, limit: int = 6000,
-                    locale: str = LOCALE) -> tuple[int, str]:
+                    locale: str = LOCALE, request_id: str | None = None) -> tuple[int, str]:
     """Run a script of the construct3-agent-plugin skill; return its exit code and what it printed."""
-    proc = copilot.run_script(name, args, project, locale=locale, limit=limit, timeout=90)
+    proc = copilot.run_script(name, args, project, locale=locale, limit=limit, timeout=90, request_id=request_id)
     return proc.returncode, (proc.stdout + proc.stderr).strip() or "no output"
 
 
-def run_script(name: str, args: list[str], project: Path | None = None, limit: int = 6000, locale: str = LOCALE) -> str:
-    """Run a script of the construct3-agent-plugin skill and return what it printed."""
-    return run_script_code(name, args, project, limit, locale)[1]
+def run_script(name: str, args: list[str], project: Path | None = None, limit: int = 6000, locale: str = LOCALE,
+               request_id: str | None = None) -> str:
+    """Run a script of the construct3-agent-plugin skill and return what it printed. request_id names the task
+    record, so a reader of the task store can tell whose call it was."""
+    return run_script_code(name, args, project, limit, locale, request_id)[1]
 
 
 def lookup_ace(object: str, words: list[str] | None = None, project: Path | None = None) -> str:
