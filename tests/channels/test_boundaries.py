@@ -1,6 +1,7 @@
 """Keep the boundary between the Construct application and the channels: copilot/ never imports channels, and
 channels/app.py is the only module under channels/ that imports copilot."""
 import ast
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -20,8 +21,14 @@ def imported(path: Path) -> set[str]:
     return names
 
 
+def tracked(folder: str) -> list[Path]:
+    """The Python files git tracks under folder; channels/var/ holds runtime copies (backups) that are not code."""
+    out = subprocess.run(["git", "ls-files", "--", f"{folder}/*.py"], cwd=REPO, capture_output=True, text=True, check=True)
+    return [REPO / line for line in out.stdout.splitlines() if (REPO / line).is_file()]
+
+
 def importers(folder: str, package: str) -> list[str]:
-    return sorted(str(path.relative_to(REPO).as_posix()) for path in (REPO / folder).rglob("*.py")
+    return sorted(str(path.relative_to(REPO).as_posix()) for path in tracked(folder)
                   if any(name == package or name.startswith(package + ".") for name in imported(path)))
 
 
@@ -33,6 +40,6 @@ class BoundaryTests(unittest.TestCase):
         self.assertEqual(importers("channels", "copilot"), ["channels/app.py"])
 
     def test_no_channel_module_loads_dotenv_on_import(self):
-        users = sorted(str(p.relative_to(REPO).as_posix()) for p in (REPO / "channels").rglob("*.py")
+        users = sorted(str(p.relative_to(REPO).as_posix()) for p in tracked("channels")
                        if "load_dotenv(" in p.read_text(encoding="utf-8"))
         self.assertEqual(users, [])
