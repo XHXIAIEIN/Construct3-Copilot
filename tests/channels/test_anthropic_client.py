@@ -54,6 +54,24 @@ class AnthropicTests(unittest.TestCase):
         self.assertEqual(requests[1]["messages"][1]["content"], blocks)
         self.assertEqual(requests[1]["messages"][2]["content"][0]["type"], "tool_result")
 
+    def test_image_part_becomes_a_base64_image_block(self):
+        requests = []
+        def reply(request):
+            requests.append(json.loads(request.content))
+            return httpx.Response(200, json={"id": "response-placeholder", "content": [{"type": "text", "text": "ok"}],
+                                             "stop_reason": "end_turn", "usage": {}})
+        content = [{"type": "text", "text": "question-placeholder"},
+                   {"type": "image_url", "image_url": {"url": "data:image/png;base64,aW1hZ2U="}}]
+        with httpx.Client(transport=httpx.MockTransport(reply)) as http:
+            client = AnthropicClient(api_key="key-placeholder", base_url="https://api.anthropic.com", client=http)
+            client.create(model="model-placeholder", messages=[{"role": "user", "content": content}])
+            with self.assertRaises(ValueError):  # only images already downloaded go out
+                client.create(model="model-placeholder", messages=[{"role": "user", "content": [
+                    {"type": "image_url", "image_url": {"url": "https://example.test/image.png"}}]}])
+        self.assertEqual(requests[0]["messages"][0]["content"], [
+            {"type": "text", "text": "question-placeholder"},
+            {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": "aW1hZ2U="}}])
+
     def test_error_message_does_not_repeat_provider_body_or_credentials(self):
         def reply(request):
             return httpx.Response(401, json={"error": "key-placeholder"})

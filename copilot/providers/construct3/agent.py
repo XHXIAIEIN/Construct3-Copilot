@@ -38,7 +38,8 @@ class Run:
     that project goes out as a file after the reply."""
 
     def __init__(self, question: str, history: list[dict] | None, project: Path | None, group: bool,
-                 session: Path | None, notify) -> None:
+                 session: Path | None, notify, images: list[dict] | None = None) -> None:
+        """images: {"media_type", "data" (base64)} each, sent after the question in the same message."""
         self.question = question
         self.project = project  # a new project replaces the one passed in
         self.session = session
@@ -52,7 +53,9 @@ class Run:
         if session is not None and is_build_ask(question, project is not None):
             question += BUILD_NOTE
             self.trace.append("build ask")
-        self.messages = [*(history or []), {"role": "user", "content": question}]
+        content = [{"type": "text", "text": question}, *({"type": "image_url", "image_url": {
+            "url": f"data:{i['media_type']};base64,{i['data']}"}} for i in images)] if images else question
+        self.messages = [*(history or []), {"role": "user", "content": content}]
         self.tools = list(kb.TOOLS)
         self.handlers = dict(kb.HANDLERS)
         self.steps = MAX_STEPS
@@ -134,13 +137,14 @@ class Agent:
     def answer(
         self, question: str, history: list[dict] | None = None, project: Path | None = None, group: bool = False,
         outbox: list[Path] | None = None, session: Path | None = None, notify=None, record: dict | None = None,
+        images: list[dict] | None = None,
     ) -> tuple[str, list[str]]:
         """Run an answer under the same-session lock and record prepared attachments. record, when given, is
         filled with the answer's record (record.settle), also when the answer fails part way."""
         calls: list[dict] = []
         with copilot.session(project, session, group) as task:
             try:
-                text, trace = self._answer_in_session(question, history, project, group, outbox, session, notify, calls)
+                text, trace = self._answer_in_session(question, history, project, group, outbox, session, notify, calls, images)
                 failed = text in (NO_FILE, NOT_MADE, NOT_FINISHED, NOT_SURE, NO_STEPS) or any(
                     t.startswith("pack failed:") or t == "steps ran out" for t in trace)
                 task.finish(status="failed" if failed else "completed", summary=text, artifacts=outbox or [])
@@ -157,10 +161,11 @@ class Agent:
     def _answer_in_session(
         self, question: str, history: list[dict] | None, project: Path | None, group: bool,
         outbox: list[Path] | None, session: Path | None, notify, calls: list[dict] | None = None,
+        images: list[dict] | None = None,
     ) -> tuple[str, list[str]]:
         tally = self.usage.begin()
         started = time.monotonic()
-        run = Run(question, history, project, group, session, notify)
+        run = Run(question, history, project, group, session, notify, images)
         if calls is not None:
             run.calls = calls
         text = ""

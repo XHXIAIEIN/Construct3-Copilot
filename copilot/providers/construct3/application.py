@@ -1,6 +1,7 @@
 """Handle Construct requests independently of their message transport."""
 from pathlib import Path
 from types import SimpleNamespace
+import base64
 import copy
 import hashlib
 import io
@@ -58,8 +59,11 @@ def load_archive(data: bytes, filename: str, target: Path, depth: int = 0) -> tu
 
 
 class Application:
-    def __init__(self, client, *, model, request_options=None, timeout=120, usage=None, bad_request_error=()):
+    def __init__(self, client, *, model, request_options=None, timeout=120, usage=None, bad_request_error=(),
+                 vision=False):
+        """vision: the model reads images, which then reach it with the question instead of a note."""
         self.agent = Agent(client, model=model, request_options=request_options, timeout=timeout, usage=usage, bad_request_error=bad_request_error)
+        self.vision = vision
         self.projects = {}
 
     def describe(self):
@@ -79,7 +83,8 @@ class Application:
             self.projects[key] = Path(request["project"])
         extra = ""  # file contents the model reads after the question
         sent = None  # what was attached, for the question asked when the message has no text
-        unread = []  # suffixes of attachments the bot cannot read (images, video, PDF)
+        unread = []  # suffixes of attachments the bot cannot read (video, PDF, and images when the model reads none)
+        images = []  # {"media_type", "data"}: images the model reads with the question
         for att in attachments:
             # the log keeps a digest of the name, not the name: users send receipts and other private files
             suffix = Path(att.filename or "").suffix.lower()
@@ -115,13 +120,24 @@ class Application:
                 log.info("text file: %s bytes", len(data))
                 extra += attachments_mod.text_block(att.filename, data)
                 sent = sent or "文件"
+            elif self.vision and (media := attachments_mod.image_type(att.filename or "", att.content_type or "")):
+                # 2026-10-18: a screenshot of a skew effect reached Claude only as "a .png you cannot read"
+                try:
+                    data = attachments_mod.download(att.url, attachments_mod.IMAGE_MAX)
+                except (OSError, ValueError) as exc:
+                    log.warning("image download failed: %s", exc)
+                    unread.append(suffix or media)
+                    continue
+                images.append({"media_type": media, "data": base64.b64encode(data).decode("ascii")})
+                sent = sent or "图片"
             else:
                 unread.append(suffix or "无扩展名")
         if unread and question:
             # without the note the model answered "没看懂" to a question about a file it never saw (2026-10-04)
+            readable = "Construct 3 projects, text files and images under 5 MB" if self.vision else \
+                "Construct 3 projects and text files"
             question += (f"\n(This message also came with a {', '.join(unread)} file that you cannot read: only "
-                         "Construct 3 projects and text files reach you. Say so in one sentence if the question "
-                         "is about that file.)")
+                         f"{readable} reach you. Say so in one sentence if the question is about that file.)")
         elif sent is None and question and (key in self.projects or (session.is_dir() and any(session.rglob("project.c3proj")))):
             # a project sent earlier pulled a general question into its scripts (2026-10-04)
             # the first wording ended the answer with an offer to apply it if the person sent the .c3p again
@@ -132,7 +148,8 @@ class Application:
                          "not a word about the project or this note.)")
         if sent and not question:
             # an open question about a sent project made the model invent problems to fix (2026-10-04)
-            question = "我发来了项目，说说它做了什么。" if sent == "项目" else "我发来了文件，说说它是什么。"
+            question = {"项目": "我发来了项目，说说它做了什么。", "图片": "我发来了图片，说说它是什么。"}.get(
+                sent, "我发来了文件，说说它是什么。")
         elif sent:
             question = f"{question}（随这条消息发来了{sent}）"
         if not question:
@@ -146,7 +163,7 @@ class Application:
                 if saved:
                     self.projects[key] = saved.parent
             text, trace = self.agent.answer(question, history, self.projects.get(key), request.get("group", False), outbox,
-                                            session, notify, record=record)
+                                            session, notify, record=record, images=images)
             made = next(session.rglob("project.c3proj"), None) if session.is_dir() else None
             if made:  # a project the answer made replaces the session's
                 self.projects[key] = made.parent

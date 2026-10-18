@@ -18,6 +18,10 @@ TEXT_SUFFIXES = {".md", ".txt", ".js", ".ts", ".mjs", ".json", ".csv", ".xml", "
 OTHER_ARCHIVES = {".rar", ".7z", ".tar", ".tgz", ".gz"}  # read with bsdtar and turned into a zip
 PROJECT_SUFFIXES = {".c3p", ".zip", ".capx"} | OTHER_ARCHIVES
 TEXT_MAX = 512 * 1024  # bytes downloaded of a text file
+# images a model that reads them gets; 5 MB is the Anthropic API's limit for one image
+IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
+               ".webp": "image/webp"}
+IMAGE_MAX = 5 * 1024 * 1024
 TEXT_CHARS = 8000  # characters of one file passed to the model
 SHEET_CHARS = 12000  # characters of a .capx's printed events passed to the model
 
@@ -30,6 +34,13 @@ def download(url: str, limit: int) -> bytes:
     if len(data) > limit:
         raise ValueError(f"file larger than {limit // (1024 * 1024)} MB")
     return data
+
+
+def image_type(filename: str, content_type: str) -> str | None:
+    """The media type of an image the model can read, from the platform's content type or else the suffix."""
+    if content_type in IMAGE_TYPES.values():
+        return content_type
+    return IMAGE_TYPES.get(Path(filename).suffix.lower())
 
 
 def decode(data: bytes) -> str:

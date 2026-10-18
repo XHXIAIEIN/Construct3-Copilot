@@ -1,5 +1,6 @@
-"""Adapt text and client-tool turns to Anthropic's Messages protocol."""
+"""Adapt text, image and client-tool turns to Anthropic's Messages protocol."""
 import json
+import re
 import time
 from types import SimpleNamespace
 
@@ -9,6 +10,24 @@ except ImportError:
     import httpx
 from openai import APIStatusError, BadRequestError
 from openai.types.chat import ChatCompletion
+
+DATA_URL = re.compile(r"data:(image/[\w.+-]+);base64,(.+)", re.S)
+
+
+def content_blocks(content) -> list[dict]:
+    """A message's content as Anthropic blocks: a string, or OpenAI's parts of text and base64 image_url."""
+    if isinstance(content, str):
+        return [{"type": "text", "text": content}] if content else []
+    blocks = []
+    for part in content:
+        if part.get("type") == "text":
+            blocks.append({"type": "text", "text": part["text"]})
+            continue
+        found = DATA_URL.fullmatch(part.get("image_url", {}).get("url", "")) if part.get("type") == "image_url" else None
+        if not found:
+            raise ValueError("原生 Anthropic 适配器支持文本、base64 图片与工具消息。")
+        blocks.append({"type": "image", "source": {"type": "base64", "media_type": found[1], "data": found[2]}})
+    return blocks
 
 
 class AnthropicClient:
@@ -36,9 +55,7 @@ class AnthropicClient:
             elif role == "assistant" and message.get("anthropic_content"):
                 blocks = message["anthropic_content"]
             else:
-                if not isinstance(content, str):
-                    raise ValueError("原生 Anthropic 适配器支持文本与工具消息。")
-                blocks = [{"type": "text", "text": content}] if content else []
+                blocks = content_blocks(content)
                 for call in message.get("tool_calls") or []:
                     blocks.append({"type": "tool_use", "id": call["id"], "name": call["function"]["name"],
                                    "input": json.loads(call["function"]["arguments"])})

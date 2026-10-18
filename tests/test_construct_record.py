@@ -90,7 +90,7 @@ def test_answer_fills_the_record_even_when_it_fails():
         yield task
 
     def fails(*args):
-        args[-1].append({"id": "c1", "name": "new_project_from_spec", "ok": True, "built": True, "fixes": 1})
+        args[7].append({"id": "c1", "name": "new_project_from_spec", "ok": True, "built": True, "fixes": 1})
         raise RuntimeError("after the build")
 
     agent, record = Agent.__new__(Agent), {}
@@ -105,7 +105,7 @@ def test_answer_fills_the_record_even_when_it_fails():
 def test_handle_returns_the_record_and_describe_declares_it(tmp_path):
     application = Application(Mock(), model="model-placeholder")
 
-    def answer(*args, record=None):
+    def answer(*args, record=None, images=None):
         record["tools"] = [{"name": "lookup_ace", "ok": True}]
         return "ok", []
 
@@ -125,7 +125,7 @@ def test_handle_returns_the_record_and_describe_declares_it(tmp_path):
 def test_handle_marks_a_broken_off_answer_failed(tmp_path):
     application = Application(Mock(), model="model-placeholder")
 
-    def answer(*args, record=None):
+    def answer(*args, record=None, images=None):
         record["tools"] = [{"name": "lookup_ace", "ok": True}]
         raise RuntimeError("HTTP 529 on the last call")
 

@@ -23,7 +23,7 @@ def test_request_context_reaches_agent_and_files_survive_late_failure(tmp_path):
     application = Application(Mock(), model="model-placeholder")
     artifact = tmp_path / "output.c3p"
 
-    def answer(question, history, project, group, outbox, session, notify, record=None):
+    def answer(question, history, project, group, outbox, session, notify, record=None, images=None):
         assert question == "example"
         assert history == [{"role": "user", "content": "earlier"}]
         assert group is True
@@ -60,6 +60,40 @@ def test_model_json_mode_fallback_uses_injected_error_type():
     application = Application(client, model="model-placeholder", bad_request_error=UnsupportedMode)
     assert application.agent._json([]) == {"valid": True}
     assert client.chat.completions.create.call_count == 2
+
+
+def test_image_reaches_a_model_that_reads_images(tmp_path):
+    application = Application(Mock(), model="model-placeholder", vision=True)
+    application.agent.answer = Mock(return_value=("ok", []))
+    attachment = {"filename": "photo.png", "content_type": "image/png", "size": 5, "url": "https://example.test/p"}
+    with patch("copilot.providers.construct3.attachments.download", return_value=b"image") as download:
+        application.handle({"text": "这种斜切效果怎么做", "session_id": "c2c:placeholder", "session_dir": tmp_path,
+                            "attachments": [attachment]})
+    download.assert_called_once()
+    question = application.agent.answer.call_args.args[0]
+    assert question == "这种斜切效果怎么做（随这条消息发来了图片）"
+    assert application.agent.answer.call_args.kwargs["images"] == [{"media_type": "image/png", "data": "aW1hZ2U="}]
+
+
+def test_image_is_a_note_for_a_text_model(tmp_path):
+    application = Application(Mock(), model="model-placeholder")
+    application.agent.answer = Mock(return_value=("ok", []))
+    attachment = {"filename": "photo.png", "content_type": "image/png", "size": 5, "url": "https://example.test/p"}
+    with patch("copilot.providers.construct3.attachments.download") as download:
+        application.handle({"text": "这种斜切效果怎么做", "session_id": "c2c:placeholder", "session_dir": tmp_path,
+                            "attachments": [attachment]})
+    download.assert_not_called()
+    assert "a .png file that you cannot read" in application.agent.answer.call_args.args[0]
+    assert application.agent.answer.call_args.kwargs["images"] == []
+
+
+def test_run_sends_images_after_the_question():
+    from copilot.providers.construct3.agent import Run
+    run = Run("question", [], None, False, None, None, [{"media_type": "image/jpeg", "data": "eA=="}])
+    assert run.messages[-1]["content"] == [
+        {"type": "text", "text": "question"},
+        {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,eA=="}}]
+    assert Run("question", [], None, False, None, None).messages[-1]["content"] == "question"
 
 
 def test_attachment_log_leads_with_session_key(tmp_path, caplog):
