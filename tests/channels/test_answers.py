@@ -6,6 +6,7 @@ import asyncio
 import io
 import json
 import logging
+import re
 import tempfile
 import threading
 import unittest
@@ -100,6 +101,43 @@ class AnswerLogTests(unittest.TestCase):
         answer = answers.handle(Two(usage), {"text": "q"}, usage=usage)
         self.log.write(answer, chat="private", session="c2c:A", files_in=[], files_out=[])
         self.assertEqual(self.lines()[0]["model"], "deepseek-chat,glm-4.7-flash")
+
+    def test_cache_reads_and_writes_are_counted_apart_where_reported(self):
+        from channels.logs import head
+        usage = Usage(self.data)
+
+        class Cached(Recording):
+            def handle(self, request):
+                for extra in ({"prompt_cache_hit_tokens": 30},  # DeepSeek
+                              {"prompt_tokens_details": SimpleNamespace(cached_tokens=40)},  # OpenAI's protocol
+                              {"prompt_tokens_details": SimpleNamespace(cached_tokens=50),
+                               "prompt_cache_write_tokens": 20},  # the Anthropic client
+                              {"prompt_tokens_details": None}):  # a server that reports neither
+                    self.usage.count(SimpleNamespace(usage=SimpleNamespace(prompt_tokens=100, completion_tokens=1, **extra)))
+                return {"text": "reply"}
+
+        answer = answers.handle(Cached(usage), {"text": "q"}, usage=usage)
+        line = self.log.write(answer, chat="private", session="c2c:A", files_in=[], files_out=[])
+        self.assertEqual((line["prompt"], line["cache_read"], line["cache_write"]), (400, 120, 20))
+        self.assertIn("prompt 400 (cache read 120, write 20) completion 4", head(line))
+
+    def test_usage_log_line_ends_with_the_cache_writes_and_reads_as_before(self):
+        # the panel's log page reads usage.log and bot.log's usage lines with this expression
+        page = (REPO / "channels" / "panel" / "static" / "index.html").read_text(encoding="utf-8")
+        panel = re.compile(re.search(r"USAGE=/(.+?)/,", page).group(1))
+        usage = Usage(self.data)
+        for count, session in (({"prompt_tokens_details": SimpleNamespace(cached_tokens=60), "prompt_cache_write_tokens": 30},
+                                Path("c2c_A")), ({}, None)):
+            tally = usage.begin()
+            usage.count(SimpleNamespace(model="claude-opus-5-5", usage=SimpleNamespace(prompt_tokens=100, completion_tokens=5, **count)))
+            with self.assertLogs("channels.model.usage", "INFO") as logged:
+                usage.write_usage(session, tally, 12.4)
+            usage.end()
+            self.assertEqual(panel.search(logged.output[0]).groups(), ("1", "100", "5", "12", "claude-opus-5-5"))
+        lines = usage.path.read_text(encoding="utf-8").splitlines()
+        self.assertRegex(lines[0], r" c2c_A calls 1 prompt 100 \(cache hit 60\) completion 5 in 12 s \(cache write 30\)$")
+        self.assertRegex(lines[1], r" - calls 1 prompt 100 \(cache hit 0\) completion 5 in 12 s$")  # no cache reported
+        self.assertEqual([panel.search(l).groups()[:4] for l in lines], [("1", "100", "5", "12")] * 2)
 
     def test_turns_rotate_and_both_files_are_read(self):
         with patch.object(answers, "TURNS_BYTES", 10):

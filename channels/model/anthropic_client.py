@@ -4,6 +4,7 @@ import logging
 import re
 import time
 from types import SimpleNamespace
+from urllib.parse import urlsplit
 
 try:
     import httpx2 as httpx
@@ -55,6 +56,8 @@ class AnthropicClient:
         if not self.url.endswith("/v1"):
             self.url += "/v1"
         self.url += "/messages"
+        # only Anthropic's own server is sent cache_control; Zhipu's server on this protocol may refuse the field
+        self.caches = urlsplit(self.url).hostname == "api.anthropic.com"
         self.http = client or httpx.Client(follow_redirects=False)
         self.chat = SimpleNamespace(completions=SimpleNamespace(create=self.create))
 
@@ -118,6 +121,12 @@ class AnthropicClient:
             payload.pop("tools", None)
         elif isinstance(tool_choice, dict):
             payload["tool_choice"] = {"type": "tool", "name": tool_choice["function"]["name"]}
+        # Cache the prompt up to its last block: the next step of the tool loop sends it again with one step more
+        # and reads it back at the cache price (one answer of 32 calls sent 2.4M prompt tokens, 2026-10-19).
+        # The calls without tools (search words, check, shortening) are each sent once, and a cache write costs
+        # more than plain input, so they go without it.
+        if self.caches and payload.get("tools"):
+            payload["cache_control"] = {"type": "ephemeral"}
         payload.update(extra_body or {})
         response = self.post(payload, timeout)
         if response.status_code >= 300:
@@ -128,14 +137,18 @@ class AnthropicClient:
         calls = [{"id": b["id"], "type": "function", "function": {
             "name": b["name"], "arguments": json.dumps(b["input"], ensure_ascii=False)}}
             for b in blocks if b["type"] == "tool_use"]
-        usage = data.get("usage", {})
+        usage = data.get("usage") or {}
+        read, write = usage.get("cache_read_input_tokens"), usage.get("cache_creation_input_tokens")
         return ChatCompletion.model_validate({
             "id": data["id"], "object": "chat.completion", "created": int(time.time()), "model": data.get("model", model),
             "choices": [{"index": 0, "finish_reason": "tool_calls" if calls else "length" if data.get("stop_reason") == "max_tokens" else "stop",
                          "message": {"role": "assistant", "content": "".join(b["text"] for b in blocks if b["type"] == "text"),
                                      "tool_calls": calls or None, "anthropic_content": blocks}}],
-            "usage": {"prompt_tokens": usage.get("input_tokens", 0) + usage.get("cache_read_input_tokens", 0) + usage.get("cache_creation_input_tokens", 0),
-                      "completion_tokens": usage.get("output_tokens", 0),
-                      "total_tokens": sum(usage.get(k, 0) for k in ("input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")),
-                      "prompt_cache_hit_tokens": usage.get("cache_read_input_tokens", 0)},
+            # prompt_tokens: the whole prompt, cache reads and writes included. Reads go in OpenAI's field for them,
+            # writes, which OpenAI's protocol has no field for, beside it; a count the server leaves out stays None
+            "usage": {"prompt_tokens": (usage.get("input_tokens") or 0) + (read or 0) + (write or 0),
+                      "completion_tokens": usage.get("output_tokens") or 0,
+                      "total_tokens": sum(usage.get(k) or 0 for k in ("input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")),
+                      "prompt_tokens_details": {"cached_tokens": read},
+                      "prompt_cache_write_tokens": write},
         })

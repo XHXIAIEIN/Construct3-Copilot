@@ -54,6 +54,42 @@ class AnthropicTests(unittest.TestCase):
         self.assertEqual(requests[1]["messages"][1]["content"], blocks)
         self.assertEqual(requests[1]["messages"][2]["content"][0]["type"], "tool_result")
 
+    def test_tool_loop_calls_are_cached_and_reads_and_writes_counted_apart(self):
+        from channels.model.usage import cache_counts
+        requests = []
+        def reply(request):
+            requests.append(json.loads(request.content))
+            return httpx.Response(200, json={"id": "response-placeholder", "content": [{"type": "text", "text": "ok"}],
+                "stop_reason": "end_turn", "usage": {"input_tokens": 10, "output_tokens": 3,
+                                                     "cache_read_input_tokens": 50, "cache_creation_input_tokens": 20}})
+        messages = [{"role": "system", "content": "system-placeholder"}, {"role": "user", "content": "question-placeholder"}]
+        tools = [{"type": "function", "function": {"name": "lookup", "parameters": {"type": "object"}}}]
+        with httpx.Client(transport=httpx.MockTransport(reply)) as http:
+            client = AnthropicClient(api_key="key-placeholder", base_url="https://api.anthropic.com/v1", client=http)
+            result = client.create(model="model-placeholder", messages=messages, tools=tools)
+            client.create(model="model-placeholder", messages=messages)  # a side call: sent once, never read back
+            client.create(model="model-placeholder", messages=messages, tools=tools, tool_choice="none")
+        self.assertEqual(requests[0]["cache_control"], {"type": "ephemeral"})
+        self.assertEqual(["cache_control" in r for r in requests[1:]], [False, False])
+        self.assertEqual(requests[0]["system"], "system-placeholder")  # the prompt itself is unchanged
+        self.assertEqual((result.usage.prompt_tokens, result.usage.total_tokens), (80, 83))  # as without caching
+        self.assertEqual(cache_counts(result.usage), (50, 20))
+
+    def test_other_servers_on_this_protocol_are_sent_no_cache_control(self):
+        from channels.model.usage import cache_counts
+        requests = []
+        def reply(request):
+            requests.append(json.loads(request.content))
+            return httpx.Response(200, json={"id": "response-placeholder", "content": [{"type": "text", "text": "ok"}],
+                                             "stop_reason": "end_turn", "usage": {"input_tokens": 10, "output_tokens": 3}})
+        tools = [{"type": "function", "function": {"name": "lookup", "parameters": {"type": "object"}}}]
+        with httpx.Client(transport=httpx.MockTransport(reply)) as http:
+            client = AnthropicClient(api_key="key-placeholder", base_url="https://open.bigmodel.cn/api/anthropic", client=http)
+            result = client.create(model="model-placeholder", messages=[{"role": "user", "content": "hello"}], tools=tools)
+        self.assertNotIn("cache_control", requests[0])
+        self.assertEqual(result.usage.prompt_tokens, 10)
+        self.assertEqual(cache_counts(result.usage), (None, None))  # not reported: unknown, not zero
+
     def test_image_part_becomes_a_base64_image_block(self):
         requests = []
         def reply(request):

@@ -119,6 +119,9 @@ class AnswerLog:
                 "files_in": files_in, "files_out": files_out, "ok": answer.error is None}
         if parts is not None:
             line["reply_sent"], line["reply_parts"] = parts[0] == parts[1], list(parts)
+        for key in ("cache_read", "cache_write"):  # parts of prompt, only when the server reports them
+            if answer.tokens.get(key) is not None:
+                line[key] = answer.tokens[key]
         if answer.tokens.get("models"):
             line["model"] = ",".join(answer.tokens["models"])
         record = answer.result.get("record")

@@ -104,10 +104,13 @@ def unsent(line: dict) -> str:
 
 def head(line: dict) -> str:
     when = local_time(line)
+    cache = ", ".join(f"{word} {line[key]}" for key, word in (("cache_read", "read"), ("cache_write", "write"))
+                      if line.get(key) is not None)
     return (f"[{when:%Y-%m-%d %H:%M:%S}] " if when else "") + (
         f"turn {line.get('turn', '-')}  {line.get('chat')} {line.get('session')}{wait(line)}  "
         f"{line.get('seconds')}s calls {line.get('calls')} prompt {line.get('prompt')} "
-        f"completion {line.get('completion')}" + (f" model {line['model']}" if line.get("model") else "")
+        + (f"(cache {cache}) " if cache else "")
+        + f"completion {line.get('completion')}" + (f" model {line['model']}" if line.get("model") else "")
         + f"  {'ok' if line.get('ok') else '失败'}")
 
 
