@@ -44,7 +44,10 @@ PRESEARCH_MIN = 8  # characters; "在吗" or "做好了吗" asks nothing to sear
 PRESEARCH = (
     "A Construct 3 user asks:\n{question}\n\nGive 2 to 5 short English search words for the Construct 3 features "
     "and the problem in this question (e.g. time scale, pause, animation, touch, layer). "
-    'Reply with JSON only: {{"words": ["...", "..."]}}'
+    'Set "show" to true when it asks how to make something a player sees or does (an effect, a motion, a '
+    "mechanic) that takes several steps to build, so a small example project shows it better than words; false "
+    "for a yes-or-no question, an expression, a setting, an error, or a question about the person's own project. "
+    'Reply with JSON only: {{"words": ["...", "..."], "show": false}}'
 )
 CHECK_FAILED = (
     "Check failed: {missing}. A name the schema lacks may not exist, or may belong to another plugin or behavior. "
@@ -101,9 +104,10 @@ def session_prompt() -> str:
     return newproject.prompt()
 
 
-def presearch(question: str, ask_json: Callable[[list[dict]], dict]) -> tuple[list[str], str] | str:
-    """The pitfall search for a question before the model answers: the words and the search result, or the
-    trace line that says why there was none. ask_json(messages) is one model call that answers a JSON object.
+def presearch(question: str, ask_json: Callable[[list[dict]], dict]) -> tuple[list[str], str, bool] | str:
+    """The pitfall search for a question before the model answers: the words, the search result and whether an
+    example shows the answer better than words, or the trace line that says why there was none. ask_json(messages)
+    is one model call that answers a JSON object.
 
     2026-10-09: asked how to pause a battle while an ultimate animation plays, the model guessed ACE names three
     times and gave up without one search, though wait-and-time-scale.md holds the answer; a tool result steers
@@ -113,6 +117,7 @@ def presearch(question: str, ask_json: Callable[[list[dict]], dict]) -> tuple[li
     try:
         found = ask_json([{"role": "user", "content": PRESEARCH.format(question=question[:1000])}])
         words = [str(w) for w in found.get("words", [])][:6]
+        show = found.get("show") is True
     except (json.JSONDecodeError, AttributeError, TypeError) as e:
         return f"presearch: no words ({type(e).__name__})"
     if not words:
@@ -121,7 +126,7 @@ def presearch(question: str, ask_json: Callable[[list[dict]], dict]) -> tuple[li
         out = run_script("search_guides", [*words, "--examples", "0", "--pitfalls", "3"], limit=5000)
     except subprocess.TimeoutExpired:
         return "presearch: search timed out"
-    return words, out
+    return words, out, show
 
 
 PRESEARCH_TOOL = "search_guides"

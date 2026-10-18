@@ -12,8 +12,8 @@ from pathlib import Path
 from . import services as copilot
 from .record import fixed_lines, settle
 MAX_STEPS = 10
-from .reply import (ASKED_EVENTS, BUILD_NOTE, LENGTH_NOTE, PROMISE, drop_promise, is_build_ask, scrub, shorten,
-                    step_lines)
+from .reply import (ASKED_EVENTS, BUILD_NOTE, LENGTH_NOTE, PROMISE, SHOW_NOTE, drop_promise, is_build_ask, scrub,
+                    shorten, step_lines)
 
 log = logging.getLogger("copilot.construct3.agent")
 from . import plugin as kb
@@ -53,6 +53,7 @@ class Run:
         self.edits_before = kb.edits.edit_count(project) if project else 0
         # an answer that makes or changes a project runs its tool loop with thinking on (Agent.project_options)
         self.build = project is not None
+        self.shown = False  # set by show_example: an example made for a how-to question, not asked for
         if session is not None and is_build_ask(question, project is not None):
             self.build = True
             question += BUILD_NOTE
@@ -68,6 +69,21 @@ class Run:
         add_system(self.messages, kb.VOICE_PROMPT)
         if group:
             add_system(self.messages, kb.GROUP_PROMPT)
+
+    def show_example(self) -> bool:
+        """Answer with a small example project instead of steps in words, when a new project can be made; whether
+        the answer now does. 2026-10-19: asked how to skew a sprite, the bot wrote four steps of mesh editing that
+        an example shows at a glance."""
+        if self.session is None or self.project is not None or self.build:
+            return False
+        message = self.messages[-1]
+        if isinstance(message["content"], list):
+            message["content"][0]["text"] = message["content"][0]["text"].replace(LENGTH_NOTE, SHOW_NOTE)
+        else:
+            message["content"] = message["content"].replace(LENGTH_NOTE, SHOW_NOTE)
+        self.build = self.shown = True
+        self.trace.append("show ask")
+        return True
 
     def changed(self, result: tuple[bool, str]) -> str:
         self.send = self.send or result[0]
@@ -185,7 +201,10 @@ class Agent:
             tried = any(t.startswith(kb.BUILD_TOOLS) for t in run.trace)
             made = run.send and kb.is_new(run.project)
             # a reply that describes a game and promises its file, with no build tried (quick mode, 2026-10-06)
-            if (tried and (not made or "steps ran out" in run.trace)) or (session and not project and not made and PROMISE.search(text)):
+            if run.shown and not made:
+                # an example the person did not ask for: its answer in words stands, without the promised file
+                run.send = False
+            elif (tried and (not made or "steps ran out" in run.trace)) or (session and not project and not made and PROMISE.search(text)):
                 # the model said the game was made when every build had been refused (2026-10-04)
                 text = NOT_MADE
                 # a build that failed its play test sits unmarked in the session folder; an edit_sheet on it then
@@ -252,7 +271,9 @@ class Agent:
             if found:
                 run.trace.append(found)
             return
-        words, out = found
+        words, out, show = found
+        if show:
+            run.show_example()  # before the search result, while the question is the last message
         call = {"id": "presearch", "type": "function",
                 "function": {"name": kb.PRESEARCH_TOOL, "arguments": json.dumps({"words": words})}}
         run.messages.append({"role": "assistant", "content": "", "tool_calls": [call]})
