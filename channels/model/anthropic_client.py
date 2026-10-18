@@ -1,5 +1,6 @@
 """Adapt text, image and client-tool turns to Anthropic's Messages protocol."""
 import json
+import logging
 import re
 import time
 from types import SimpleNamespace
@@ -11,7 +12,24 @@ except ImportError:
 from openai import APIStatusError, BadRequestError
 from openai.types.chat import ChatCompletion
 
+log = logging.getLogger("channels.model.anthropic")
 DATA_URL = re.compile(r"data:(image/[\w.+-]+);base64,(.+)", re.S)
+# a request that fails for a passing reason is sent again, as often as the OpenAI client does by default
+# (client.py): a 529 on the last call of an answer failed the answer (2026-10-18)
+RETRIES = 2
+RETRY_STATUS = {408, 409, 429}  # and every status from 500 up, 529 (overloaded) among them
+RETRY_ERRORS = (httpx.ConnectError, httpx.ConnectTimeout, httpx.RemoteProtocolError)
+RETRY_AFTER_MAX = 30  # seconds
+
+
+def retry_delay(response, attempt: int) -> float:
+    """Seconds to wait after try attempt (0 for the first) failed: the server's retry-after up to RETRY_AFTER_MAX,
+    else 0.5 s and then 1 s."""
+    try:
+        after = float(response.headers.get("retry-after", "")) if response is not None else -1
+    except ValueError:
+        after = -1
+    return min(after, RETRY_AFTER_MAX) if after >= 0 else 0.5 * 2 ** attempt
 
 
 def content_blocks(content) -> list[dict]:
@@ -39,6 +57,27 @@ class AnthropicClient:
         self.url += "/messages"
         self.http = client or httpx.Client(follow_redirects=False)
         self.chat = SimpleNamespace(completions=SimpleNamespace(create=self.create))
+
+    def post(self, payload: dict, timeout):
+        """The response to payload, sent again after an overload, a rate limit, a server error or a lost
+        connection, RETRIES times at most. A read timeout is not retried: a call that ran out of time once takes
+        as long again."""
+        for attempt in range(RETRIES + 1):
+            response = None
+            try:
+                response = self.http.post(self.url, json=payload, timeout=timeout,
+                                          headers={"x-api-key": self.key, "anthropic-version": "2023-06-01"})
+            except RETRY_ERRORS as exc:
+                if attempt == RETRIES:
+                    raise
+                reason = type(exc).__name__
+            else:
+                if attempt == RETRIES or not (response.status_code in RETRY_STATUS or response.status_code >= 500):
+                    return response
+                reason = f"HTTP {response.status_code}"
+            delay = retry_delay(response, attempt)
+            log.warning("Anthropic request failed (%s), try %d of %d in %.1f s", reason, attempt + 2, RETRIES + 1, delay)
+            time.sleep(delay)
 
     def create(self, *, model, messages, tools=None, tool_choice=None, timeout=120,
                max_tokens=6000, extra_body=None, response_format=None, **options):
@@ -80,8 +119,7 @@ class AnthropicClient:
         elif isinstance(tool_choice, dict):
             payload["tool_choice"] = {"type": "tool", "name": tool_choice["function"]["name"]}
         payload.update(extra_body or {})
-        response = self.http.post(self.url, json=payload, timeout=timeout,
-                                  headers={"x-api-key": self.key, "anthropic-version": "2023-06-01"})
+        response = self.post(payload, timeout)
         if response.status_code >= 300:
             error = BadRequestError if response.status_code == 400 else APIStatusError
             raise error(f"Anthropic 接口返回 HTTP {response.status_code}", response=response, body=None)

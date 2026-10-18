@@ -72,6 +72,47 @@ class AnthropicTests(unittest.TestCase):
             {"type": "text", "text": "question-placeholder"},
             {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": "aW1hZ2U="}}])
 
+    def test_overload_and_rate_limit_are_sent_again(self):
+        statuses = [529, 429, 200]
+        def reply(request):
+            status = statuses.pop(0)
+            if status != 200:
+                return httpx.Response(status, headers={"retry-after": "2"} if status == 429 else {})
+            return httpx.Response(200, json={"id": "response-placeholder", "content": [{"type": "text", "text": "ok"}],
+                                             "stop_reason": "end_turn", "usage": {}})
+        with httpx.Client(transport=httpx.MockTransport(reply)) as http, \
+                patch("channels.model.anthropic_client.time.sleep") as sleep:
+            client = AnthropicClient(api_key="key-placeholder", base_url="https://api.anthropic.com", client=http)
+            result = client.create(model="model-placeholder", messages=[{"role": "user", "content": "hello"}])
+        self.assertEqual(result.choices[0].message.content, "ok")
+        self.assertEqual([c.args[0] for c in sleep.call_args_list], [0.5, 2.0])
+
+    def test_lost_connection_is_sent_again_and_the_last_failure_raised(self):
+        calls = []
+        def reply(request):
+            calls.append(request)
+            if len(calls) == 1:
+                raise httpx.ConnectError("connection refused")
+            return httpx.Response(503)
+        with httpx.Client(transport=httpx.MockTransport(reply)) as http, \
+                patch("channels.model.anthropic_client.time.sleep"):
+            client = AnthropicClient(api_key="key-placeholder", base_url="https://api.anthropic.com", client=http)
+            with self.assertRaises(APIStatusError):
+                client.create(model="model-placeholder", messages=[{"role": "user", "content": "hello"}])
+        self.assertEqual(len(calls), 3)
+
+    def test_a_refused_request_is_not_sent_again(self):
+        calls = []
+        def reply(request):
+            calls.append(request)
+            return httpx.Response(400, json={"error": "bad request"})
+        with httpx.Client(transport=httpx.MockTransport(reply)) as http, \
+                patch("channels.model.anthropic_client.time.sleep") as sleep:
+            client = AnthropicClient(api_key="key-placeholder", base_url="https://api.anthropic.com", client=http)
+            with self.assertRaises(APIStatusError):
+                client.create(model="model-placeholder", messages=[{"role": "user", "content": "hello"}])
+        self.assertEqual((len(calls), sleep.call_count), (1, 0))
+
     def test_error_message_does_not_repeat_provider_body_or_credentials(self):
         def reply(request):
             return httpx.Response(401, json={"error": "key-placeholder"})
