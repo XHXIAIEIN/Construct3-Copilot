@@ -2,7 +2,7 @@
 
     .venv/Scripts/python.exe tests/e2e/construct3/e2e.py RUN [RUN ...]
 
-Each run: python -m qqbot.qq --cli "做个五子棋" into sessions/e2e<RUN>, then the installed preview player plays the plan of
+Each run: python -m channels.qq --cli "做个五子棋" into sessions/e2e<RUN>, then the installed preview player plays the plan of
 make_play.py (a blocked line, a taken cell, a win across, the restart, a win on a diagonal) on a copy under .tmp/construct3-e2e/.
 Prints the bot's tool calls in short, its reply, and each check with the value the game held.
 """
@@ -16,17 +16,16 @@ import subprocess
 import sys
 from pathlib import Path
 
-from dotenv import load_dotenv  # noqa: E402
-
 REPO = Path(__file__).resolve().parents[3]
-HERE = Path(os.environ.get("QQBOT_HOME") or REPO.parent / "qqbot").resolve()
 sys.path.insert(0, str(REPO))
-load_dotenv(HERE / ".env")  # the paths and keys the bot itself reads
+from channels import settings as channel_settings  # noqa: E402
 from copilot import Runtime  # noqa: E402
 from copilot.providers.construct3 import services as copilot  # noqa: E402
-DATA = Path(os.environ.get("C3BOT_DATA") or HERE / "var")
-RAG = Path(os.environ.get("CONSTRUCT3_RAG") or HERE.parent / "Construct3-RAG")
-copilot.configure(Runtime(Path(os.environ.get("COPILOT_SKILLS_ROOT") or REPO.parent / "Construct3-Agent-Skills"), DATA / "copilot"), data_dir=DATA, rag=RAG, source="e2e")
+SETTINGS = channel_settings.load()  # channels/.env and the environment: the paths and keys the bot itself reads
+DATA = channel_settings.data_dir(SETTINGS)
+RAG = Path(SETTINGS.get("CONSTRUCT3_RAG") or REPO.parent / "Construct3-RAG")
+SKILLS = Path(SETTINGS.get("C3BOT_SKILLS") or SETTINGS.get("CONSTRUCT3_AGENT_SKILLS") or REPO.parent / "Construct3-Agent-Skills")
+copilot.configure(Runtime(SKILLS, DATA / "copilot"), data_dir=DATA, rag=RAG, source="e2e")
 TMP = REPO / ".tmp" / "construct3-e2e"
 TMP.mkdir(parents=True, exist_ok=True)
 # step -> state, turn, pieces, a word the status shows (None: any)
@@ -51,7 +50,7 @@ def run(n: str, ask: bool = True) -> None:
     session = DATA / "sessions" / f"e2e{n}"
     if ask:
         shutil.rmtree(session, ignore_errors=True)
-    proc = subprocess.CompletedProcess([], 0, (DATA / "sessions" / f"e2e{n}.out").read_text(encoding="utf-8"), "") if not ask else subprocess.run([sys.executable, "-m", "qqbot.qq", "--cli", "做个五子棋", "--session", str(session)], cwd=HERE,
+    proc = subprocess.CompletedProcess([], 0, (DATA / "sessions" / f"e2e{n}.out").read_text(encoding="utf-8"), "") if not ask else subprocess.run([sys.executable, "-m", "channels.qq", "--cli", "做个五子棋", "--session", str(session)], cwd=REPO,
                           capture_output=True, text=True, encoding="utf-8", timeout=1200)
     (DATA / "sessions" / f"e2e{n}.out").write_text(proc.stdout, encoding="utf-8")
     lines = proc.stdout.splitlines()

@@ -1,7 +1,7 @@
 # 本地任务运行与 QQ 接入
 
 Copilot 执行已安装的 Construct3-Agent-Skills 脚本，并用 SQLite 保存每次调用的请求和结果。
-QQbot 负责接收与发送消息，Copilot 的 Construct 应用负责模型工具循环及工具执行。
+`channels/` 的 QQ 通道负责接收与发送消息，Copilot 的 Construct 应用负责模型工具循环及工具执行。
 
 ## 运行
 
@@ -32,26 +32,31 @@ Windows 上，父进程提前退出后留下的独立子进程可能需要人工
 
 ## QQ 配置
 
-适配后的 qqbot 默认查找同级 `Construct3-Copilot` 和 `Construct3-Agent-Skills`。
-已有模型、令牌和 QQ 应用配置继续放在 qqbot 自己的 `.env` 中。
+QQ 通道在本仓库的 `channels/` 下，默认查找同级的 `Construct3-Agent-Skills` 和 `Construct3-RAG`。
+模型、令牌和 QQ 应用配置放在 `channels/.env`。
 需要覆盖路径时，在该文件中设置：
 
 ```dotenv
-C3BOT_COPILOT=D:/code/Construct3-Copilot
 C3BOT_SKILLS=D:/code/Construct3-Agent-Skills
+CONSTRUCT3_RAG=D:/code/Construct3-RAG
 ```
 
-先在 qqbot 目录安装宿主并运行离线检查，再启动机器人：
+在仓库根目录安装通道的依赖并运行离线检查，再启动机器人：
 
 ```powershell
-.venv/Scripts/python -m pip install -e .
-.venv/Scripts/python -m unittest discover -s tests -v
-.venv/Scripts/python -m qqbot.qq
+.venv/Scripts/python -m pip install -r requirements.txt -r channels/requirements.txt
+.venv/Scripts/python -m pytest tests/channels
+.venv/Scripts/python -m channels.qq
 ```
+
+日常从 `channels/start.cmd` 打开面板，由面板启动或重启 QQ 通道。
+`python -m channels.qq --cli "问题"` 在终端问一次，打印回复和工具调用，不连接 QQ。
 
 QQ 的一次对话对应一个父任务，各项工具调用是它的子任务。
 机器人会话通过消息入口和 Copilot 会话锁串行处理。
 发出的项目文件会记录路径、大小和 SHA-256。
+每次回答，通道往 `channels/var/logs/qq/answers.jsonl` 追加一行；Construct 应用的 `record`（工具、构建结果、自动修正数）放在其中的 `app` 下。
+应用加的字段和统计方式由 `describe()` 声明，启动时写到 `channels/var/runtime/app.json`，面板据此计算统计。
 
 ## 执行边界
 

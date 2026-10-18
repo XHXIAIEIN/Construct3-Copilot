@@ -629,7 +629,9 @@ function renderChrome(){
   // The list marks the model in use, so the header only speaks up when QQbot is not ready.
   setText($("now"),state.gateway?.alive&&state.gateway.status==="ready"?"":gw);$("now").hidden=page!=="models"||!$("now").textContent;
   setText($("ollama-state"),state.ollama.online?"运行中":"未启动");$("start").hidden=!!state.ollama.online;setProp($("start"),"disabled",busy);
-  setText($("gateway-state"),gw.replace("QQbot ",""));setText($("ollama-url"),state.ollama.url||"—");setText($("config"),state.config_path||"var/models.json");
+  // A count is only the live bot's: one left by a process that is gone says nothing.
+  const answering=state.gateway?.alive&&Number.isInteger(state.gateway.active_answers)&&state.gateway.active_answers>0?state.gateway.active_answers:0;
+  setText($("gateway-state"),gw.replace("QQbot ","")+(answering?`，正在回答 ${answering} 个`:""));setText($("ollama-url"),state.ollama.url||"—");setText($("config"),state.config_path||"var/models.json");
   setProp($("api-add"),"disabled",busy);setProp($("refresh"),"disabled",refreshing);setProp($("api-submit"),"disabled",busy);
 }
 function renderAll(){ if(!state)return;renderChrome();renderLocal();renderApis(); }
