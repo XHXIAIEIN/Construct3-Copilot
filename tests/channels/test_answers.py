@@ -141,18 +141,11 @@ class AnswerLogTests(unittest.TestCase):
             ask_cli(Recording(fail=True), "example", channel="qq", data_dir=self.data)
         self.assertEqual(self.lines()[-1]["ok"], False)
 
-    def test_qq_message_writes_one_line_after_its_file_is_sent(self):
+    def qq_client(self, application, usage):
+        """The botpy client run_qq makes for application, kept from connecting."""
         import botpy
         from channels.platforms.qq import bot
-        clients, asked, usage = [], [], Usage(self.data)
-        made = self.data / "made.c3p"
-        made.write_bytes(b"x" * 10)
-
-        class Delivering(Recording):
-            def handle(self, request):
-                asked.append(request["text"])
-                result = super().handle(request)
-                return {**result, "files": [str(made)]}
+        clients = []
 
         def close_logs():  # bot.log and botpy.log, so the folder can go
             for logger in [logging.getLogger(), *map(logging.getLogger, list(logging.Logger.manager.loggerDict))]:
@@ -168,9 +161,22 @@ class AnswerLogTests(unittest.TestCase):
         self.addCleanup(loop.close)
         self.addCleanup(asyncio.set_event_loop, None)
         with patch.object(botpy.Client, "run", lambda self, **kw: clients.append(self)):
-            bot.run_qq(Delivering(usage, {"build": "ok"}), settings={"QQ_APPID": "1", "QQ_SECRET": "s"},
-                       data_dir=self.data, usage=usage)
-        client = clients[0]
+            bot.run_qq(application, settings={"QQ_APPID": "1", "QQ_SECRET": "s"}, data_dir=self.data, usage=usage)
+        return clients[0]
+
+    def test_qq_message_writes_one_line_after_its_file_is_sent(self):
+        from channels.platforms.qq import bot
+        asked, usage = [], Usage(self.data)
+        made = self.data / "made.c3p"
+        made.write_bytes(b"x" * 10)
+
+        class Delivering(Recording):
+            def handle(self, request):
+                asked.append(request["text"])
+                result = super().handle(request)
+                return {**result, "files": [str(made)]}
+
+        client = self.qq_client(Delivering(usage, {"build": "ok"}), usage)
         replies = []
 
         async def reply(**kwargs):
@@ -201,6 +207,26 @@ class AnswerLogTests(unittest.TestCase):
             asyncio.run(client.on_c2c_message_create(SimpleNamespace(
                 id="m2", content="哦哦", reply=reply, attachments=[], author=SimpleNamespace(user_openid="OPENID"))))
         self.assertEqual((replies, len(self.lines()), asked), ([], 1, ["做个游戏"]))
+
+    def test_qq_message_writes_its_line_when_qq_refuses_the_reply(self):
+        from botpy.errors import ServerError
+        from channels.platforms.qq import bot
+        usage = Usage(self.data)
+        client = self.qq_client(Recording(usage, {"build": "ok"}), usage)
+
+        async def refused(**kwargs):
+            raise ServerError("message refused")
+
+        message = SimpleNamespace(id="m1", content="做个游戏", reply=refused, attachments=[],
+                                  author=SimpleNamespace(user_openid="OPENID"))
+        with patch.object(bot.qqfile, "token_auth", lambda token: None), \
+                self.assertLogs("channels.qq", "WARNING") as warned:
+            asyncio.run(client.on_c2c_message_create(message))
+        self.assertIn("c2c:OPENID reply send failed: ServerError('message refused')", warned.output[0])
+        line = self.lines()[0]
+        self.assertEqual((line["session"], line["calls"], line["ok"], line["app"]),
+                         ("c2c:OPENID", 2, True, {"build": "ok"}))
+        self.assertEqual(answers.read_turns(self.data, "qq", [line["turn"]])[line["turn"]]["reply"], "reply")
 
 
 class ReadersTests(unittest.TestCase):
