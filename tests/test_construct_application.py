@@ -206,6 +206,29 @@ def test_image_is_a_note_for_a_text_model(tmp_path):
     assert application.agent.answer.call_args.kwargs["images"] == []
 
 
+def test_record_says_what_went_in_besides_the_question(tmp_path):
+    """The grader reads it to judge with what the model had (review.py)."""
+    application = Application(Mock(), model="model-placeholder", vision=True)
+    application.agent.answer = Mock(return_value=("ok", []))
+    request = {"session_id": "c2c:placeholder", "session_dir": tmp_path / "c2c_placeholder",
+               "history": [{"role": "user", "content": "一"}, {"role": "assistant", "content": "甲"}]}
+    image = {"filename": "photo.png", "content_type": "image/png", "size": 5, "url": "https://example.test/p"}
+    video = {"filename": "clip.mp4", "content_type": "video/mp4", "size": 5, "url": "https://example.test/v"}
+    project = {"filename": "game.c3p", "content_type": "file", "size": 5, "url": "https://example.test/g"}
+    contexts = []
+    with patch.object(attachments, "download", side_effect=[b"image", zipped(**{"project.c3proj": "{}"})]):
+        for text, sent in [("这种斜切效果怎么做", [image]), ("给我做一个示例", []), ("这个呢", [video]),
+                           ("看看这个项目", [project]), ("怎么加音效", [])]:
+            contexts.append(application.handle({**request, "text": text, "attachments": sent})["record"]["context"])
+    assert contexts == [
+        {"history": 1, "image": "new", "notes": []},
+        {"history": 1, "image": "kept", "notes": []},
+        {"history": 1, "image": "kept", "notes": ["unread_file"]},
+        {"history": 0, "image": "kept", "notes": []},  # a project starts the chat over; the image's last question
+        {"history": 1, "image": "none", "notes": ["open_project"]},
+    ]
+
+
 def test_run_sends_images_after_the_question():
     from copilot.providers.construct3.agent import Run
     from copilot.providers.construct3.reply import LENGTH_NOTE

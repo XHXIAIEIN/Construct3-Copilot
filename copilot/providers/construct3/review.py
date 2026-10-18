@@ -36,14 +36,16 @@ contact anyone, do not edit any file, do not run the bot.
 Question ({key}, {when}):
 {question}
 
-Earlier turns of the same chat, oldest first (may be empty):
+Earlier turns of the same chat the bot was given, oldest first (may be empty):
 {earlier}
+
+Also given to the bot with the question: {context}
 
 Tool calls the bot made:
 {tools}
 
-Reply it sent (" / " marks a line break):
-{reply}
+Reply it wrote (" / " marks a line break):
+{reply}{delivery}
 
 Snapshot of the chat's session folder (a project the user sent or the bot made, may be absent): {snap}
 
@@ -130,9 +132,51 @@ def turn_of(turn: str) -> dict | None:
     return None
 
 
+# the application's record "context", as application.py writes it
+IMAGES = {"new": "an image sent with this question, which you cannot see",
+          "kept": "an image sent earlier in this chat, which you cannot see"}
+NOTES = {"unread_file": "a note that the message came with a file the bot cannot read",
+         "open_project": "a note that the project sent earlier is still open, so never to ask for its file"}
+
+
+def earlier_of(line: dict, turn: dict, fallback: deque) -> list[tuple[str, str]]:
+    """The earlier turns the bot was given, as question and reply: the history the channel kept with the turn, as
+    many of its last turns as the application's record says went in (none after a project upload); for a turn
+    written before the history was kept, the grader's own last turns of the chat."""
+    history = turn.get("history")
+    if not isinstance(history, list):
+        return list(fallback)
+    pairs, question = [], None
+    for message in history:
+        if not isinstance(message, dict):
+            continue
+        content = str(message.get("content", "")).replace("\n", " / ")  # as the grader keeps a reply
+        if message.get("role") == "user":
+            question = content
+        elif message.get("role") == "assistant" and question is not None:
+            pairs.append((question, content))
+            question = None
+    went = ((line.get("app") or {}).get("context") or {}).get("history")
+    if isinstance(went, int) and not isinstance(went, bool):
+        pairs = pairs[-went:] if went > 0 else []
+    return pairs
+
+
+def context_of(line: dict) -> str:
+    """What else went in with the question, from the application's record."""
+    context = (line.get("app") or {}).get("context")
+    if not isinstance(context, dict):
+        return "(not recorded)"
+    said = [IMAGES[context["image"]]] if context.get("image") in IMAGES else []
+    said += [NOTES.get(n, f"a note {n}") for n in context.get("notes") or []]
+    return "; ".join(said) or "nothing"
+
+
 def item_of(line: dict, earlier: deque) -> dict | None:
     """What one answer's grade needs, None for a line not to grade: no turn (written before turn ids), a failed
-    answer, a terminal question or a turn that cannot be found."""
+    answer, a terminal question or a turn that cannot be found. earlier: the grader's own last turns of the chat,
+    for a turn that did not keep its history. The reply graded is the one the bot wrote, also where the person
+    got less of it; delivery says so."""
     if not line.get("turn") or not line.get("ok") or line.get("chat") == "cli":
         return None
     turn = turn_of(line["turn"])
@@ -142,9 +186,15 @@ def item_of(line: dict, earlier: deque) -> dict | None:
     key = str(line.get("session", "")).replace(":", "_")  # the session folder's spelling
     when = datetime.fromisoformat(str(line["at"]).replace("Z", "+00:00")).astimezone().strftime("%Y-%m-%d %H:%M:%S")
     snap = snapshot(key, datetime.now().strftime("%Y%m%d-%H%M%S"))
+    delivery = ""
+    if line.get("reply_sent") is False:
+        went, total = (line.get("reply_parts") or ["?", "?"])[:2]
+        delivery = (f"\n(QQ took {went} of the {total} messages it was cut into; the person did not see the rest. "
+                    "Grade the reply as written.)")
     return {"key": key, "when": when, "question": turn.get("question", ""),
-            "earlier": "\n".join(f"Q: {q}\nA: {a}" for q, a in earlier) or "(none)",
-            "tools": "\n".join(turn.get("trace", [])) or "(none)", "reply": turn.get("reply", "").replace("\n", " / "),
+            "earlier": "\n".join(f"Q: {q}\nA: {a}" for q, a in earlier_of(line, turn, earlier)) or "(none)",
+            "context": context_of(line), "tools": "\n".join(turn.get("trace", [])) or "(none)",
+            "reply": str(turn.get("written", turn.get("reply", ""))).replace("\n", " / "), "delivery": delivery,
             "snap": str(snap) if snap else "none"}
 
 

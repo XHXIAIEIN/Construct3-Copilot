@@ -111,7 +111,8 @@ def test_handle_returns_the_record_and_describe_declares_it(tmp_path):
 
     application.agent.answer = answer
     result = application.handle({"text": "example", "session_id": "s", "session_dir": tmp_path})
-    assert result["record"] == {"tools": [{"name": "lookup_ace", "ok": True}]}
+    assert result["record"] == {"context": {"history": 0, "image": "none", "notes": []},
+                                "tools": [{"name": "lookup_ace", "ok": True}]}
     assert "record" not in application.handle({"text": "", "session_id": "s", "session_dir": tmp_path})
     description = application.describe()
     assert description == DESCRIPTION and description is not DESCRIPTION
@@ -132,4 +133,5 @@ def test_handle_marks_a_broken_off_answer_failed(tmp_path):
     application.agent.answer = answer
     result = application.handle({"text": "example", "session_id": "s", "session_dir": tmp_path})
     assert result["text"] == "出错了，稍后再试。"
-    assert result["record"] == {"tools": [{"name": "lookup_ace", "ok": True}], "failed": True}
+    assert result["record"] == {"context": {"history": 0, "image": "none", "notes": []},
+                                "tools": [{"name": "lookup_ace", "ok": True}], "failed": True}

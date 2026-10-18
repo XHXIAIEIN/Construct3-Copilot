@@ -150,6 +150,8 @@ class Application:
                 sent = sent or "图片"
             else:
                 unread.append(suffix or "无扩展名")
+        image = "new" if images else "none"  # for the record: the image the model reads, if any, and whence
+        notes = []  # for the record: the notes appended to the question, by name
         # kept on disk: "给我做一个示例" after three restarts was built from the old project, without the image (2026-10-19)
         kept = session.parent / "_images" / f"{re.sub(r'[^A-Za-z0-9_-]', '_', key)}.json"
         now = datetime.now(timezone.utc).isoformat()
@@ -173,6 +175,7 @@ class Application:
             else:
                 kept.unlink(missing_ok=True)
             if images:
+                image = "kept"
                 extra += "\n(The image sent earlier in this chat comes with this message again.)"
         if unread and question:
             # without the note the model answered "没看懂" to a question about a file it never saw (2026-10-04)
@@ -180,6 +183,7 @@ class Application:
                 "Construct 3 projects and text files"
             question += (f"\n(This message also came with a {', '.join(unread)} file that you cannot read: only "
                          f"{readable} reach you. Say so in one sentence if the question is about that file.)")
+            notes.append("unread_file")
         elif sent is None and question and (key in self.projects or (session.is_dir() and any(session.rglob("project.c3proj")))):
             # a project sent earlier pulled a general question into its scripts (2026-10-04)
             # the first wording ended the answer with an offer to apply it if the person sent the .c3p again
@@ -188,6 +192,7 @@ class Application:
                          "scripts, or make the example it asks for with the project tools; end with the answer: "
                          "no offer to apply it to the project, and "
                          "not a word about the project or this note.)")
+            notes.append("open_project")
         if sent and not question:
             # an open question about a sent project made the model invent problems to fix (2026-10-04)
             question = {"项目": "我发来了项目，说说它做了什么。", "图片": "我发来了图片，说说它是什么。"}.get(
@@ -198,7 +203,10 @@ class Application:
             return {"text": "请发送 Construct 问题、项目或文本文件。", "files": [], "trace": []}
         question = question[:QUESTION_MAX] + extra
         outbox = []
-        record = {}  # filled by the agent, also when it fails part way
+        # what went in besides the question, so a reader of the record (the grader) has the same; the agent fills
+        # the rest, also when it fails part way
+        record = {"context": {"history": sum(1 for m in history if isinstance(m, dict) and m.get("role") == "user"),
+                              "image": image, "notes": notes}}
         try:
             if key not in self.projects:  # a project sent before a restart is still on disk
                 saved = next(session.rglob("project.c3proj"), None) if session.is_dir() else None

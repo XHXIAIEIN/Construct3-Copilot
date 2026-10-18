@@ -3,7 +3,8 @@
 The host writes the record under "app" in its answer log without reading it; the panel counts it by DESCRIPTION
 with its atomic operations. Both come from Copilot's own execution: the run's tool calls as the agent made them,
 and the task store's rows for the scripts those calls ran and for the ACE check's own lookups. The application
-adds "failed" when the answer broke off, which the host cannot tell, since the reply still goes out."""
+adds "failed" when the answer broke off, which the host cannot tell, since the reply still goes out, and "context",
+what went to the model besides the question, which the grader reads to judge with the same."""
 from __future__ import annotations
 
 from .acecheck import CHECK_REQUEST
@@ -19,6 +20,10 @@ DESCRIPTION = {
         {"id": "fixes", "label": "自动修正"},
         {"id": "tools", "label": "工具"},  # a list of {"name", "ok"}
         {"id": "failed", "label": "出错"},  # true when the answer broke off and the reply said so
+        # {"history": the earlier turns it went with, "image": "new", "kept" (sent earlier) or "none",
+        #  "notes": the notes appended to the question, "unread_file" and "open_project"}; not counted: the
+        # turn's line in python -m channels.logs shows it, and the grader reads it
+        {"id": "context", "label": "带进去的上下文"},
     ],
     "metrics": [
         {"id": "failed", "label": "出错", "op": "count", "where": {"failed": True}, "unit": "次",

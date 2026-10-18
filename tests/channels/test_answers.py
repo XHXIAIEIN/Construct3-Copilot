@@ -339,6 +339,12 @@ class ReadersTests(unittest.TestCase):
         self.assertLess(len(out), 2000)
         self.assertNotIn("还原效果图", self.logs("--session", "OLD"))
 
+    def test_app_record_is_shown_without_knowing_it(self):
+        from channels.logs import app_fields
+        self.assertEqual(app_fields({"context": {"history": 2, "image": "kept", "notes": ["open_project"]},
+                                     "tools": [{"name": "x", "ok": False}], "build": "ok", "empty": []}),
+                         "context（history=2, image=kept, notes=open_project）, tools 1（1 个失败）, build=ok, empty 0")
+
     def test_list_puts_messages_given_no_answer_among_the_turns(self):
         out = self.logs("--last", "0")
         self.assertIn("未回答  private c2c:NEW  只表示收到，没回复也没调模型\n  消息：哦哦\n  对照的 bot 消息的最后一句：示例做好了", out)
@@ -384,6 +390,25 @@ class ReadersTests(unittest.TestCase):
         self.assertEqual((items[1]["key"], items[1]["question"], items[1]["reply"], items[1]["snap"]),
                          ("c2c_NEW", "还原效果图", "示例做好了", "none"))
         self.assertIn("refused: bad 0", items[1]["tools"])
+        # the history the bot was given, not the grader's own; a record from before "context" says so
+        self.assertEqual((items[1]["earlier"], items[1]["context"]), ("Q: 这种斜切效果怎么做\nA: 用网格变形", "(not recorded)"))
+        self.assertIn("QQ took 1 of the 2 messages", items[1]["delivery"])
+        review.PROMPT.format(**items[1])
+
+    def test_grader_judges_with_the_context_the_bot_had(self):
+        from copilot.providers.construct3 import review
+        history = [{"role": "user", "content": "一"}, {"role": "assistant", "content": "甲"},
+                   {"role": "user", "content": "二"}, {"role": "assistant", "content": "乙\n丙"}]
+        own = review.deque([("旧问", "旧答")])
+        line = {"app": {"context": {"history": 1, "image": "kept", "notes": ["open_project"]}}}
+        self.assertEqual(review.earlier_of(line, {"history": history}, own), [("二", "乙 / 丙")])
+        uploaded = {"app": {"context": {"history": 0, "image": "none", "notes": []}}}  # a project upload clears it
+        self.assertEqual(review.earlier_of(uploaded, {"history": history}, own), [])
+        self.assertEqual(review.earlier_of({}, {"history": history}, own), [("一", "甲"), ("二", "乙 / 丙")])
+        self.assertEqual(review.earlier_of(line, {"reply": "x"}, own), [("旧问", "旧答")])  # a turn from before
+        self.assertEqual(review.context_of(line), f"{review.IMAGES['kept']}; {review.NOTES['open_project']}")
+        self.assertEqual(review.context_of(uploaded), "nothing")
+        self.assertEqual(review.context_of({"app": {"tools": []}}), "(not recorded)")
 
 
 class DescriptionTests(unittest.TestCase):

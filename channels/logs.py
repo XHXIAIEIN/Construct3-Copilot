@@ -76,13 +76,15 @@ def files(items: list) -> str:
 
 
 def app_fields(app) -> str:
-    """The application's record without knowing it: a scalar as is, a list as its length, with how many of its
-    items say ok false, an object as its own fields in brackets."""
+    """The application's record without knowing it: a scalar as is, a list of names as its names, another list as
+    its length, with how many of its items say ok false, an object as its own fields in brackets."""
     if not isinstance(app, dict):
         return ""
     parts = []
     for key, value in app.items():
-        if isinstance(value, list):
+        if isinstance(value, list) and value and all(isinstance(v, str) for v in value):
+            parts.append(f"{key}={'/'.join(value)}")
+        elif isinstance(value, list):
             bad = sum(1 for v in value if isinstance(v, dict) and v.get("ok") is False)
             parts.append(f"{key} {len(value)}" + (f"（{bad} 个失败）" if bad else ""))
         elif isinstance(value, dict):
