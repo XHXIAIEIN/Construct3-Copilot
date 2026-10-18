@@ -448,9 +448,9 @@ function levelOf(line){
 // usage.log "date time message". Anything else (tracebacks, Ollama's key=value lines) is shown as it is.
 const PYLOG=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?:[,.]\d+)? (?:\S+ )?(DEBUG|INFO|WARNING|ERROR|CRITICAL) (.*)$/,
   BOTPY=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?:[,.]\d+)?\t\[(\w+)\]\t\S*\t(.*)$/,PLAIN=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?:[,.]\d+)? (.*)$/,
-  // channels.core.chat writes "<chat> asks|reply|tools|attachment: ...", channels.model.usage "usage: <chat with _> ..."
-  SID=/^(usage: )?((?:c2c|group)[:_][\w:]+) (?:(asks|reply|tools|attachment|note): )?(.*)$/,
-  KINDS={asks:"问",reply:"答",tools:"工具",attachment:"附件",usage:"用量",note:"提示"},
+  // channels.core.chat writes "<chat> asks|reply|tools|attachment|ack: ...", channels.model.usage "usage: <chat with _> ..."
+  SID=/^(usage: )?((?:c2c|group)[:_][\w:]+) (?:(asks|reply|tools|attachment|note|ack): )?(.*)$/,
+  KINDS={asks:"问",reply:"答",tools:"工具",attachment:"附件",usage:"用量",note:"提示",ack:"只表示收到，没回也没调模型"},
   // channels/platforms/qq/bot.py: written once as the process starts, and when the gateway connects
   BOOT="QQ gateway connection starting",READY="QQ gateway ready event received",LEVELS={WARNING:"警告",WARN:"警告",ERROR:"错误",CRITICAL:"严重"},
   // the tools line ends with the command that prints its turn; the panel reads the same turn from /api/turns
@@ -497,7 +497,7 @@ function logRows(line,level){
     const key=s[2].replaceAll("_",":"),kind=s[1]?"usage":s[3]||"";
     if(kind==="asks")return withDay(p,newTurn(key,p,s[4]));
     const turn=logTurns.get(key);
-    if(turn){fillTurn(turn,kind,s[4]);return [];}
+    if(turn&&kind!=="ack"){fillTurn(turn,kind,s[4]);return [];}  // a "哦哦" after the reply gets a line of its own
   }
   const node=make("div","logline"),body=make("div","lm");
   if(level)node.dataset.level=level;

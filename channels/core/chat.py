@@ -1,7 +1,7 @@
 """One question and its answer, the same on every platform: the daily limit, the chat's recent turns, its session
-folder, the call of application.handle and the line in the answer log. A platform receives the message, passes it
-to Chats.admit and Chats.ask, sends what comes back the way its platform can, then calls Chats.record with what
-it sent."""
+folder, the call of application.handle and the line in the answer log. A platform receives the message, drops it
+when Chats.acknowledged says it only says got it, passes it to Chats.admit and Chats.ask, sends what comes back
+the way its platform can, then calls Chats.record with what it sent."""
 from __future__ import annotations
 
 import asyncio
@@ -14,7 +14,7 @@ from datetime import date
 from functools import wraps
 from pathlib import Path
 
-from . import answers as answer_log
+from . import ack, answers as answer_log
 
 log = logging.getLogger("channels.core.chat")
 
@@ -87,6 +87,18 @@ class Chats:
                 log.warning("history of %s unreadable: %s", key, exc)
             self.history[key] = turns
         return self.history[key]
+
+    def acknowledged(self, key: str, question: str, *, attachments=()) -> bool:
+        """Whether the message only says got it or thanks after the chat's last reply ("哦哦", "o了", "谢谢", "1";
+        the words and signals are in ack.json). Such a message gets no reply and no model call, and counts neither
+        against the day's questions nor in the history. A message with a file is always answered."""
+        if attachments:
+            return False
+        last = next((m["content"] for m in reversed(self.recent(key)) if m.get("role") == "assistant"), "")
+        if not ack.acknowledges(question, last):
+            return False
+        log.info("%s ack: %s", key, question)
+        return True
 
     def admit(self, key: str, question: str) -> str | None:
         """Count the question; the reply to send instead of an answer once the chat has used up today's."""

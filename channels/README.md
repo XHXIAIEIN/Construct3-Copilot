@@ -35,7 +35,7 @@ settings.py      读取 .env，由入口读一次后显式传下去；数据目�
 app.py           唯一接到 Copilot 的地方：造模型客户端，再造 Construct 应用
 model/           模型连接：设置、OpenAI 兼容和 Anthropic 客户端、用量、GPU 让位
 core/            与平台无关的部分：chat.py 一问一答（限额、历史、会话目录、回答记录），
-                 entry.py 平台入口和 --cli，以及启动回执
+                 ack.py 和 ack.json 认出只表示收到的消息，entry.py 平台入口和 --cli，以及启动回执
 platforms/       一个文件夹一个平台，__init__.py 是面板读的平台登记表
   qq/            QQ：连接、引用消息、分段回复、文件上传，自带 requirements.txt
 panel/           面板：control.py 编排切换，ollama.py、envfile.py、gateway.py 分管
@@ -61,7 +61,7 @@ var/             本地配置、日志、会话与备份（不进 git）
 
 1. 在 `platforms/` 下建 `<名字>/`，写 `__main__.py`：调用 `core.entry.main("<名字>", run, split=...)`。
    `run` 负责连接平台；`split` 把回复切成该平台能发的段落，`--cli` 也按它打印。
-2. 收到消息时依次调用 `core.chat.Chats` 的 `admit`（每日限额）和 `ask`（调用应用）；按平台的方式发出回复和文件，再调用 `record` 写回答记录。
+2. 收到消息时先问 `core.chat.Chats` 的 `acknowledged`，是就不回；再依次调用 `admit`（每日限额）和 `ask`（调用应用）；按平台的方式发出回复和文件，再调用 `record` 写回答记录。
    连上平台后用 `core.receipt.GatewayReceipt` 记录启动和就绪。
 3. 平台自己的依赖写进 `<名字>/requirements.txt`，再在 `channels/requirements.txt` 里加一行 `-r`。
 4. 在 `platforms/__init__.py` 登记模块名、显示名和要在面板展示的日志。
@@ -69,6 +69,10 @@ var/             本地配置、日志、会话与备份（不进 git）
 请求包含消息、会话、历史、附件和通知回调；返回值提供 `text`、`files` 与 `trace`，可以再带一个 `record`。
 
 每个聊天最近 3 轮问答存在 `var/sessions/_history/`，最近一张图和它还要跟着的提问数存在 `var/sessions/_images/`，bot 重启后接着用。
+
+只表示收到、懂了或谢谢的消息（「哦哦」「o了」「ojbk」「谢谢」「1」）不回复、不调模型、不算进每日限额，也不进历史。
+上一条回复最后一句在问或在提议时照常回答；回复里给了方案或选项时，「1」算作选择。带文件或引用了别的消息时总是回答。
+词表和这些信号在 `core/ack.json`，改完下一条消息就生效。`bot.log` 记一行 `<聊天> ack: <消息>`，`answers.jsonl` 不记。
 
 `app.py` 默认从 Copilot 仓库的相邻目录加载 Construct3-Agent-Skills 和 Construct3-RAG，可用 `.env` 的 `C3BOT_SKILLS` 和 `CONSTRUCT3_RAG` 指定。
 Construct 的工具循环、工程解析、生成与交付规则实现在 `copilot/providers/construct3/`。

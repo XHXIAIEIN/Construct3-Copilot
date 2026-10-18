@@ -144,12 +144,13 @@ class AnswerLogTests(unittest.TestCase):
     def test_qq_message_writes_one_line_after_its_file_is_sent(self):
         import botpy
         from channels.platforms.qq import bot
-        clients, usage = [], Usage(self.data)
+        clients, asked, usage = [], [], Usage(self.data)
         made = self.data / "made.c3p"
         made.write_bytes(b"x" * 10)
 
         class Delivering(Recording):
             def handle(self, request):
+                asked.append(request["text"])
                 result = super().handle(request)
                 return {**result, "files": [str(made)]}
 
@@ -160,6 +161,12 @@ class AnswerLogTests(unittest.TestCase):
                         handler.close()
                         logger.removeHandler(handler)
         self.addCleanup(close_logs)
+        # botpy.Client() takes asyncio.get_event_loop(), which raises once an async test before this one has left
+        # no current loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        self.addCleanup(loop.close)
+        self.addCleanup(asyncio.set_event_loop, None)
         with patch.object(botpy.Client, "run", lambda self, **kw: clients.append(self)):
             bot.run_qq(Delivering(usage, {"build": "ok"}), settings={"QQ_APPID": "1", "QQ_SECRET": "s"},
                        data_dir=self.data, usage=usage)
@@ -187,6 +194,13 @@ class AnswerLogTests(unittest.TestCase):
         self.assertEqual(receipt["active_answers"], 0)
         turn = answers.read_turns(self.data, "qq", [line["turn"]])[line["turn"]]
         self.assertEqual((turn["question"], turn["reply"]), ("做个游戏", "reply"))
+
+        # a "哦哦" after the reply gets no reply, no model call and no line (channels/core/ack.py)
+        replies.clear()
+        with patch.object(bot.qqfile, "send_file", sent), patch.object(bot.qqfile, "token_auth", lambda token: None):
+            asyncio.run(client.on_c2c_message_create(SimpleNamespace(
+                id="m2", content="哦哦", reply=reply, attachments=[], author=SimpleNamespace(user_openid="OPENID"))))
+        self.assertEqual((replies, len(self.lines()), asked), ([], 1, ["做个游戏"]))
 
 
 class ReadersTests(unittest.TestCase):
