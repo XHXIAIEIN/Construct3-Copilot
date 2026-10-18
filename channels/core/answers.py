@@ -5,8 +5,9 @@ tokens, the files in and out, whether handle returned); the application's own re
 under "app" as it came, unread. How to count the "app" fields is the application's declaration, which
 channels/app.py writes to <data>/runtime/app.json at startup.
 
-Each answer has a turn id. The question, the reply and the full tool trace go to <data>/logs/<channel>/turns.jsonl
-under that id, so answers.jsonl stays small for the panel's counts and bot.log keeps one short line per step.
+Each answer has a turn id. The question, the reply as sent, the history the application was given and the full tool
+trace go to <data>/logs/<channel>/turns.jsonl under that id, so answers.jsonl stays small for the panel's counts and
+bot.log keeps one short line per step.
 
 A message the channel drops without an answer (one that only says got it, channels/core/ack.py) goes to
 <data>/logs/<channel>/skipped.jsonl with the reason, not to answers.jsonl: the panel's counts and the application's
@@ -100,17 +101,24 @@ class AnswerLog:
         self._lock = threading.Lock()
 
     def write(self, answer: Answer, *, chat: str, session: str, files_in: list[dict], files_out: list[dict],
-              turn: str | None = None, question: str = "", reply: str | None = None, arrived: str | None = None,
+              turn: str | None = None, question: str = "", reply: str | None = None, written: str | None = None,
+              parts: tuple[int, int] | None = None, history: list | None = None, arrived: str | None = None,
               waited: int | None = None) -> dict:
         """Append the answer's line and its turn, and return the line. chat is "private", "group" or "cli";
-        reply: the text sent, the application's text when None; arrived and waited: when the question came and
-        the seconds it waited for the chat's running answer before handle started, left out when None."""
+        reply: the text sent, the application's text when None; written: the text the reply was cut from, kept in
+        the turn as "written" when it is not what was sent; parts: how many of the messages the reply was cut into
+        went out, and of how many, which the line keeps as reply_parts and reply_sent (absent for a terminal
+        answer, which sends nothing); history: the messages the application was given before the question;
+        arrived and waited: when the question came and the seconds it waited for the chat's running answer before
+        handle started, left out when None."""
         turn = turn or new_turn_id()
         line = {"at": utc_now(), "turn": turn, "channel": self.channel, "chat": chat, "session": session,
                 **arrival(arrived, waited),
                 "seconds": round(answer.seconds), "calls": answer.tokens.get("calls", 0),
                 "prompt": answer.tokens.get("prompt", 0), "completion": answer.tokens.get("completion", 0),
                 "files_in": files_in, "files_out": files_out, "ok": answer.error is None}
+        if parts is not None:
+            line["reply_sent"], line["reply_parts"] = parts[0] == parts[1], list(parts)
         if answer.tokens.get("models"):
             line["model"] = ",".join(answer.tokens["models"])
         record = answer.result.get("record")
@@ -120,8 +128,12 @@ class AnswerLog:
             log.warning("application record is %s, not an object; left out", type(record).__name__)
         trace = answer.result.get("trace")
         content = {"turn": turn, "question": question,
-                   "reply": answer.result.get("text", "") if reply is None else reply,
-                   "trace": [str(step) for step in trace] if isinstance(trace, list) else []}
+                   "reply": answer.result.get("text", "") if reply is None else reply}
+        if written is not None and written != content["reply"]:
+            content["written"] = written
+        if history is not None:
+            content["history"] = history
+        content["trace"] = [str(step) for step in trace] if isinstance(trace, list) else []
         try:
             text = json.dumps(line, ensure_ascii=False, default=str)
             with self._lock:

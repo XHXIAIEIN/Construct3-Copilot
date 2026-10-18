@@ -87,10 +87,11 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
                                             for a in attachments])
         files = turn.files[:1] if send_file else []
         parts = chunks(turn.text)[: MAX_REPLIES - len(files) - len(notes)]  # the file and the note are replies to the same message too
-        sent = set()
+        sent, said = set(), 0
         try:
             for seq, part in enumerate(parts, start=len(notes) + 1):
                 await reply(content=part, msg_seq=seq)
+                said += 1
             for seq, path in enumerate(files, start=len(notes) + len(parts) + 1):
                 try:
                     await send_file(path, seq)
@@ -103,8 +104,8 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
         except Exception as exc:  # botpy raises when QQ refuses a message (botpy/http.py _handle_response)
             log.warning("%s reply send failed: %r", key, exc)
         finally:
-            # the answer is made and in the history, so its line with the model usage and tools is written too
-            chats.record(turn, chat=chat_of(key), session=key, sent=sent,
+            # also when QQ refused: the history gets what went out, and the line the model usage and tools
+            chats.record(turn, chat=chat_of(key), session=key, sent=sent, parts=parts, parts_sent=said,
                          files_in=[answer_log.file_fact(a.filename, a.size) for a in attachments])
 
     # botpy 1.2 drops msg_elements, where a quoted message (message_type 103) carries its content and files,

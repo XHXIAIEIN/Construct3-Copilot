@@ -73,12 +73,18 @@ class AnswerLogTests(unittest.TestCase):
         trace = ["presearch ['x']", "new_project_from_spec({'spec': '" + "x" * 5000 + "'}) -> refused: bad"]
         answer = answers.Answer(result={"text": "reply\nline two", "trace": trace})
         self.log.write(answer, chat="private", session="c2c:A", files_in=[], files_out=[], turn="T1", question="问")
+        earlier = [{"role": "user", "content": "一"}, {"role": "assistant", "content": "x"}]
         self.log.write(answers.Answer(result={"text": "x"}), chat="private", session="c2c:A", files_in=[],
-                       files_out=[], turn="T2", question="二", reply="sent instead")
+                       files_out=[], turn="T2", question="二", reply="sent instead", written="x", parts=(1, 2),
+                       history=earlier)
         self.assertLess(len(self.log.path.read_text(encoding="utf-8")), 1000)
         found = answers.read_turns(self.data, "qq", ["T1", "T2", "absent"])
         self.assertEqual(found["T1"], {"turn": "T1", "question": "问", "reply": "reply\nline two", "trace": trace})
-        self.assertEqual((found["T2"]["reply"], found["T2"]["trace"]), ("sent instead", []))
+        self.assertEqual((found["T2"]["reply"], found["T2"]["written"], found["T2"]["history"], found["T2"]["trace"]),
+                         ("sent instead", "x", earlier, []))
+        first, second = answers.read_answers(self.data, "qq")
+        self.assertNotIn("reply_sent", first)  # nothing said how the reply went out
+        self.assertEqual((second["reply_sent"], second["reply_parts"]), (False, [1, 2]))
         self.assertNotIn("absent", found)
         self.assertEqual([l["turn"] for l in answers.read_answers(self.data, "qq")], ["T1", "T2"])
 
@@ -199,10 +205,11 @@ class AnswerLogTests(unittest.TestCase):
                          ("private", "c2c:OPENID", 2, {"build": "ok"}))
         self.assertEqual((line["files_in"], line["files_out"]),
                          ([{"type": ".zip", "bytes": 99}], [{"type": ".c3p", "bytes": 10, "sent": True}]))
+        self.assertEqual((line["reply_sent"], line["reply_parts"]), (True, [1, 1]))
         receipt = json.loads((self.data / "runtime" / "gateway.json").read_text(encoding="utf-8"))
         self.assertEqual(receipt["active_answers"], 0)
         turn = answers.read_turns(self.data, "qq", [line["turn"]])[line["turn"]]
-        self.assertEqual((turn["question"], turn["reply"]), ("做个游戏", "reply"))
+        self.assertEqual((turn["question"], turn["reply"], turn["history"]), ("做个游戏", "reply", []))
 
         # a "哦哦" after the reply gets no reply, no model call and no answer line (channels/core/ack.py); it is in
         # skipped.jsonl with the reply it followed
@@ -280,9 +287,14 @@ class AnswerLogTests(unittest.TestCase):
             asyncio.run(client.on_c2c_message_create(message))
         self.assertIn("c2c:OPENID reply send failed: ServerError('message refused')", warned.output[0])
         line = self.lines()[0]
-        self.assertEqual((line["session"], line["calls"], line["ok"], line["app"]),
-                         ("c2c:OPENID", 2, True, {"build": "ok"}))
-        self.assertEqual(answers.read_turns(self.data, "qq", [line["turn"]])[line["turn"]]["reply"], "reply")
+        self.assertEqual((line["session"], line["calls"], line["ok"], line["app"], line["reply_sent"], line["reply_parts"]),
+                         ("c2c:OPENID", 2, True, {"build": "ok"}, False, [0, 1]))
+        turn = answers.read_turns(self.data, "qq", [line["turn"]])[line["turn"]]
+        self.assertEqual((turn["reply"], turn["written"]), ("", "reply"))
+        # the next question carries the one asked, without the reply the person never saw
+        history = json.loads((self.data / "sessions" / "_history" / "c2c_OPENID.json").read_text(encoding="utf-8"))
+        self.assertEqual(history["turns"], [{"role": "user", "content": "做个游戏"},
+                                            {"role": "assistant", "content": "（这条回复没有发出去。）"}])
 
 
 class ReadersTests(unittest.TestCase):
@@ -302,7 +314,8 @@ class ReadersTests(unittest.TestCase):
                                        for n in range(2)] + ["check_design(...) -> later: 原图没带进来"]
         log.write(answers.Answer(result={"text": "示例做好了", "trace": steps, "record": {"tools": [{"ok": False}]}}),
                   chat="private", session="c2c:NEW", files_in=[answers.file_fact("a.png", 9)], files_out=[],
-                  turn="20261018-231714-a1b2", question="还原效果图")
+                  turn="20261018-231714-a1b2", question="还原效果图", parts=(1, 2),
+                  history=[{"role": "user", "content": "这种斜切效果怎么做"}, {"role": "assistant", "content": "用网格变形"}])
         log.write(answers.Answer(result={"text": "cli"}), chat="cli", session="cli", files_in=[], files_out=[],
                   turn="20261018-231800-ffff", question="终端")
         log.skip(chat="private", session="c2c:NEW", reason="ack", message="哦哦", after="示例做好了")
@@ -321,6 +334,8 @@ class ReadersTests(unittest.TestCase):
         self.assertIn("问：还原效果图", out)
         self.assertIn("工具（4 步）：presearch, new_project_from_spec×2, check_design", out)
         self.assertIn("tools 1（1 个失败）", out)
+        self.assertIn("回复只发出 1/2 段", out)
+        self.assertEqual(out.count("回复只发出"), 1)  # the other lines went out whole or do not say
         self.assertLess(len(out), 2000)
         self.assertNotIn("还原效果图", self.logs("--session", "OLD"))
 
@@ -354,7 +369,9 @@ class ReadersTests(unittest.TestCase):
         out = self.logs("--turn", "20261018-231714-a1b2", "--grep", "new_project", "--width", "80")
         self.assertIn("-> refused: bad 1", out)
         self.assertNotIn("check_design", out)
+        self.assertIn("带着的历史（2 条）：\n  问：这种斜切效果怎么做\n  答：用网格变形\n问：还原效果图", out)
         self.assertLess(len(out), 1000)
+        self.assertNotIn("带着的历史", self.logs("--turn", "20261018-231800-ffff"))  # a turn that did not keep it
 
     def test_grader_reads_the_turn_and_skips_terminal_and_old_lines(self):
         from copilot.providers.construct3 import review

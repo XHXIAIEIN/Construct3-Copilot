@@ -62,8 +62,9 @@ var/             本地配置、日志、会话与备份（不进 git）
 1. 在 `platforms/` 下建 `<名字>/`，写 `__main__.py`：调用 `core.entry.main("<名字>", run, split=...)`。
    `run` 负责连接平台；`split` 把回复切成该平台能发的段落，`--cli` 也按它打印。
 2. 消息一到先调用 `core.chat.Chats` 的 `arrive`，再进 `serialized_sessions` 排队，等同一会话正在做的回答结束：`arrive` 记下到达时间和对方这时看到的那条 bot 消息。
-   轮到这条消息时问 `acknowledged`（传入这个 arrival，和 `record` 一样要传聊天类型），是就不回；再依次调用 `admit`（每日限额）和 `ask`（调用应用，也传 arrival）；按平台的方式发出回复和文件，再调用 `record` 写回答记录。
-   发送出错时也要调用 `record`：`ask` 返回时回答已经做好并存进历史，回答记录里要有它的用量和工具。
+   轮到这条消息时问 `acknowledged`（传入这个 arrival，和 `record` 一样要传聊天类型），是就不回；再依次调用 `admit`（每日限额）和 `ask`（调用应用，也传 arrival）；按平台的方式发出回复和文件，再调用 `record`。
+   `record` 要传两样：`parts` 是回复按平台限制切成的段落，`parts_sent` 是从第一段数起实际发出去了几段。它把这次问答写进历史，再写回答记录。历史和 `turns.jsonl` 存的都是发出去的那几段，不是应用写的全文。从 `ask` 开始到 `record` 写完历史，这个会话都算在回答，期间到的消息对照的是忙碌提示。
+   发送出错时也要调用 `record`：回答已经做好，回答记录里要有它的用量和工具，历史里也要有这次提问。
    连上平台后用 `core.receipt.GatewayReceipt` 记录启动和就绪。
 3. 平台自己的依赖写进 `<名字>/requirements.txt`，再在 `channels/requirements.txt` 里加一行 `-r`。
 4. 在 `platforms/__init__.py` 登记模块名、显示名和要在面板展示的日志。
@@ -71,6 +72,7 @@ var/             本地配置、日志、会话与备份（不进 git）
 请求包含消息、会话、历史、附件和通知回调；返回值提供 `text`、`files` 与 `trace`，可以再带一个 `record`。
 
 每个聊天最近 3 轮问答存在 `var/sessions/_history/`，最近一张图和它还要跟着的提问数存在 `var/sessions/_images/`，bot 重启后接着用。
+历史里的回复是用户实际收到的文字：QQ 去掉的网址不在里面，平台只发出前几段时只留那几段。一段都没发出去时，问题照留，回复记成「（这条回复没有发出去。）」。问题要留着，用户接着问「怎么没回」时模型才知道问的是什么；回复不能留，不然模型会接着一段用户没看到的话往下说。没有回答在做时，判断“只表示收到”对照的也是这份历史里的最后一条回复。
 两份文件都记着最后一轮的时间（`at`，UTC）。离最后一轮超过 6 小时再问，就不带历史和图，从头开始；没有 `at` 的旧文件也当作过期。
 6 小时是 `core/chat.py` 的 `HISTORY_HOURS` 和 `copilot/providers/construct3/application.py` 的 `EARLIER_IMAGE_HOURS`，要改就两处一起改。
 
@@ -111,8 +113,10 @@ Construct 应用的任务与文件记录保存在 `var/copilot/`。
 `at` 是写这一行的时间，在回复发出之后；`seconds` 只算 `handle`。问题什么时候到的记在 `arrived`（UTC）；它排队等同一会话正在做的回答，等了多少秒记在 `waited`，从到达算到 `handle` 开始。
 同一会话没有回答在做时，`waited` 是 0。`--cli` 的行和加这两个字段之前的行没有它们，表示没测，不表示没等。
 `bot.log` 的 `usage:` 行末尾也带 `model`，`usage.log` 的格式不变。
+平台发回复的情况记在 `reply_parts`（`[发出的段数, 要发的段数]`）和 `reply_sent`（两者相等为 `true`）。QQ 拒发时只在 `bot.log` 留一行 warning，现在这里也能看到；`--cli` 不经过平台，没有这两项。
 应用返回的 `record` 原样放在 `app` 下，通道不解读它。
 每行带一个回合号 `turn`。这一轮的问题、回复和完整工具轨迹按回合号写进同一目录的 `turns.jsonl`。超过 32MB 时改名为 `turns.1.jsonl`，只保留这一份旧文件。
+`turns.jsonl` 的 `reply` 是用户收到的文字；和应用写的不一样时（去掉了网址、只发出一部分），全文另存在 `written`。`history` 是这一轮交给应用的历史，最多 3 轮 6 条，旧记录没有这一项。
 `bot.log` 的 `tools:` 行只记工具名的顺序和回合号，以前这一行会塞下整条轨迹，最长 160KB。
 
 没有回答的消息写进同一目录的 `skipped.jsonl`，一条一行：时间、通道、聊天类型、会话、`arrived` 和 `waited`（同上，`waited` 算到判断为止）、原因 `skipped`、消息原文 `message`，以及它到达时跟着的那条 bot 消息的最后一句 `after`。
@@ -126,7 +130,7 @@ Construct 应用的任务与文件记录保存在 `var/copilot/`。
 python -m channels.logs --since 23:00                     # 每轮一段：时间、问题、收发文件、用量、工具、回复
 python -m channels.logs --session E5DB --failed           # 某个会话里失败的回答
 python -m channels.logs --skipped                         # 只看没回答的消息和它对照的那条 bot 消息的最后一句
-python -m channels.logs --turn <回合号> --grep new_project  # 一轮的完整轨迹，只列匹配的步骤
+python -m channels.logs --turn <回合号> --grep new_project  # 一轮带着的历史和完整轨迹，只列匹配的步骤
 ```
 
 默认列表按时间把没回答的消息排在回合之间，加 `--session` 就只剩同一会话的回合和消息；`--failed` 只列失败的回答，不含这些消息。

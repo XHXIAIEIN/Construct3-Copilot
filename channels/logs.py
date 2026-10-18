@@ -77,7 +77,7 @@ def files(items: list) -> str:
 
 def app_fields(app) -> str:
     """The application's record without knowing it: a scalar as is, a list as its length, with how many of its
-    items say ok false."""
+    items say ok false, an object as its own fields in brackets."""
     if not isinstance(app, dict):
         return ""
     parts = []
@@ -85,9 +85,19 @@ def app_fields(app) -> str:
         if isinstance(value, list):
             bad = sum(1 for v in value if isinstance(v, dict) and v.get("ok") is False)
             parts.append(f"{key} {len(value)}" + (f"（{bad} 个失败）" if bad else ""))
-        elif not isinstance(value, dict):
+        elif isinstance(value, dict):
+            parts.append(f"{key}（{app_fields(value)}）")
+        else:
             parts.append(f"{key}={value}")
     return ", ".join(parts)
+
+
+def unsent(line: dict) -> str:
+    """How much of the reply did not go out, empty when all of it did or the line does not say."""
+    if line.get("reply_sent") is not False:
+        return ""
+    went, total = (line.get("reply_parts") or ["?", "?"])[:2]
+    return f"回复只发出 {went}/{total} 段，“答”是发出的部分"
 
 
 def head(line: dict) -> str:
@@ -103,6 +113,8 @@ def summary(line: dict, turn: dict | None, width: int) -> str:
     rows = [head(line), f"  文件：收 {files(line.get('files_in', []))}；发 {files(line.get('files_out', []))}"]
     if line.get("app"):
         rows.append(f"  应用：{app_fields(line['app'])}")
+    if unsent(line):
+        rows.append(f"  {unsent(line)}")
     if turn is None:
         rows.append(f"  {OLD}")
     else:
@@ -125,12 +137,21 @@ def detail(line: dict, turn: dict | None, width: int, grep: str | None) -> str:
     rows = [head(line), f"文件：收 {files(line.get('files_in', []))}；发 {files(line.get('files_out', []))}"]
     if line.get("app"):
         rows.append(f"应用：{app_fields(line['app'])}")
+    if unsent(line):
+        rows.append(unsent(line))
     if turn is None:
         return "\n".join(rows + [OLD])
     trace = turn.get("trace", [])
     pattern = re.compile(grep) if grep else None
-    rows += [f"问：{turn.get('question', '')}", f"答：{turn.get('reply', '')}",
-             f"工具轨迹（{len(trace)} 步" + (f"，只列含 {grep} 的" if grep else "") + "）："]
+    history = turn.get("history")
+    if isinstance(history, list):  # turns written before it was kept have none
+        rows.append(f"带着的历史（{len(history)} 条）：" + ("" if history else "无"))
+        rows += [f"  {'问' if m.get('role') == 'user' else '答'}：{cut(m.get('content', ''), width)}"
+                 for m in history if isinstance(m, dict)]
+    rows += [f"问：{turn.get('question', '')}", f"答：{turn.get('reply', '')}"]
+    if "written" in turn:
+        rows.append(f"应用写的全文：{turn['written']}")
+    rows.append(f"工具轨迹（{len(trace)} 步" + (f"，只列含 {grep} 的" if grep else "") + "）：")
     rows += [f"  {n:>3}. {cut_step(step, width)}" for n, step in enumerate(trace, 1)
              if pattern is None or pattern.search(step)]
     return "\n".join(rows)

@@ -40,15 +40,16 @@ def main(channel: str, run, *, split=lambda text: [text], description: str | Non
 def ask_cli(application, question: str, *, channel: str, data_dir: Path, project: Path | None = None,
             session: Path | None = None, usage=None, split=lambda text: [text]) -> None:
     """Ask once in the terminal; print the tool calls, the reply as the platform would split it, and the files.
-    The answer goes to the platform's answer log as chat "cli", its files as not sent; the gateway receipt is the
-    running platform's and is left alone."""
+    The answer goes to the platform's answer log as chat "cli", its files as not sent and its reply without
+    reply_sent, since nothing goes to the platform; no chat history is read or written, and the gateway receipt is
+    the running platform's and is left alone."""
     answer = handle(application, {
         "text": question, "session_id": "cli", "session_dir": session or data_dir / "sessions" / "cli",
         "history": [], "group": False, "attachments": [], "project": project,
         "notify": lambda note: print(f"[note] {note}")}, usage=usage)
     result = answer.result
     AnswerLog(data_dir, channel).write(
-        answer, chat="cli", session="cli", files_in=[], question=question,
+        answer, chat="cli", session="cli", files_in=[], question=question, history=[],
         files_out=[file_fact(Path(p).name, size_of(Path(p)), sent=False) for p in result.get("files", [])])
     if answer.error is not None:
         raise answer.error

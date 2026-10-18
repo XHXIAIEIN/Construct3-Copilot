@@ -74,12 +74,17 @@ class AcknowledgesTests(unittest.TestCase):
 
 
 class ChatAcknowledgedTests(unittest.IsolatedAsyncioTestCase):
+    async def answered(self, chats, key, question, notify=None):
+        """Ask and record the reply as sent whole, which puts it in the history."""
+        turn = await chats.ask(key, question, group=False, attachments=[], notify=notify)
+        chats.record(turn, chat="private", session=key, files_in=[], sent=set(), parts=[turn.text], parts_sent=1)
+
     async def test_got_it_is_not_counted_and_reads_the_chat_last_reply(self):
         with tempfile.TemporaryDirectory() as tmp:
             application = Mock()
             application.handle.return_value = {"text": PLAIN}
             chats = chat.Chats(application, data_dir=Path(tmp), channel="qq", daily_limit=1)
-            await chats.ask("c2c:a", "lerp 每帧用会受帧率影响吗？", group=False, attachments=[], notify=None)
+            await self.answered(chats, "c2c:a", "lerp 每帧用会受帧率影响吗？")
             with self.assertLogs("channels.core.chat", "INFO") as logged:
                 self.assertTrue(chats.acknowledged("c2c:a", "哦哦", chat="private"))
             self.assertIn("c2c:a ack: 哦哦", logged.output[-1])
@@ -88,7 +93,7 @@ class ChatAcknowledgedTests(unittest.IsolatedAsyncioTestCase):
             self.assertIsNone(chats.admit("c2c:a", "那 dt 是什么"))  # the day's one question is still there
 
             application.handle.return_value = {"text": INVITE}
-            await chats.ask("c2c:b", "做个贪吃蛇", group=False, attachments=[], notify=None)
+            await self.answered(chats, "c2c:b", "做个贪吃蛇")
             self.assertFalse(chats.acknowledged("c2c:b", "1", chat="private"))
             self.assertTrue(chats.acknowledged("c2c:a", "1", chat="private"))  # another chat's reply does not count
             self.assertTrue(chats.acknowledged("group:G:M", "谢谢", chat="group"))  # a chat with no reply yet
@@ -103,9 +108,9 @@ class ChatAcknowledgedTests(unittest.IsolatedAsyncioTestCase):
             self.assertFalse({"arrived", "waited"} & set(skipped[0]))  # no arrival taken, no wait measured
 
     async def test_a_message_is_judged_against_the_bot_message_it_came_after(self):
-        """While the chat's answer is being made, a message follows that answer's busy note, and nothing before the
-        note: the question being answered already answered the reply before it. Once the answer is made, a
-        message follows its reply."""
+        """While the chat's answer is being made and sent, a message follows that answer's busy note, and nothing
+        before the note: the question being answered already answered the reply before it. Once record has put the
+        reply in the history, a message follows the reply."""
         note = "在做了，要两三分钟，做好发你。"
         with tempfile.TemporaryDirectory() as tmp:
             arrivals = {}
@@ -121,10 +126,14 @@ class ChatAcknowledgedTests(unittest.IsolatedAsyncioTestCase):
             application = Mock()
             application.handle.side_effect = handle
             chats = chat.Chats(application, data_dir=Path(tmp), channel="qq")
-            await chats.ask("c2c:a", "跳跃怎么做", group=False, attachments=[], notify=None)
+            await self.answered(chats, "c2c:a", "跳跃怎么做")
             notes = []
-            await chats.ask("c2c:a", "要，做个贪吃蛇", group=False, attachments=[], notify=notes.append)
+            turn = await chats.ask("c2c:a", "要，做个贪吃蛇", group=False, attachments=[], notify=notes.append)
             self.assertEqual(notes, [note])
+            # the reply is being sent and not in the history yet, so a message now still follows the note
+            self.assertEqual(chats.arrive("c2c:a").seen, note)
+            chats.record(turn, chat="private", session="c2c:a", files_in=[], sent=set(), parts=[turn.text],
+                         parts_sent=1)
             self.assertEqual({name: a.seen for name, a in arrivals.items()},
                              {"before the note": "", "after the note": note})
             for arrival in arrivals.values():

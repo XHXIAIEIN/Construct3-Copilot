@@ -2,7 +2,8 @@
 folder, the call of application.handle and the line in the answer log. A platform takes Chats.arrive as a message
 comes, before the message waits for its chat's running answer; once its turn comes, it drops the message when
 Chats.acknowledged says it only says got it, passes it to Chats.admit and Chats.ask, sends what comes back the way
-its platform can, then calls Chats.record with what it sent."""
+its platform can, then calls Chats.record with what it sent: the history and the answer log keep the text the
+person received, not the text the application wrote."""
 from __future__ import annotations
 
 import asyncio
@@ -28,6 +29,9 @@ HISTORY_TURNS = 3
 HISTORY_HOURS = 6
 DAILY_LIMIT = 30  # questions per chat and day
 FAILED = "应用处理失败，请稍后重试。"
+# the history's reply when none of it went out. The question stays, since the person asked it and a "怎么没回" after
+# it needs it; the reply does not, so the model does not go on from an answer the person never saw
+UNSENT = "（这条回复没有发出去。）"
 
 
 def safe_name(key: str) -> str:
@@ -79,13 +83,14 @@ class Arrival:
 @dataclass
 class Turn:
     """What the application answered, ready to send: its text (FAILED when handle raised) and its files, with the
-    turn id and the question the answer log keeps them under, when the question came and how many seconds it
-    waited before handle started (both None without an arrival)."""
+    turn id and the question the answer log keeps them under, the history the application was given, and when the
+    question came and how many seconds it waited before handle started (both None without an arrival)."""
     answer: answer_log.Answer
     text: str = ""
     files: list[Path] = field(default_factory=list)
     id: str = ""
     question: str = ""
+    history: list[dict] = field(default_factory=list)
     arrived: str | None = None
     waited: int | None = None
 
@@ -180,8 +185,11 @@ class Chats:
                   arrival: Arrival | None = None) -> Turn:
         """Run application.handle in a worker thread. attachments: filename, url, content_type and size each;
         notify(note) is called from that thread for a note the application sends while it works. arrival: the
-        question's, from arrive; the turn keeps when it came and how long it waited before handle started."""
+        question's, from arrive; the turn keeps when it came and how long it waited before handle started. The turn
+        goes into the history in record, with what was sent; the chat is answering until then, so a message that
+        comes while the reply is being sent follows the busy note, not the reply before it."""
         waited = None if arrival is None else arrival.waited()
+        history = list(self.recent(key))
 
         def noted(note: str) -> None:
             self.answering[key] = note
@@ -190,40 +198,52 @@ class Chats:
         try:
             answer = await asyncio.to_thread(answer_log.handle, self.application, {
                 "text": question, "session_id": key, "session_dir": self.sessions / safe_name(key),
-                "history": list(self.recent(key)), "group": group, "notify": noted if notify else None,
+                "history": list(history), "group": group, "notify": noted if notify else None,
                 "attachments": attachments,
             }, usage=self.usage, receipt=self.receipt)
-        finally:
-            # nothing below gives way to the event loop, so the next message's arrive already finds this reply in
-            # the history
+        except BaseException:  # cancelled: no record will end the answering
             self.answering.pop(key, None)
+            raise
         turn_id = answer_log.new_turn_id()
         if answer.error is None:
             turn = Turn(answer, answer.result.get("text", ""), [Path(p) for p in answer.result.get("files", [])],
-                        turn_id, question)
+                        turn_id, question, history)
             trace = answer.result.get("trace", [])
         else:
             log.error("application failed", exc_info=answer.error)
-            turn, trace = Turn(answer, FAILED, id=turn_id, question=question), []
+            turn, trace = Turn(answer, FAILED, id=turn_id, question=question, history=history), []
         turn.arrived, turn.waited = None if arrival is None else arrival.at, waited
         # the whole trace can be 100 KB; it goes to turns.jsonl with the answer's line
         log.info("%s tools: %s (python -m channels.logs --turn %s)", key, answer_log.trace_summary(trace), turn_id)
         log.info("%s reply: %s", key, turn.text.replace("\n", " / "))
-        turns = self.history[key]  # not recent(): the turns this answer went with stay even when it took long
-        turns.extend([{"role": "user", "content": question}, {"role": "assistant", "content": turn.text}])
-        self.answered[key] = utc_now()
-        path = self.sessions / "_history" / f"{safe_name(key)}.json"
-        try:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps({"at": self.answered[key], "turns": list(turns)}, ensure_ascii=False),
-                            encoding="utf-8")
-        except OSError as exc:
-            log.warning("history of %s not saved: %s", key, exc)
         return turn
 
-    def record(self, turn: Turn, *, chat: str, session: str, files_in: list[dict], sent: set[Path]) -> dict:
-        """The answer's line, written once the platform has sent what it could. chat: "private", "group" or "cli"."""
+    def record(self, turn: Turn, *, chat: str, session: str, files_in: list[dict], sent: set[Path],
+               parts: list[str], parts_sent: int) -> dict:
+        """Put the turn in the chat's history and write the answer's line, once the platform has sent what it
+        could. chat: "private", "group" or "cli"; session: the chat's key as given to ask; sent: the files that went
+        out. parts: the messages the platform cut turn.text into to send, after its own limits; parts_sent: how many
+        of them went out, first ones first. The history and the turn's reply are those joined as they are, so a
+        split that drops what it cuts at drops it there too; a reply none of which went out is UNSENT in the history."""
+        parts_sent = max(0, min(parts_sent, len(parts)))
+        said = "".join(parts[:parts_sent])
+        if parts_sent < len(parts):
+            log.warning("%s reply sent %d of %d parts", session, parts_sent, len(parts))
+        # not recent() for a chat that asked: the turns this answer went with stay even when it took long
+        turns = self.history[session] if session in self.history else self.recent(session)
+        turns.extend([{"role": "user", "content": turn.question}, {"role": "assistant", "content": said or UNSENT}])
+        self.answered[session] = utc_now()
+        # nothing above gives way to the event loop, so the next message's arrive finds this reply in the history
+        self.answering.pop(session, None)
+        path = self.sessions / "_history" / f"{safe_name(session)}.json"
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"at": self.answered[session], "turns": list(turns)}, ensure_ascii=False),
+                            encoding="utf-8")
+        except OSError as exc:
+            log.warning("history of %s not saved: %s", session, exc)
         return self.log.write(turn.answer, chat=chat, session=session, files_in=files_in,
-                              turn=turn.id or None, question=turn.question, reply=turn.text,
+                              turn=turn.id or None, question=turn.question, reply=said, written=turn.text,
+                              parts=(parts_sent, len(parts)), history=turn.history,
                               files_out=[answer_log.file_fact(p.name, size_of(p), sent=p in sent) for p in turn.files],
                               arrived=turn.arrived, waited=turn.waited)

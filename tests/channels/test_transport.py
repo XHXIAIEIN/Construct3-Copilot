@@ -11,7 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 import asyncio
-from channels.core import chat
+from channels.core import answers, chat
 from channels.platforms.qq import bot
 from channels.core.receipt import GatewayReceipt
 
@@ -75,19 +75,58 @@ class ChatSerializationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(order, ["first", "other", "second"])
 
 
+async def answered(chats, key, question, parts=None, parts_sent=None):
+    """Ask, then record the reply as a platform does: sent whole, or cut into parts of which parts_sent went out."""
+    turn = await chats.ask(key, question, group=False, attachments=[], notify=None)
+    parts = [turn.text] if parts is None else parts
+    chats.record(turn, chat="private", session=key, files_in=[], sent=set(), parts=parts,
+                 parts_sent=len(parts) if parts_sent is None else parts_sent)
+    return turn
+
+
 class ChatHistoryTests(unittest.IsolatedAsyncioTestCase):
     async def test_history_outlives_a_restart(self):
         with tempfile.TemporaryDirectory() as tmp:
             application = Mock()
             application.handle.return_value = {"text": "用网格变形"}
             before = chat.Chats(application, data_dir=Path(tmp), channel="qq")
-            await before.ask("c2c:placeholder", "这种斜切效果怎么做", group=False, attachments=[], notify=None)
+            await answered(before, "c2c:placeholder", "这种斜切效果怎么做")
             after = chat.Chats(application, data_dir=Path(tmp), channel="qq")
-            await after.ask("c2c:placeholder", "给我做一个示例", group=False, attachments=[], notify=None)
+            await answered(after, "c2c:placeholder", "给我做一个示例")
             self.assertEqual(application.handle.call_args.args[0]["history"], [
                 {"role": "user", "content": "这种斜切效果怎么做"}, {"role": "assistant", "content": "用网格变形"}])
-            await after.ask("c2c:other", "你好", group=False, attachments=[], notify=None)
+            await answered(after, "c2c:other", "你好")
             self.assertEqual(application.handle.call_args.args[0]["history"], [])
+
+    async def test_history_keeps_what_was_sent(self):
+        """A reply QQ refused part way is in the history as far as it went, and one it refused whole as UNSENT
+        after its question; the answer log and the "got it" rule read the same text."""
+        written = "改成 lerp(a,b,1-0.01^dt)。要我做个示例吗？"
+        parts = ["改成 lerp(a,b,1-0.01^dt)。", "要我做个示例吗？"]
+        with tempfile.TemporaryDirectory() as tmp:
+            application = Mock()
+            application.handle.return_value = {"text": written}
+            chats = chat.Chats(application, data_dir=Path(tmp), channel="qq")
+            await answered(chats, "c2c:a", "lerp 受帧率影响吗", parts=parts, parts_sent=1)
+            # the offer never reached the person, so "好的" only says got it
+            self.assertTrue(chats.acknowledged("c2c:a", "好的", chat="private"))
+            self.assertEqual(answers.read_skipped(Path(tmp), "qq")[0]["after"], "改成 lerp(a,b,1-0.01^dt)。")
+            await answered(chats, "c2c:a", "dt 是什么", parts=parts, parts_sent=0)
+            sent_first = [{"role": "user", "content": "lerp 受帧率影响吗"},
+                          {"role": "assistant", "content": "改成 lerp(a,b,1-0.01^dt)。"}]
+            restarted = chat.Chats(application, data_dir=Path(tmp), channel="qq")
+            await answered(restarted, "c2c:a", "怎么没回")
+            self.assertEqual(application.handle.call_args.args[0]["history"], sent_first + [
+                {"role": "user", "content": "dt 是什么"}, {"role": "assistant", "content": chat.UNSENT}])
+
+            lines = answers.read_answers(Path(tmp), "qq")
+            self.assertEqual([(l["reply_sent"], l["reply_parts"]) for l in lines],
+                             [(False, [1, 2]), (False, [0, 2]), (True, [1, 1])])
+            turns = answers.read_turns(Path(tmp), "qq", [l["turn"] for l in lines])
+            first, second, third = (turns[l["turn"]] for l in lines)
+            self.assertEqual((first["reply"], first["written"], first["history"]), (parts[0], written, []))
+            self.assertEqual((second["reply"], second["written"], second["history"]), ("", written, sent_first))
+            self.assertEqual((third["reply"], "written" in third, len(third["history"])), (written, False, 4))
 
     async def test_history_ends_hours_after_the_last_answer(self):
         def hours_ago(hours):
@@ -104,7 +143,7 @@ class ChatHistoryTests(unittest.IsolatedAsyncioTestCase):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(json.dumps(saved, ensure_ascii=False), encoding="utf-8")
                 after_restart = chat.Chats(application, data_dir=Path(tmp), channel="qq")
-                await after_restart.ask("c2c:placeholder", "给我做一个示例", group=False, attachments=[], notify=None)
+                await answered(after_restart, "c2c:placeholder", "给我做一个示例")
                 self.assertEqual(application.handle.call_args.args[0]["history"], carried)
                 written = json.loads(path.read_text(encoding="utf-8"))
                 self.assertTrue(chat.within_hours(written["at"], 0.1))
@@ -113,8 +152,8 @@ class ChatHistoryTests(unittest.IsolatedAsyncioTestCase):
 
             running = chat.Chats(application, data_dir=Path(tmp), channel="qq")
             with patch("channels.core.chat.utc_now", return_value=hours_ago(chat.HISTORY_HOURS + 1)):
-                await running.ask("c2c:other", "这种斜切效果怎么做", group=False, attachments=[], notify=None)
-            await running.ask("c2c:other", "怎么存档", group=False, attachments=[], notify=None)
+                await answered(running, "c2c:other", "这种斜切效果怎么做")
+            await answered(running, "c2c:other", "怎么存档")
             self.assertEqual(application.handle.call_args.args[0]["history"], [])
 
 
