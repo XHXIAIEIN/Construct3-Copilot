@@ -120,3 +120,16 @@ def test_handle_returns_the_record_and_describe_declares_it(tmp_path):
         for path in (metric.get("field"), metric.get("each"), metric.get("by") if not metric.get("each") else None):
             assert path is None or path in fields, path
     json.dumps(description)
+
+
+def test_handle_marks_a_broken_off_answer_failed(tmp_path):
+    application = Application(Mock(), model="model-placeholder")
+
+    def answer(*args, record=None):
+        record["tools"] = [{"name": "lookup_ace", "ok": True}]
+        raise RuntimeError("HTTP 529 on the last call")
+
+    application.agent.answer = answer
+    result = application.handle({"text": "example", "session_id": "s", "session_dir": tmp_path})
+    assert result["text"] == "出错了，稍后再试。"
+    assert result["record"] == {"tools": [{"name": "lookup_ace", "ok": True}], "failed": True}

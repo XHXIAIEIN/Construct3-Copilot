@@ -2,7 +2,8 @@
 
 The host writes the record under "app" in its answer log without reading it; the panel counts it by DESCRIPTION
 with its atomic operations. Both come from Copilot's own execution: the run's tool calls as the agent made them,
-and the task store's rows for the scripts those calls ran and for the ACE check's own lookups."""
+and the task store's rows for the scripts those calls ran and for the ACE check's own lookups. The application
+adds "failed" when the answer broke off, which the host cannot tell, since the reply still goes out."""
 from __future__ import annotations
 
 from .acecheck import CHECK_REQUEST
@@ -17,8 +18,11 @@ DESCRIPTION = {
         {"id": "build", "label": "生成结果", "values": {"ok": "成功", "failed": "失败"}},
         {"id": "fixes", "label": "自动修正"},
         {"id": "tools", "label": "工具"},  # a list of {"name", "ok"}
+        {"id": "failed", "label": "出错"},  # true when the answer broke off and the reply said so
     ],
     "metrics": [
+        {"id": "failed", "label": "出错", "op": "count", "where": {"failed": True}, "unit": "次",
+         "note": {"label": "占", "op": "rate", "field": "failed", "format": "percent"}},
         {"id": "builds", "label": "生成项目", "op": "count", "by": "build", "unit": "次"},
         {"id": "fixes", "label": "自动修正", "op": "sum", "field": "fixes", "unit": "处",
          "note": {"label": "来自", "op": "count", "where": {"build": ["ok", "failed"]}, "unit": "次生成"}},

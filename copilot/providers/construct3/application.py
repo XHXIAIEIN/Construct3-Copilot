@@ -154,6 +154,8 @@ class Application:
             log.exception("agent failed")
             # a build finished before the failure is packed in outbox and still goes (2026-10-06: a 402 after a build)
             text, trace = ("后面出了错，做好的部分先发你。" if outbox else "出错了，稍后再试。"), []
+            # the host only sees handle return, so without this a 529 on the last call counted as answered (2026-10-18)
+            record["failed"] = True
         return {"text": text, "trace": trace, "files": outbox, "record": record}
 
     def review(self):

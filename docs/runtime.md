@@ -55,7 +55,7 @@ CONSTRUCT3_RAG=D:/code/Construct3-RAG
 QQ 的一次对话对应一个父任务，各项工具调用是它的子任务。
 机器人会话通过消息入口和 Copilot 会话锁串行处理。
 发出的项目文件会记录路径、大小和 SHA-256。
-每次回答，通道往 `channels/var/logs/qq/answers.jsonl` 追加一行；Construct 应用的 `record`（工具、构建结果、自动修正数）放在其中的 `app` 下。
+每次回答，通道往 `channels/var/logs/qq/answers.jsonl` 追加一行；Construct 应用的 `record`（工具、构建结果、自动修正数，回答中途出错时还有 `failed`）放在其中的 `app` 下。
 应用加的字段和统计方式由 `describe()` 声明，启动时写到 `channels/var/runtime/app.json`，面板据此计算统计。
 
 ## 执行边界
