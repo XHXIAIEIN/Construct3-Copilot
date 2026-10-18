@@ -62,6 +62,7 @@ class Run:
         self.tools = list(kb.TOOLS)
         self.handlers = dict(kb.HANDLERS)
         self.steps = MAX_STEPS
+        add_system(self.messages, kb.VOICE_PROMPT)
         if group:
             add_system(self.messages, kb.GROUP_PROMPT)
 

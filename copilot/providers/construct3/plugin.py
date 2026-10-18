@@ -4,6 +4,7 @@ The host agent loop consumes these tools, callbacks and validation rules:
 
 - TOOLS, HANDLERS: the tools every question gets, and the functions behind them
 - PROJECT_TOOLS, PROJECT_PROMPT, project_handlers(project, changed, send_project): the tools a sent project adds
+- VOICE_PROMPT: how every reply reads
 - GROUP_PROMPT: the note for a message from a group
 - session_tools(run): the tools, handlers and extra steps for making a new project in run.session
 - presearch(question): the search words for a question, or None, and the tool call that holds its result
@@ -28,8 +29,8 @@ from .services import LOCALE, RAG
 
 from . import newproject
 from .acecheck import LIST_ACES, missing_aces, project_text
-from .tools import (GROUP_PROMPT, HANDLERS, PROJECT_PROMPT, PROJECT_TOOLS, TOOLS, project_handlers,  # noqa: F401
-                    run_script)
+from .tools import (GROUP_PROMPT, HANDLERS, PROJECT_PROMPT, PROJECT_TOOLS, TOOLS, VOICE_PROMPT,  # noqa: F401
+                    project_handlers, run_script)
 
 log = logging.getLogger("copilot.construct3")
 
