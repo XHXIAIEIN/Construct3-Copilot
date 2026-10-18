@@ -48,7 +48,7 @@ def ask_cli(application, question: str, *, channel: str, data_dir: Path, project
         "notify": lambda note: print(f"[note] {note}")}, usage=usage)
     result = answer.result
     AnswerLog(data_dir, channel).write(
-        answer, chat="cli", session="cli", files_in=[],
+        answer, chat="cli", session="cli", files_in=[], question=question,
         files_out=[file_fact(Path(p).name, size_of(Path(p)), sent=False) for p in result.get("files", [])])
     if answer.error is not None:
         raise answer.error
