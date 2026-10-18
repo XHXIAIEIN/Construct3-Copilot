@@ -185,26 +185,63 @@ def events(control):
 TASK_ROWS = 20000
 
 
+CHECK_PAIR = 5  # seconds: the check looks each name up in Chinese, then in English, within this
+
+
+def _checks(rows):
+    """Indexes of the lookup_ace rows that copilot's post-answer ACE check made, not the model. Newer rows say so
+    in request_id ("acecheck:..."). Older rows: the check asks with limit 0 or in English (the model's tool cannot
+    set a locale), and its Chinese name lookup is the one an English lookup of the same names, under the same
+    answer, follows within CHECK_PAIR seconds; the model's own calls carry the Chinese lookup alone."""
+    english, found = {}, set()
+    parsed = []
+    for row in rows:
+        try:
+            request = json.loads(row["request"] or "{}")
+        except ValueError:
+            request = {}
+        parsed.append(request if isinstance(request, dict) else {})
+        if row["capability"] == "lookup_ace" and parsed[-1].get("locale") == "en-US":
+            key = (row["parent_id"], json.dumps(parsed[-1].get("args"), sort_keys=True))
+            english.setdefault(key, []).append(row["when"])
+    for index, (row, request) in enumerate(zip(rows, parsed)):
+        if row["capability"] != "lookup_ace":
+            continue
+        if (str(row["request_id"] or "").startswith("acecheck:") or request.get("limit") == 0
+                or request.get("locale") == "en-US"
+                or any(0 < (later - row["when"]).total_seconds() < CHECK_PAIR for later in english.get(
+                    (row["parent_id"], json.dumps(request.get("args"), sort_keys=True)), ()))):
+            found.add(index)
+    return found
+
+
 def tasks(control):
     """copilot's own record of each tool call and each whole answer ("conversation"): its status and when it ran,
-    in local time. Read-only; the session column is left out, so nothing names a chat."""
+    in local time, and whether it was the post-answer ACE check rather than the model. Read-only; the session
+    column is left out, so nothing names a chat."""
     database = control._data() / "copilot" / "tasks.sqlite3"
     if not database.exists():
         return []
     try:
         with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2)) as db:
-            rows = db.execute("SELECT capability, status, created_at FROM tasks ORDER BY created_at DESC LIMIT ?",
+            columns = {row[1] for row in db.execute("PRAGMA table_info(tasks)")}
+            wanted = ["capability", "status", "created_at"] + [c for c in ("request_id", "request", "parent_id") if c in columns]
+            rows = db.execute(f"SELECT {', '.join(wanted)} FROM tasks ORDER BY created_at DESC LIMIT ?",
                               (TASK_ROWS,)).fetchall()
     except sqlite3.Error:
         return []
-    found = []
-    for capability, status, created in reversed(rows):
+    records = []
+    for values in reversed(rows):
+        row = dict(zip(wanted, values))
         try:
-            at = datetime.fromisoformat(created).astimezone().strftime("%Y-%m-%d %H:%M:%S")
+            row["when"] = datetime.fromisoformat(row["created_at"]).astimezone()
         except (TypeError, ValueError):
             continue
-        found.append({"at": at, "tool": capability, "status": status})
-    return found
+        row.setdefault("request_id", None); row.setdefault("request", None); row.setdefault("parent_id", None)
+        records.append(row)
+    checks = _checks(records)
+    return [{"at": row["when"].strftime("%Y-%m-%d %H:%M:%S"), "tool": row["capability"], "status": row["status"],
+             "check": index in checks} for index, row in enumerate(records)]
 
 
 def usage(control):

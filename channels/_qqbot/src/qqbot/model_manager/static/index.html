@@ -575,8 +575,9 @@ function drawTools(tasks,all){
   const first=all[0]&&parseAt(all[0].at),since=first&&first>buckets()[0].start?`记录从 ${first.getMonth()+1}月${first.getDate()}日 开始`:"";
   setText($("tools-since"),since);
   const by=new Map();
-  for(const t of tasks){const r=by.get(t.tool)||{tool:t.tool,calls:0,failed:0,interrupted:0};r.calls++;
-    if(t.status==="failed"||t.status==="interrupted")r.failed++;if(t.status==="interrupted")r.interrupted++;by.set(t.tool,r);}
+  // The post-answer ACE check calls lookup_ace too; its calls get their own row so lookup_ace counts the model's.
+  for(const t of tasks){const tool=t.check?"ace-check":t.tool,r=by.get(tool)||{tool,calls:0,failed:0,interrupted:0};r.calls++;
+    if(t.status==="failed"||t.status==="interrupted")r.failed++;if(t.status==="interrupted")r.interrupted++;by.set(tool,r);}
   const rows=[...by.values()].sort((a,b)=>(b.tool==="conversation")-(a.tool==="conversation")||b.failed-a.failed||b.calls-a.calls);
   const head=make("div","toolrow");head.append(make("span","",""),make("span","num","调用"),make("span","num","失败"),Object.assign(make("span","meter"),{textContent:"失败率"}));
   $("tools").replaceChildren(head,...(rows.length?rows.map(r=>{
@@ -584,7 +585,7 @@ function drawTools(tasks,all){
     fill.style.width=rate+"%";track.append(fill);meter.append(track,make("span","",rate+"%"));
     const failed=make("span","num fail",r.failed?String(r.failed):"—");
     if(r.interrupted)failed.prepend(make("small","",`中断 ${r.interrupted}`));
-    row.append(make("span","",r.tool==="conversation"?"回答":r.tool),make("span","num calls",String(r.calls)),failed,meter);
+    row.append(make("span","",({conversation:"回答","ace-check":"ACE 校验"})[r.tool]||r.tool),make("span","num calls",String(r.calls)),failed,meter);
     return row;
   }):[make("div","empty","这段时间没有记录。")]));
 }

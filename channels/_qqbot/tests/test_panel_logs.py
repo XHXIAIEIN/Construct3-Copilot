@@ -157,19 +157,28 @@ class LogTests(unittest.TestCase):
     def test_tasks_come_from_copilot_records_without_sessions(self):
         database = self.home / "var/copilot/tasks.sqlite3"
         database.parent.mkdir(parents=True)
+        ask = lambda args, **more: json.dumps({"args": args, "locale": "zh-CN", "limit": 6000, **more})
         with closing(sqlite3.connect(database)) as db:
-            db.execute("CREATE TABLE tasks (task_id TEXT PRIMARY KEY, session_id TEXT, capability TEXT, status TEXT, "
-                       "created_at TEXT, finished_at TEXT)")
-            db.executemany("INSERT INTO tasks VALUES (?, ?, ?, ?, ?, ?)", [
-                ("t1", "secret-session", "lookup_ace", "failed", "2026-10-16T12:56:15+00:00", None),
-                ("t2", "secret-session", "conversation", "interrupted", "2026-10-16T12:50:00+00:00", None),
-                ("t3", "secret-session", "lookup_ace", "completed", "not a time", None)])
+            db.execute("CREATE TABLE tasks (task_id TEXT PRIMARY KEY, parent_id TEXT, session_id TEXT, capability TEXT, "
+                       "request_id TEXT, status TEXT, request TEXT, created_at TEXT)")
+            db.executemany("INSERT INTO tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
+                ("t1", None, "secret-session", "conversation", None, "interrupted", "{}", "2026-10-16T12:50:00+00:00"),
+                # the model's own lookup
+                ("t2", "t1", "secret-session", "lookup_ace", None, "failed", ask(["Sprite"]), "2026-10-16T12:51:00+00:00"),
+                # the check, old rows: limit 0, then a Chinese name lookup paired with the English one
+                ("t3", "t1", "secret-session", "lookup_ace", None, "failed", ask(["SnakeHead"], limit=0), "2026-10-16T12:52:00+00:00"),
+                ("t4", "t1", "secret-session", "lookup_ace", None, "failed", ask(["Sprite", "x"]), "2026-10-16T12:52:01+00:00"),
+                ("t5", "t1", "secret-session", "lookup_ace", None, "completed", ask(["Sprite", "x"], locale="en-US"), "2026-10-16T12:52:02+00:00"),
+                # the check, new rows: tagged
+                ("t6", "t1", "secret-session", "lookup_ace", "acecheck:1", "completed", ask(["Text"]), "2026-10-16T12:53:00+00:00"),
+                ("t7", None, "secret-session", "lookup_ace", None, "completed", "{}", "not a time")])
             db.commit()
         data = self.get("/api/usage")
-        self.assertEqual([(t["tool"], t["status"]) for t in data["tasks"]], [("conversation", "interrupted"), ("lookup_ace", "failed")])
+        self.assertEqual([(t["tool"], t["status"], t["check"]) for t in data["tasks"]],
+                         [("conversation", "interrupted", False), ("lookup_ace", "failed", False), ("lookup_ace", "failed", True),
+                          ("lookup_ace", "failed", True), ("lookup_ace", "completed", True), ("lookup_ace", "completed", True)])
         self.assertRegex(data["tasks"][0]["at"], r"^2026-10-1[67] \d\d:50:00$")
         self.assertNotIn("secret-session", json.dumps(data))
-
 
 if __name__ == "__main__":
     unittest.main()
