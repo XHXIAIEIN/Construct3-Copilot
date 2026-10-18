@@ -37,11 +37,11 @@ def load_archive(data: bytes, filename: str, target: Path, depth: int = 0) -> tu
         names = [i.filename.replace("\\", "/") for i in zf.infolist()]
         if any(n.rsplit("/", 1)[-1] == "project.c3proj" for n in names):
             if sum(i.file_size for i in zf.infolist()) > UNPACK_MAX:
-                raise ValueError("项目解压后超过 200 MB")
+                raise attachments_mod.Unreadable("项目解压后超过 200 MB")
             for info in zf.infolist():
                 dest = (target / info.filename).resolve()
                 if not dest.is_relative_to(target.resolve()):
-                    raise ValueError(f"压缩包里有不安全的路径：{info.filename}")
+                    raise attachments_mod.Unreadable(f"压缩包里有不安全的路径：{info.filename}")
             if target.exists():
                 shutil.rmtree(target)
             target.mkdir(parents=True)
@@ -56,7 +56,7 @@ def load_archive(data: bytes, filename: str, target: Path, depth: int = 0) -> tu
             note = (f"\n\n({filename} holds {count} projects; this is the first, {Path(inner).name}. "
                     "Ask for another one sent on its own.)") if count > 1 else ""
             return project, extra + note
-    raise ValueError(f"{filename} 里没有 Construct 3 项目（project.c3proj）或 Construct 2 项目（.capx）")
+    raise attachments_mod.Unreadable(f"{filename} 里没有 Construct 3 项目（project.c3proj）或 Construct 2 项目（.capx）")
 
 
 
@@ -102,7 +102,9 @@ class Application:
                     project, more = unpack_project(att.url, att.filename, session)
                 except (OSError, ValueError, zipfile.BadZipFile, ET.ParseError) as exc:
                     log.warning("project unpack failed: %s", exc)
-                    return {"text": f"项目文件打不开：{exc}", "files": [], "trace": []}
+                    text = f"项目文件打不开：{exc}" if isinstance(exc, attachments_mod.Unreadable) else \
+                        "项目文件打不开，请重新发送；还打不开就在 Construct 3 里另存为 .c3p 再发。"
+                    return {"text": text, "files": [], "trace": []}
                 history.clear()
                 if project:
                     self.projects[key] = project
@@ -120,7 +122,8 @@ class Application:
                     data = attachments_mod.download(att.url, attachments_mod.TEXT_MAX)
                 except (OSError, ValueError) as exc:
                     log.warning("text file download failed: %s", exc)
-                    return {"text": f"文件打不开：{exc}", "files": [], "trace": []}
+                    text = f"文件打不开：{exc}" if isinstance(exc, attachments_mod.Unreadable) else "文件没有下载成功，请重新发送。"
+                    return {"text": text, "files": [], "trace": []}
                 log.info("text file: %s bytes", len(data))
                 extra += attachments_mod.text_block(att.filename, data)
                 sent = sent or "文件"
