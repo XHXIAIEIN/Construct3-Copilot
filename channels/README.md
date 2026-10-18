@@ -61,7 +61,7 @@ var/             本地配置、日志、会话与备份（不进 git）
 
 1. 在 `platforms/` 下建 `<名字>/`，写 `__main__.py`：调用 `core.entry.main("<名字>", run, split=...)`。
    `run` 负责连接平台；`split` 把回复切成该平台能发的段落，`--cli` 也按它打印。
-2. 收到消息时先问 `core.chat.Chats` 的 `acknowledged`，是就不回；再依次调用 `admit`（每日限额）和 `ask`（调用应用）；按平台的方式发出回复和文件，再调用 `record` 写回答记录。
+2. 收到消息时先问 `core.chat.Chats` 的 `acknowledged`（和 `record` 一样要传聊天类型），是就不回；再依次调用 `admit`（每日限额）和 `ask`（调用应用）；按平台的方式发出回复和文件，再调用 `record` 写回答记录。
    发送出错时也要调用 `record`：`ask` 返回时回答已经做好并存进历史，回答记录里要有它的用量和工具。
    连上平台后用 `core.receipt.GatewayReceipt` 记录启动和就绪。
 3. 平台自己的依赖写进 `<名字>/requirements.txt`，再在 `channels/requirements.txt` 里加一行 `-r`。
@@ -75,7 +75,8 @@ var/             本地配置、日志、会话与备份（不进 git）
 
 只表示收到、懂了或谢谢的消息（「哦哦」「o了」「ojbk」「谢谢」「1」）不回复、不调模型、不算进每日限额，也不进历史。
 上一条回复最后一句在问或在提议时照常回答；回复里给了方案或选项时，「1」算作选择。带文件或引用了别的消息时总是回答。
-词表和这些信号在 `core/ack.json`，改完下一条消息就生效。`bot.log` 记一行 `<聊天> ack: <消息>`，`answers.jsonl` 不记。
+词表和这些信号在 `core/ack.json`，改完下一条消息就生效。
+没回的消息记进 `skipped.jsonl`，连同它前面那条回复的最后一句，用 `python -m channels.logs --skipped` 查，误判的提问能从这里找到（见“回答记录与统计”）。`bot.log` 也记一行 `<聊天> ack: <消息>`。
 
 `app.py` 默认从 Copilot 仓库的相邻目录加载 Construct3-Agent-Skills 和 Construct3-RAG，可用 `.env` 的 `C3BOT_SKILLS` 和 `CONSTRUCT3_RAG` 指定。
 Construct 的工具循环、工程解析、生成与交付规则实现在 `copilot/providers/construct3/`。
@@ -109,14 +110,21 @@ Construct 应用的任务与文件记录保存在 `var/copilot/`。
 每行带一个回合号 `turn`。这一轮的问题、回复和完整工具轨迹按回合号写进同一目录的 `turns.jsonl`。超过 32MB 时改名为 `turns.1.jsonl`，只保留这一份旧文件。
 `bot.log` 的 `tools:` 行只记工具名的顺序和回合号，以前这一行会塞下整条轨迹，最长 160KB。
 
+没有回答的消息写进同一目录的 `skipped.jsonl`，一条一行：时间、通道、聊天类型、会话、原因 `skipped`、消息原文 `message`，以及它前面那条回复的最后一句 `after`。
+目前只有一种原因 `ack`，即只表示收到的消息。规则判断上一条回复在不在问、在不在提议，看的就是 `after` 这一句。
+它不进 `answers.jsonl`，因为那里一行就是一次回答，面板统计和应用的审查器都按这个读。跳过的消息既不是回答，也不是失败，混进去会改变回答数、正常返回率、人数和平均用时。
+统计不算 `skipped.jsonl`；面板日志页的“QQ 未回答的消息”显示它的原文。
+
 查回答用 `python -m channels.logs`，不要去 grep `bot.log`：
 
 ```powershell
 python -m channels.logs --since 23:00                     # 每轮一段：时间、问题、收发文件、用量、工具、回复
 python -m channels.logs --session E5DB --failed           # 某个会话里失败的回答
+python -m channels.logs --skipped                         # 只看没回答的消息和它前面那条回复的最后一句
 python -m channels.logs --turn <回合号> --grep new_project  # 一轮的完整轨迹，只列匹配的步骤
 ```
 
+默认列表按时间把没回答的消息排在回合之间，加 `--session` 就只剩同一会话的回合和消息；`--failed` 只列失败的回答，不含这些消息。
 轨迹截断时保留 `->` 后面工具返回的内容，截掉的是前面的参数。`--width 0` 不截。加回合号之前的记录只有计数，问题和回复要去 `bot.log` 里找。
 
 应用的 `describe()` 声明自己加了哪些字段、怎么统计。`app.py` 启动时把它写到 `var/runtime/app.json`，通道停着时这份声明仍在。

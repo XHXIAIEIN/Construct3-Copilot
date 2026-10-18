@@ -24,6 +24,7 @@ PLATFORMS = {
         process_logs="logs/bot",  # bot/ is the folder name from qqbot; the data layout is kept as it was
         logs=[("bot", "QQ 对话", "logs/bot/bot.log"),
               ("answers", "QQ 回答记录", "logs/qq/answers.jsonl"),
+              ("skipped", "QQ 未回答的消息", "logs/qq/skipped.jsonl"),
               ("bot-output", "QQ 进程输出", "logs/bot/model-control.err.log"),
               ("bot-service", "QQ 进程输出（start.ps1）", "logs/bot/service.stderr.log"),
               ("botpy", "QQ 连接", "logs/bot/botpy.log")]),

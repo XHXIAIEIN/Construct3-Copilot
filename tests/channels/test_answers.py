@@ -201,12 +201,15 @@ class AnswerLogTests(unittest.TestCase):
         turn = answers.read_turns(self.data, "qq", [line["turn"]])[line["turn"]]
         self.assertEqual((turn["question"], turn["reply"]), ("做个游戏", "reply"))
 
-        # a "哦哦" after the reply gets no reply, no model call and no line (channels/core/ack.py)
+        # a "哦哦" after the reply gets no reply, no model call and no answer line (channels/core/ack.py); it is in
+        # skipped.jsonl with the reply it followed
         replies.clear()
         with patch.object(bot.qqfile, "send_file", sent), patch.object(bot.qqfile, "token_auth", lambda token: None):
             asyncio.run(client.on_c2c_message_create(SimpleNamespace(
                 id="m2", content="哦哦", reply=reply, attachments=[], author=SimpleNamespace(user_openid="OPENID"))))
         self.assertEqual((replies, len(self.lines()), asked), ([], 1, ["做个游戏"]))
+        self.assertEqual([(s["chat"], s["session"], s["message"], s["after"])
+                          for s in answers.read_skipped(self.data, "qq")], [("private", "c2c:OPENID", "哦哦", "reply")])
 
     def test_qq_message_writes_its_line_when_qq_refuses_the_reply(self):
         from botpy.errors import ServerError
@@ -249,6 +252,7 @@ class ReadersTests(unittest.TestCase):
                   turn="20261018-231714-a1b2", question="还原效果图")
         log.write(answers.Answer(result={"text": "cli"}), chat="cli", session="cli", files_in=[], files_out=[],
                   turn="20261018-231800-ffff", question="终端")
+        log.skip(chat="private", session="c2c:NEW", reason="ack", message="哦哦", after="示例做好了")
 
     def logs(self, *argv) -> str:
         from channels import logs
@@ -266,6 +270,18 @@ class ReadersTests(unittest.TestCase):
         self.assertIn("tools 1（1 个失败）", out)
         self.assertLess(len(out), 2000)
         self.assertNotIn("还原效果图", self.logs("--session", "OLD"))
+
+    def test_list_puts_messages_given_no_answer_among_the_turns(self):
+        out = self.logs("--last", "0")
+        self.assertIn("未回答  private c2c:NEW  只表示收到，没回复也没调模型\n  消息：哦哦\n  上一条回复的最后一句：示例做好了", out)
+        self.assertLess(out.index("问：终端"), out.index("消息：哦哦"))  # in time order
+        self.assertIn("消息：哦哦", self.logs("--last", "1"))
+        self.assertIn("消息：哦哦", self.logs("--session", "NEW"))
+        self.assertNotIn("哦哦", self.logs("--session", "OLD"))
+        only = self.logs("--skipped")
+        self.assertIn("消息：哦哦", only)
+        self.assertNotIn("问：", only)
+        self.assertNotIn("哦哦", self.logs("--failed"))  # a skip has no "ok" and is no failure
 
     def test_one_turn_keeps_tool_results_when_steps_are_cut(self):
         out = self.logs("--turn", "20261018-231714-a1b2", "--grep", "new_project", "--width", "80")

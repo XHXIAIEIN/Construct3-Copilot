@@ -9,6 +9,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from channels.core.answers import AnswerLog
 from channels.panel import stats
 from channels.panel.control import ModelControl
 from channels.panel.server import create_server
@@ -117,6 +118,14 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(metrics["tools"]["rows"]["lookup_ace"], {"true": 1, "false": 1})
         self.assertEqual(metrics["tools"]["names"], {"ace-check": "ACE"})
         self.assertEqual(metrics["fixes"]["trend"][-1], [2, 1, 0])
+
+    def test_messages_given_no_answer_change_no_number(self):
+        self.describe({"id": "app-placeholder", "metrics": [{"id": "all", "label": "全部", "op": "count"}]})
+        before = {range_: stats.report(self.data, range_, self.now) for range_ in ("day", "month")}
+        AnswerLog(self.data, "qq").skip(chat="private", session="c2c:A", reason="ack", message="哦哦",
+                                        after="改成 lerp 就不受影响。")
+        self.assertTrue((self.data / "logs" / "qq" / "skipped.jsonl").is_file())
+        self.assertEqual({range_: stats.report(self.data, range_, self.now) for range_ in ("day", "month")}, before)
 
     def test_unreadable_declaration_falls_back(self):
         path = self.data / "runtime" / "app.json"

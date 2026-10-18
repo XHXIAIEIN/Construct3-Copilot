@@ -111,16 +111,19 @@ class Chats:
             turns.clear()
         return turns
 
-    def acknowledged(self, key: str, question: str, *, attachments=()) -> bool:
+    def acknowledged(self, key: str, question: str, *, chat: str, attachments=()) -> bool:
         """Whether the message only says got it or thanks after the chat's last reply ("哦哦", "o了", "谢谢", "1";
         the words and signals are in ack.json). Such a message gets no reply and no model call, and counts neither
-        against the day's questions nor in the history. A message with a file is always answered."""
+        against the day's questions nor in the history; it goes to skipped.jsonl with the last sentence of that
+        reply, so a question dropped by mistake can be found. A message with a file is always answered.
+        chat: "private", "group" or "cli", as for record."""
         if attachments:
             return False
         last = next((m["content"] for m in reversed(self.recent(key)) if m.get("role") == "assistant"), "")
         if not ack.acknowledges(question, last):
             return False
         log.info("%s ack: %s", key, question)
+        self.log.skip(chat=chat, session=key, reason="ack", message=question, after=ack.last_sentence(last))
         return True
 
     def admit(self, key: str, question: str) -> str | None:

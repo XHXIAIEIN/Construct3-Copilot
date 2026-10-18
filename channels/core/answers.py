@@ -7,7 +7,11 @@ channels/app.py writes to <data>/runtime/app.json at startup.
 
 Each answer has a turn id. The question, the reply and the full tool trace go to <data>/logs/<channel>/turns.jsonl
 under that id, so answers.jsonl stays small for the panel's counts and bot.log keeps one short line per step.
-read_answers and read_turns are the readers; python -m channels.logs prints them."""
+
+A message the channel drops without an answer (one that only says got it, channels/core/ack.py) goes to
+<data>/logs/<channel>/skipped.jsonl with the reason, not to answers.jsonl: the panel's counts and the application's
+grader read answers.jsonl as one line per answer given, and a skip is no answer and no failure.
+read_answers, read_turns and read_skipped are the readers; python -m channels.logs prints them."""
 from __future__ import annotations
 
 import json
@@ -86,6 +90,7 @@ class AnswerLog:
         self.channel = channel
         self.path = data_dir / "logs" / channel / "answers.jsonl"
         self.turns = self.path.with_name("turns.jsonl")
+        self.skipped = self.path.with_name("skipped.jsonl")
         self._lock = threading.Lock()
 
     def write(self, answer: Answer, *, chat: str, session: str, files_in: list[dict], files_out: list[dict],
@@ -128,6 +133,21 @@ class AnswerLog:
             log.warning("turns.jsonl not written: %s", exc)
         return line
 
+    def skip(self, *, chat: str, session: str, reason: str, message: str, after: str) -> dict:
+        """Append the line of a message given no answer and return it. reason: why, "ack" for one that only says
+        got it; after: the last sentence of the reply it followed, where the rule looks for a question or an offer."""
+        line = {"at": utc_now(), "channel": self.channel, "chat": chat, "session": session, "skipped": reason,
+                "message": message, "after": after}
+        try:
+            text = json.dumps(line, ensure_ascii=False)
+            with self._lock:
+                self.skipped.parent.mkdir(parents=True, exist_ok=True)
+                with self.skipped.open("a", encoding="utf-8") as stream:
+                    stream.write(text + "\n")
+        except (OSError, TypeError, ValueError) as exc:
+            log.warning("skipped.jsonl not written: %s", exc)
+        return line
+
 
 def _json_lines(path: Path):
     try:
@@ -147,6 +167,11 @@ def _json_lines(path: Path):
 def read_answers(data_dir: Path, channel: str) -> list[dict]:
     """The answer lines of a channel, oldest first. Lines written before turn ids have no "turn"."""
     return list(_json_lines(data_dir / "logs" / channel / "answers.jsonl"))
+
+
+def read_skipped(data_dir: Path, channel: str) -> list[dict]:
+    """The messages a channel gave no answer, oldest first."""
+    return list(_json_lines(data_dir / "logs" / channel / "skipped.jsonl"))
 
 
 def read_turns(data_dir: Path, channel: str, ids) -> dict[str, dict]:
