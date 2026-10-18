@@ -100,6 +100,25 @@ class ModelControl:
             except (ControlError, OSError) as exc:
                 return {"ok": False, "message": str(exc) if isinstance(exc, ControlError) else "模型预热未完成。"}
 
+    def restart(self) -> dict:
+        """Restart the channel on .env as it is, e.g. to load new code. A running answer holds it; a process that
+        is not the verified one is left alone."""
+        gateway = self.gateway
+        with self.lock:
+            try:
+                gateway.assert_idle()
+                receipt = gateway.receipt()
+                identities = gateway.identity(receipt) if receipt else []
+                if not identities and gateway.candidates():
+                    raise ControlError("检测到尚未核验的 QQ 启动进程，请先检查其启动收据。")
+                gateway.stop(identities)
+                launched = utc_now()
+                gateway.wait_ready(gateway.launch(), launched)
+                return {"ok": True, "message": "QQ 助手已重启并收到就绪事件。", "status": self.status()}
+            except Exception as exc:
+                return {"ok": False, "message": str(exc) if isinstance(exc, ControlError) else
+                        "QQ 助手重启未完成，请检查本地日志。"}
+
     def switch(self, model: str, *, api=None) -> dict:
         """Point .env at the local model, or at the API profile api, and restart the channel on it."""
         gateway = self.gateway

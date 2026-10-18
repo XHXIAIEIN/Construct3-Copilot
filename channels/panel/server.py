@@ -32,11 +32,11 @@ class Jobs:
             return dict(self.job) if self.job else None
 
     def submit(self, action, model):
-        if action not in {"start", "warm", "switch", "api_save", "api_delete", "api_balance", "api_switch"}:
-            raise ValueError("请选择启动、加载或切换操作")
+        if action not in {"start", "restart", "warm", "switch", "api_save", "api_delete", "api_balance", "api_switch"}:
+            raise ValueError("请选择启动、重启、加载或切换操作")
         if action == "api_save" and not isinstance(model, dict):
             raise ValueError("接口配置无效")
-        if action not in {"start", "api_save"} and (not isinstance(model, str) or not model.strip()):
+        if action not in {"start", "restart", "api_save"} and (not isinstance(model, str) or not model.strip()):
             raise ValueError("请先选择一个模型")
         with self.lock:
             if self.job and self.job["state"] == "running":
@@ -58,7 +58,7 @@ class Jobs:
                     result = fn(model)
             else:
                 fn = getattr(self.control, action)
-                result = fn() if action == "start" else fn(model)
+                result = fn() if action in {"start", "restart"} else fn(model)
             state = "completed" if result.get("ok") else "failed"
             message = result.get("message", "操作完成" if state == "completed" else "操作失败")
         except Exception as exc:

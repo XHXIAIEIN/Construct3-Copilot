@@ -147,6 +147,31 @@ class ModelControlTests(unittest.TestCase):
         self.assertEqual(next((self.home / "var" / "backups" / "models").glob("*.env")).read_bytes(), self.original)
         mocks[2].assert_called_once_with([self.process, self.parent])
 
+    def test_restart_replaces_the_verified_process_and_leaves_env(self):
+        mocks = self.prepare_switch()
+        result = self.control.restart()
+        self.assertTrue(result["ok"])
+        self.assertEqual((self.home / ".env").read_bytes(), self.original)
+        mocks[2].assert_called_once_with([self.process, self.parent])
+        mocks[4].assert_called_once()
+
+    def test_restart_waits_for_a_running_answer(self):
+        mocks = self.prepare_switch()
+        receipt = self.home / "var" / "runtime" / "gateway.json"
+        receipt.write_text(json.dumps({**self.receipt, "active_answers": 1}), encoding="utf-8")
+        result = self.control.restart()
+        self.assertFalse(result["ok"])
+        self.assertIn("运行中的会话", result["message"])
+        mocks[2].assert_not_called()
+        mocks[4].assert_not_called()
+
+    def test_restart_leaves_an_unverified_process(self):
+        mocks = self.prepare_switch()
+        with patch.object(self.control.gateway, "receipt", return_value={}), patch.object(self.control.gateway, "candidates", return_value=[self.parent]):
+            self.assertFalse(self.control.restart()["ok"])
+        mocks[2].assert_not_called()
+        mocks[4].assert_not_called()
+
     def test_unknown_gateway_identity_leaves_configuration_and_processes(self):
         mocks = self.prepare_switch()
         mocks[1].side_effect = ControlError("identity mismatch")
