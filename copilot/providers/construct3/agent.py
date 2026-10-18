@@ -49,7 +49,10 @@ class Run:
         self.told = False  # the busy note went out, at the first tool call that makes or changes a project
         self.asked = project is not None or bool(ASKED_EVENTS.search(question))  # events may make the reply longer
         self.edits_before = kb.edits.edit_count(project) if project else 0
+        # an answer that makes or changes a project runs its tool loop with thinking on (Agent.project_options)
+        self.build = project is not None
         if session is not None and is_build_ask(question, project is not None):
+            self.build = True
             question += BUILD_NOTE
             self.trace.append("build ask")
         self.messages = [*(history or []), {"role": "user", "content": question}]
@@ -123,12 +126,16 @@ def json_error(name: str, exc: json.JSONDecodeError) -> str:
 
 
 class Agent:
-    def __init__(self, client, *, model, request_options=None, timeout=120, usage=None, bad_request_error=()):
+    def __init__(self, client, *, model, request_options=None, timeout=120, project_options=None,
+                 project_timeout=None, usage=None, bad_request_error=()):
         self.client = client
         self.bad_request_error = bad_request_error
         self.model = model
         self.request_options = request_options or {}
         self.timeout = timeout
+        # the tool loop of a build or an edit; the side calls (search words, checks, shortening) keep the above
+        self.project_options = self.request_options if project_options is None else project_options
+        self.project_timeout = project_timeout or timeout
         self.usage = usage or copilot.NullUsage()
 
     def answer(
@@ -247,13 +254,17 @@ class Agent:
         if run.session:
             run.add_session()
         checks = 0
+        options, timeout = ((self.project_options, self.project_timeout) if run.build
+                            else (self.request_options, self.timeout))
+        if run.build and options != self.request_options:
+            run.trace.append("thinking on")
         for _ in range(run.steps + MAX_CHECKS):
             resp = self.client.chat.completions.create(
                 model=self.model,
                 messages=run.messages,
                 tools=run.tools,
-                extra_body=self.request_options,
-                timeout=self.timeout,
+                extra_body=options,
+                timeout=timeout,
             )
             msg = resp.choices[0].message
             if not msg.tool_calls:
