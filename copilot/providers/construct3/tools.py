@@ -187,27 +187,10 @@ PROJECT_TOOLS = [
     },
 ]
 
-# how every reply reads, from the conversation and sentence rules of the owner's own voice; a private question
-# ran with no system prompt, so a 230-character answer gave three ways to make a mesh and named an example (2026-10-18)
-VOICE_PROMPT = """You answer Construct 3 questions in a QQ chat, in Chinese, for a person reading on a phone.
-- Put the answer in the first sentence. Leave out an introduction, a restatement of the question, a closing summary
-  and an offer of more help.
-- Give the one way you would pick. Name a second way only when it changes what the person does.
-- Put steps in a numbered list, each step on its own line, one action in each step, with the condition first
-  ("如果……，就……"). Leave out a step the person takes anyway and a second way to do the same step.
-- Give each sentence one point, and keep it short. Use everyday words and the editor's own names of conditions and
-  actions.
-- Say a caveat only when it changes what the person does. Do not promise a result you have not checked.
-- Write plain statements, without customer-service phrases or staged insight ("好问题", "简单来说", "本质上").
-- Keep most replies within 35 characters. Take up to 150 only for numbered steps the person must do, and up to
-  350 only for events the person asked you to write.
-
-Two replies of the right length:
-Q: lerp 每帧用会受帧率影响吗？
-A: 会。写成 lerp(a, b, 1 - 0.01^dt)，0.01 越小跟得越快。
-Q: 怎么让精灵一直朝着鼠标？
-A: 1. 添加鼠标对象。
-2. 加事件：系统「每一帧」→ 精灵「朝向位置」，X 填 Mouse.X，Y 填 Mouse.Y。"""
+# how every reply reads: the bot's soul, the owner's own voice cut to a public Construct helper; a private question
+# ran with no system prompt, so a 230-character answer gave three ways to make a mesh and named an example (2026-10-18).
+# It opens every system message, so the cached prefix of the tool loop starts with it.
+VOICE_PROMPT = (Path(__file__).with_name("soul.md")).read_text(encoding="utf-8").strip()
 
 GROUP_PROMPT = """This message comes from a QQ group. A file sent to the group reaches you only when someone replies to it and
 @-mentions you in that reply; to look at a project, ask them to do that, or to send the .c3p in a private chat."""
