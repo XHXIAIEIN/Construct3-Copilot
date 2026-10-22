@@ -24,6 +24,7 @@ NOT_SURE = "这个我没把握写对，先不给步骤。"
 NOT_MADE = "这个游戏这次没生成出来。把玩法说得再简单具体一点，再让我做一次。"
 NOT_FINISHED = "这次没改完，项目保持原样。分几步来：先说要先改哪一部分。"
 NO_FILE = "这次没做出工程文件。"
+FAILED = (NO_FILE, NOT_MADE, NOT_FINISHED, NOT_SURE, NO_STEPS)
 
 
 def add_system(messages: list[dict], text: str) -> None:
@@ -173,8 +174,8 @@ class Agent:
         with copilot.session(project, session, group) as task:
             try:
                 text, trace = self._answer_in_session(question, history, project, group, outbox, session, notify, calls, images)
-                failed = text in (NO_FILE, NOT_MADE, NOT_FINISHED, NOT_SURE, NO_STEPS) or any(
-                    t.startswith("pack failed:") or t == "steps ran out" for t in trace)
+                failed = text in FAILED or any(t.startswith("pack failed:") or t in (
+                    "steps ran out", "requested file unavailable") for t in trace)
                 task.finish(status="failed" if failed else "completed", summary=text, artifacts=outbox or [])
                 return text, trace
             finally:
@@ -216,7 +217,9 @@ class Agent:
             self.usage.write_usage(session, tally, time.monotonic() - started)
             self.usage.end()
         if session and is_build_ask(question, project is not None) and not outbox:
-            text = NO_FILE
+            # an answer in words with no build tried still answers the question, so it goes out with the note; after
+            # a failed build the words describe a game that was not made (2026-10-22: "能做 3D 游戏吗" got only the note)
+            text = f"{text}\n{NO_FILE}" if text and not tried and text not in FAILED else NO_FILE
             run.trace.append("requested file unavailable")
         if not run.send:
             text, dropped = drop_promise(text)

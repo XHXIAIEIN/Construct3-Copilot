@@ -96,6 +96,16 @@ class AdapterTests(unittest.TestCase):
         self.assertFalse(run.send)
 
 
+    def test_words_answer_to_a_build_ask_survives_the_missing_file(self):
+        agent = Agent.__new__(Agent)
+        agent.usage = copilot.NullUsage()
+        kb = "copilot.providers.construct3.agent.kb"
+        with patch.object(agent, "_answer", return_value="能做，用 3D 形状和 3D 相机。"),                 patch(f"{kb}.edits.edit_count", return_value=0):
+            text, trace = agent._answer_in_session("做个 3D 游戏", None, None, False, [], self.root / "s", None)
+        self.assertTrue(text.startswith("能做，用 3D 形状和 3D 相机。") and text.endswith(NO_FILE))
+        self.assertIn("requested file unavailable", trace)
+
+
     def test_design_names_what_it_left_for_later(self):
         session = self.root / "session"
         with patch.object(newproject, "MARKS", self.root / "marks"):

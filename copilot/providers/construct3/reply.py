@@ -17,7 +17,11 @@ STEP = re.compile(r"(?<![\d.])([1-9])[.、．](?!\d)")
 # a step that follows the end of a sentence or a colon on the same line: it starts a line of its own
 INLINE_STEP = re.compile(r"(?<=[。！？；：!?;:])[ \t]*(?=[1-9][.、．](?!\d))")
 ASKED_EVENTS = re.compile(r"事件|怎么写|写一下|写出来|写法|具体|步骤|example|event")
-SHORTEN = (
+# the rewrite sees the question and the draft, not the lookups behind the draft, so it corrected a checked fact from
+# memory: "Wait 0 resumes next tick" came back as "不能。Wait 0 在本帧事件表末尾执行" in 5 of 5 rewrites (2026-10-22)
+KEEP_FACTS = ("The answer rests on lookups you cannot see here: keep its yes or no and every fact as it stands, "
+              "and only cut words. ")
+SHORTEN = KEEP_FACTS + (
     "Rewrite your last answer in under {n} characters for the user. Keep the conclusion, the deciding reason and "
     "the steps the user must do, in everyday words. Keep the approach, not its details. Cut walkthroughs of what the code or events already do, second "
     "options, side notes, and code names, values and line numbers the person does not have to type. Keep every "
@@ -27,7 +31,7 @@ SHORTEN = (
 )
 SHORTEN_EVENTS = (" Keep every event line (conditions, then → actions) exactly as written; shorten the words "
                   "around them.")
-SHORTEN_SENT = (
+SHORTEN_SENT = KEEP_FACTS + (
     "The project file is sent with this reply. Rewrite your last answer in under {n} characters: what the "
     "example shows and what to tap or press to see it, in one or two sentences. No explanation of the "
     "mechanism, the layout, event numbers or object names. Same language, plain text, no mention of this request."
@@ -42,6 +46,14 @@ BUILD_ASK = re.compile(r"(?:做|制作|生成|重做|写)[^。！？\n]{0,40}(�
                        r"|example project|make (me )?(a|an) (example|demo|project)", re.I)
 # a bare "c3p" or "工程文件" means the held project when one is held, a new one when none is
 BUILD_ASK_BARE = re.compile(r"c3p|工程文件|项目文件", re.I)
+# whether Construct can make a kind of game ("C3 能做 3D 游戏吗") asks for yes or no, not for an example: routed as a
+# build, its answer in words was replaced by "no file" (2026-10-22). "能做个贪吃蛇吗" or "能给我做…" still asks for one
+CAN_MAKE = re.compile(r"(?:能|可以|能不能|可不可以|能否|支持)(?:用来)?(?:做|制作|开发)(?!个|一个|一款|款)"
+                      r"[^。！？\n]{0,30}(?:吗|么|嘛)")
+ASK_FOR = re.compile(r"你能|你可以|帮我|给我|发我|替我")
+# the yes or no a reply opens with; a "yes" needs a mark after it, so 会 in "会议" or 能 in "能量" is not one
+SAYS_NO = re.compile(r"^\s*(?:不能|不会|没有|不是|不行|不对|不可以|不用|不需要|无法)")
+SAYS_YES = re.compile(r"^\s*(?:能|会|有|是|可以|对|行|要|需要)(?=[，。,.：:；;！!\s]|$)")
 # the length rule again at the question, the last thing the model reads before its tools: in the system prompt
 # alone it left drafts of 200 to 500 characters, each rewritten by one more call (2026-10-18)
 LENGTH_NOTE = (f"\n(Answer in at most {REPLY_MAX} characters; numbered steps the person must do may take "
@@ -83,7 +95,14 @@ def step_lines(text: str) -> str:
 
 def is_build_ask(question: str, project_held: bool) -> bool:
     """Whether the question asks for an example or a project file."""
+    if CAN_MAKE.search(question) and not ASK_FOR.search(question):
+        return False
     return bool(BUILD_ASK.search(question) or (not project_held and BUILD_ASK_BARE.search(question)))
+
+
+def says(text: str) -> bool | None:
+    """The yes (True) or no (False) a reply opens with, or None when it opens with neither."""
+    return False if SAYS_NO.match(text) else True if SAYS_YES.match(text) else None
 
 
 def drop_promise(text: str) -> tuple[str, bool]:
@@ -117,6 +136,13 @@ def shorten(complete: Callable[[list[dict]], str], messages: list[dict], text: s
         return html.unescape(complete([*messages, {"role": "assistant", "content": before},
                                        {"role": "user", "content": ask}]).strip())
 
+    def kept(short: str) -> str:
+        # a rewrite that turns the draft's yes into a no, or back, overrode the lookups it could not see
+        if says(short) is not None and says(text) is not None and says(short) != says(text):
+            trace.append("short version turned the yes or no; long one sent")
+            return text
+        return short if short and len(short) < len(text) else text
+
     # A reply sent with a project only says what to try in it; the person reads the events in the file
     # (2026-10-09: a 330-character delivery explained the mechanism, the layout and the event numbers).
     if sent:
@@ -124,7 +150,7 @@ def shorten(complete: Callable[[list[dict]], str], messages: list[dict], text: s
             return text
         short = rewrite(text, SHORTEN_SENT.format(n=SENT_MAX))
         trace.append(f"shortened {len(text)} -> {len(short)} (sent)")
-        return short if short and len(short) < len(text) else text
+        return kept(short)
     # Events are what the person copies: an answer that writes them may be longer, and a shortening keeps them
     # (2026-10-06: a 1414-character answer of events came back as 271 characters of prose without one).
     # three or more event lines; one arrow in prose does not make an answer of events (2026-10-06)
@@ -140,4 +166,4 @@ def shorten(complete: Callable[[list[dict]], str], messages: list[dict], text: s
         if again and len(again) < len(short):
             short = again
     trace.append(f"shortened {len(text)} -> {len(short)}")
-    return short if short and len(short) < len(text) else text
+    return kept(short)

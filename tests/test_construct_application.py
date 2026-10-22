@@ -24,6 +24,14 @@ def test_whole_game_question_is_distinct_from_build_request():
     assert is_build_ask("给我整个例子", False)
 
 
+def test_can_construct_make_it_is_a_question_not_a_build_request():
+    assert not is_build_ask("Construct 3 能做 3D 游戏吗？", False)
+    assert not is_build_ask("C3 可以做联机游戏吗", False)
+    assert is_build_ask("你能做个小游戏吗", False)
+    assert is_build_ask("能给我做个例子吗", False)
+    assert is_build_ask("能不能做一个跳跃的例子", False)
+
+
 def test_request_context_reaches_agent_and_files_survive_late_failure(tmp_path):
     application = Application(Mock(), model="model-placeholder")
     artifact = tmp_path / "output.c3p"
@@ -276,6 +284,16 @@ def test_reply_limit_steps_up_with_what_the_reply_needs():
     assert shorten(complete, [], events, [], asked=True) == events
     shorten(complete, [], events + "长" * EVENTS_MAX, [], asked=True)
     assert f"under {EVENTS_MAX} characters" in asked[-1]
+
+
+def test_short_version_keeps_the_drafts_yes_or_no():
+    from copilot.providers.construct3.reply import KEEP_FACTS, shorten
+    asked, trace = [], []
+    draft = "能。Wait 0 后面的动作会在下一帧开头、行为和事件运行之前接着执行。"
+    complete = lambda messages: asked.append(messages[-1]["content"]) or "不能。Wait 0 在本帧事件表末尾执行。"
+    assert shorten(complete, [], draft, trace) == draft
+    assert asked[-1].startswith(KEEP_FACTS) and "long one sent" in trace[-1]
+    assert shorten(lambda messages: "能，下一帧开头接着执行。", [], draft, []) == "能，下一帧开头接着执行。"
 
 
 def test_a_how_to_question_is_shown_in_an_example(tmp_path):
