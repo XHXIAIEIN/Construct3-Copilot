@@ -132,7 +132,7 @@ class AdapterTests(unittest.TestCase):
         with patch.object(agent, "_answer", side_effect=build), patch(f"{kb}.is_new", return_value=True),                 patch(f"{kb}.runtime_verified", return_value=True), patch(f"{kb}.pack", return_value=self.root / "a.c3p"),                 patch(f"{kb}.edits.edit_count", return_value=0),                 patch(f"{kb}.left_for_later", return_value=["原图没放进来，用纯色代替"]):
             text, trace = agent._answer_in_session("做个示例", None, None, False, [], project, None)
         self.assertTrue(text.startswith("示例做好了。"))
-        self.assertIn("这次没做：原图没放进来，用纯色代替", text)
+        self.assertIn("。没做：原图没放进来，用纯色代替", text)
         self.assertIn("left for later named", trace)
 
 

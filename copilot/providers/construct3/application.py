@@ -67,7 +67,7 @@ def load_archive(data: bytes, filename: str, target: Path, depth: int = 0) -> tu
             note = (f"\n\n({filename} holds {count} projects; this is the first, {Path(inner).name}. "
                     "Ask for another one sent on its own.)") if count > 1 else ""
             return project, extra + note
-    raise attachments_mod.Unreadable(f"{filename} 里没有 Construct 3 项目（project.c3proj）或 Construct 2 项目（.capx）")
+    raise attachments_mod.Unreadable(f"{filename} 里没找到 Construct 项目（project.c3proj 或 .capx）")
 
 
 
@@ -114,7 +114,7 @@ class Application:
                 except (OSError, ValueError, zipfile.BadZipFile, ET.ParseError) as exc:
                     log.warning("project unpack failed: %s", exc)
                     text = f"项目文件打不开：{exc}" if isinstance(exc, attachments_mod.Unreadable) else \
-                        "项目文件打不开，请重新发送；还打不开就在 Construct 3 里另存为 .c3p 再发。"
+                        "项目打不开。重发一次，还不行就在 Construct 3 里另存为 .c3p 再发。"
                     return {"text": text, "files": [], "trace": []}
                 history.clear()
                 if project:
@@ -133,7 +133,7 @@ class Application:
                     data = attachments_mod.download(att.url, attachments_mod.TEXT_MAX)
                 except (OSError, ValueError) as exc:
                     log.warning("text file download failed: %s", exc)
-                    text = f"文件打不开：{exc}" if isinstance(exc, attachments_mod.Unreadable) else "文件没有下载成功，请重新发送。"
+                    text = f"文件打不开：{exc}" if isinstance(exc, attachments_mod.Unreadable) else "文件没收到，重发一下。"
                     return {"text": text, "files": [], "trace": []}
                 log.info("text file: %s bytes", len(data))
                 extra += attachments_mod.text_block(att.filename, data)
@@ -200,7 +200,7 @@ class Application:
         elif sent:
             question = f"{question}（随这条消息发来了{sent}）"
         if not question:
-            return {"text": "请发送 Construct 问题、项目或文本文件。", "files": [], "trace": []}
+            return {"text": "这个我看不了哦，我只回答 Construct 的问题。", "files": [], "trace": []}
         question = question[:QUESTION_MAX] + extra
         outbox = []
         # what went in besides the question, so a reader of the record (the grader) has the same; the agent fills
@@ -220,7 +220,7 @@ class Application:
         except Exception:  # the reply must still go out
             log.exception("agent failed")
             # a build finished before the failure is packed in outbox and still goes (2026-10-06: a 402 after a build)
-            text, trace = ("后面出了错，做好的部分先发你。" if outbox else "出错了，稍后再试。"), []
+            text, trace = ("后面出了错，做好的部分先发你。" if outbox else "出错了，过几分钟再问一次。"), []
             # the host only sees handle return, so without this a 529 on the last call counted as answered (2026-10-18)
             record["failed"] = True
         return {"text": text, "trace": trace, "files": outbox, "record": record}

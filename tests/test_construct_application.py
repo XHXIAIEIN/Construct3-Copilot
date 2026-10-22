@@ -94,7 +94,7 @@ def test_a_local_path_in_an_unpack_error_stays_in_the_log(tmp_path, caplog):
         application, result = send_file(tmp_path, "example.c3p", Mock(return_value=zipped(**{"project.c3proj": "{}"})))
     assert "Access is denied" in caplog.text
     assert "Access is denied" not in result["text"] and "c2c_placeholder" not in result["text"]
-    assert "重新发送" in result["text"]
+    assert "重发" in result["text"]
     application.agent.answer.assert_not_called()
 
 
@@ -104,12 +104,12 @@ def test_a_local_path_in_an_unpack_error_stays_in_the_log(tmp_path, caplog):
 ])
 def test_an_unexpected_error_gets_a_fixed_reply(tmp_path, filename, download, raw):
     _, result = send_file(tmp_path, filename, download)
-    assert raw not in result["text"] and "重新发送" in result["text"]
+    assert raw not in result["text"] and "重发" in result["text"]
 
 
 def test_a_reason_written_for_the_sender_is_shown(tmp_path):
     _, result = send_file(tmp_path, "example.c3p", Mock(return_value=zipped(**{"readme.txt": "no project"})))
-    assert result["text"] == "项目文件打不开：example.c3p 里没有 Construct 3 项目（project.c3proj）或 Construct 2 项目（.capx）"
+    assert result["text"] == "项目文件打不开：example.c3p 里没找到 Construct 项目（project.c3proj 或 .capx）"
     _, result = send_file(tmp_path, "notes.txt", url="data:," + "x" * (attachments.TEXT_MAX + 1))
     assert result["text"] == "文件打不开：文件超过 512 KB"
     # an image over the limit is still a file the model cannot read

@@ -19,11 +19,11 @@ log = logging.getLogger("copilot.construct3.agent")
 from . import plugin as kb
 
 MAX_CHECKS = 2
-NO_STEPS = "这次没查完，先不给步骤。"
-NOT_SURE = "这个我没把握写对，先不给步骤。"
-NOT_MADE = "这个游戏这次没生成出来。把玩法说得再简单具体一点，再让我做一次。"
-NOT_FINISHED = "这次没改完，项目保持原样。分几步来：先说要先改哪一部分。"
-NO_FILE = "这次没做出工程文件。"
+NO_STEPS = "没查完，步骤先不给。再问一次。"
+NOT_SURE = "这个我拿不准，步骤先不给。"
+NOT_MADE = "没做出来。玩法说简单点，再让我做一次。"
+NOT_FINISHED = "没改完，项目没动。一次改一块，先说改哪块。"
+NO_FILE = "工程文件没做出来。"
 FAILED = (NO_FILE, NOT_MADE, NOT_FINISHED, NOT_SURE, NO_STEPS)
 
 
@@ -228,10 +228,10 @@ class Agent:
         if outbox and run.session and tried and run.project and kb.is_new(run.project):
             later = kb.left_for_later(run.session)
             if later:
-                text += "\n这次没做：" + "；".join(later)
+                text += "\n没做：" + "；".join(later)
                 run.trace.append("left for later named")
         if outbox and run.project and kb.is_new(run.project) and not kb.runtime_verified(run.project):
-            text += "\n结构检查过了，还没在编辑器里跑过。"
+            text += "\n我还没在编辑器里跑过。你自己试试"
         text, note = scrub(text)
         if note:
             run.trace.append(note)

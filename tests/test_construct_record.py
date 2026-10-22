@@ -132,6 +132,6 @@ def test_handle_marks_a_broken_off_answer_failed(tmp_path):
 
     application.agent.answer = answer
     result = application.handle({"text": "example", "session_id": "s", "session_dir": tmp_path})
-    assert result["text"] == "出错了，稍后再试。"
+    assert result["text"] == "出错了，过几分钟再问一次。"
     assert result["record"] == {"context": {"history": 0, "image": "none", "notes": []},
                                 "tools": [{"name": "lookup_ace", "ok": True}], "failed": True}

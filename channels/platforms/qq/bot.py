@@ -100,7 +100,7 @@ def run_qq(application, *, settings: dict, data_dir: Path, usage=None) -> None:
                 except (OSError, aiohttp.ClientError, asyncio.TimeoutError, qqfile.UploadError) as exc:
                     log.warning("%s file send failed: %s", key, exc)
                     if seq < MAX_REPLIES:
-                        await reply(content="文件未发送成功，请稍后重试。", msg_seq=seq + 1)
+                        await reply(content="文件没发出去，过几分钟再要一次。", msg_seq=seq + 1)
         except Exception as exc:  # botpy raises when QQ refuses a message (botpy/http.py _handle_response)
             log.warning("%s reply send failed: %r", key, exc)
         finally:

@@ -28,7 +28,7 @@ HISTORY_TURNS = 3
 # (2026-10-16)
 HISTORY_HOURS = 6
 DAILY_LIMIT = 30  # questions per chat and day
-FAILED = "应用处理失败，请稍后重试。"
+FAILED = "出错了，过几分钟再问一次。"
 # the history's reply when none of it went out. The question stays, since the person asked it and a "怎么没回" after
 # it needs it; the reply does not, so the model does not go on from an answer the person never saw
 UNSENT = "（这条回复没有发出去。）"

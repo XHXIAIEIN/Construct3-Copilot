@@ -9,7 +9,7 @@ from channels.core import ack, answers, chat
 
 PLAIN = "会。改成 lerp(a,b,1-0.01^dt) 就不受影响。"  # a reply of 2026-10-19 that asks and offers nothing
 # 2026-10-16 22:43: after this reply "1" meant "do it" and the bot built the game again
-INVITE = "这个游戏这次没生成出来。把玩法说得再简单具体一点，再让我做一次。"
+INVITE = "没做出来。玩法说简单点，再让我做一次。"
 CHOICE = "有两种做法：1. 用网格变形把上边两点往里收。2. 用 3D 平面加透视。"
 
 
